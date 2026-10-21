@@ -1,0 +1,24 @@
+; MAZE CRAZE — master configuration. This file contains data, never scripts.
+; URLs below are relative to THIS file. Replace them with WordPress upload URLs if needed.
+[Game]
+Title: Maze Craze
+StartMap: 1
+RequestTimeoutMs: 10000
+
+[Maps]
+Map.1: maps/map-1.txt
+Map.2: maps/map-2.txt
+
+[Images]
+Player: assets/gnome.png
+Princess: assets/princess.png
+
+[Style]
+Font: Georgia
+MessageFont: System
+Accent: #c9ee87
+Panel: #172b28
+Text: #f1f5e6
+
+[PlayerVariables]
+PuzzlesSolved: 0

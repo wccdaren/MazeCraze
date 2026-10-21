@@ -1,0 +1,232 @@
+; Sebastian's first maze. Coordinates start at bottom-left (1,1).
+; Block indices are local. Every NID includes its originating map number.
+[Map]
+ID: 1
+Name: The Bramblewood Maze
+Dimensions: 25x19
+DefaultBlock: 1/1.1
+BorderBlock: 1/2.2
+StartingLocation: (3,3)
+ViewWindow: 3333 | 3303 | 5555 | 9999
+
+[Variables]
+GardenOpen: 0
+
+[Block.1]
+NID: 1/1.1
+Type: Move
+Description: Grass
+MapImage: ../assets/grass.png
+
+[Block.2]
+NID: 1/1.2
+Type: Move
+Description: Gravel
+MapImage: ../assets/gravel.png
+
+[Block.3]
+NID: 1/2.1
+Type: Wall
+Description: Tree
+MapImage: ../assets/tree.png
+
+[Block.4]
+NID: 1/2.2
+Type: Wall
+Description: Brick wall
+MapImage: ../assets/brick.png
+
+[Block.5]
+NID: 1/3.1
+Type: Interaction
+Description: The Pig of the North Path
+MapImage: ../assets/pig.png
+InteractionImage: ../assets/pig.png
+RequiredPower: 6
+Message: A pink snout pokes through the brambles. "No passing!" grunts the pig. It looks formidable, but perhaps a good sword would change its mind.
+CancelActionText: Back away quietly
+
+[Block.5.Choice.1]
+Text: Attack with a wielded weapon
+Action: Attack
+SelectionPrompt: Which weapon will you wield against the pig?
+TestsMatch: All
+Test.1: SelectedItem.State | Equal | Working
+Test.2: SelectedItem.Power | GreaterThan | Target.RequiredPower
+Pass.Message: Your {SelectedItem.Name} flashes in the sunlight. The pig drops a bomb and scampers into the woods. The path is clear!
+Pass.GiveItems: 1/4.3
+Pass.SetPlayerVariable.PuzzlesSolved: 1
+Fail.Message: Your {SelectedItem.Name} is too weak to attack! The pig snorts. Perhaps there is a stronger weapon nearby.
+
+[Block.6]
+NID: 1/3.2
+Type: Interaction
+Description: Mossy Chest
+MapImage: ../assets/chest.png
+Message: An old chest sits beneath the trees. Its brass clasp is open. Something sturdy is tucked inside.
+
+[Block.6.Choice.1]
+Text: Open the chest
+Action: Attempt
+Pass.GiveItems: 1/4.5
+Pass.Message: You found boots! The chest magically disappears into a shower of leaves. Open your pack and WEAR the boots before crossing mud.
+
+[Block.7]
+NID: 1/4.1
+Type: Inventory
+ItemKind: Item
+Description: Standard Key
+MapImage: ../assets/key.png
+Message: A little brass key gleams in the grass. Perhaps it fits a nearby door.
+
+[Block.8]
+NID: 1/4.2
+Type: Inventory
+ItemKind: Weapon
+Description: Bramble Sword
+Power: 8
+Hands: 1
+State: Working
+MapImage: ../assets/sword.png
+Message: A fine sword rests beside the path. Power 8. Put it in a hand from your pack before attacking.
+
+[Block.9]
+NID: 1/4.3
+Type: Inventory
+ItemKind: Item
+Description: Bomb
+MapImage: ../assets/bomb.png
+Message: A small, unlit puzzle bomb. Some trees may be less solid than they look. Only a successful match uses it up.
+
+[Block.10]
+NID: 1/3.3
+Type: Interaction
+Description: Standard Door
+MapImage: ../assets/door.png
+Message: A wooden door blocks the narrow path. Its little brass keyhole is waiting for a matching key.
+
+[Block.10.Choice.1]
+Text: Use an item from your pack
+Action: UseInventory
+SelectionPrompt: Which item fits this lock?
+Test.1: SelectedItem.ID | Equal | 1/4.1
+Pass.Message: Click! The key fits and disappears. The door folds into a tiny wooden bird and flies away. You step onto the grass beyond.
+Fail.Message: The {SelectedItem.Name} does not fit. You keep it and stay beside the door.
+
+[Block.11]
+NID: 1/3.4
+Type: Interaction
+Description: Master Door
+MapImage: ../assets/master-door.png
+Message: A golden door guards the princess's garden. A crown-shaped keyhole glitters in its center.
+
+[Block.11.Choice.1]
+Text: Try an item in the golden lock
+Action: UseInventory
+Test.1: SelectedItem.ID | Equal | 1/4.4
+Pass.Message: The master key turns! Both key and door dissolve into golden sparks. The garden awaits.
+Pass.SetMapVariable.GardenOpen: 1
+Fail.Message: The golden lock refuses your {SelectedItem.Name}. It needs a master key. Your item stays in your pack.
+
+[Block.12]
+NID: 1/4.4
+Type: Inventory
+ItemKind: Item
+Description: Master Key
+MapImage: ../assets/master-key.png
+Message: A crown-topped key! This must open the golden door to the princess's garden.
+
+[Block.13]
+NID: 1/3.5
+Type: Interaction
+Description: Deep Mud
+MapImage: ../assets/mud.png
+Message: Gloop! The path disappears into deep mud. Carrying boots is not enough. A sensible gnome WEARS them.
+
+[Block.13.Choice.1]
+Text: Try to cross the mud
+Action: Attempt
+Test.1: Equipment.Worn | Contains | 1/4.5
+Pass.ReplaceBlock: 1/1.2
+Pass.Message: Your boots keep your toes dry! You press gravel into the mud, leaving a firm path behind you.
+Fail.Message: Your feet would sink! Back away, open your pack, and wear the boots before trying again.
+
+[Block.14]
+NID: 1/4.5
+Type: Inventory
+ItemKind: Wearable
+WearLocation: Feet
+State: Working
+Description: Trail Boots
+MapImage: ../assets/boots.png
+Message: A pair of sturdy boots. These go on both feet and keep a gnome out of trouble.
+
+[Block.15]
+NID: 1/3.6
+Type: Interaction
+Description: The Lantern Gate
+MapImage: ../assets/portal.png
+Message: A ring of blue light hums between the stones. A sign reads: "The Little Clearing. Visitors welcome."
+
+[Block.15.Choice.1]
+Text: Visit the Little Clearing
+Action: Attempt
+Pass.ReplaceBlock: 1/3.6
+Pass.Transport: (2)
+Pass.Message: Blue light curls around your hat. You arrive in the Little Clearing. The gate behind you leads home.
+
+[Block.16]
+NID: 1/3.7
+Type: Interaction
+Description: Tree
+MapImage: ../assets/tree.png
+Message: This tree has a hollow trunk. A tiny sign inside reads: "A little BOOM might make a little room."
+
+[Block.16.Choice.1]
+Text: Try an item on the hollow trunk
+Action: UseInventory
+Test.1: SelectedItem.ID | Equal | 1/4.3
+Pass.Message: POP! The puzzle bomb bursts into harmless confetti. The hollow tree vanishes, revealing a secret shortcut!
+Fail.Message: The tree does not budge. Your {SelectedItem.Name} is safely back in your pack.
+
+[Block.17]
+NID: 1/4.6
+Type: Inventory
+ItemKind: Weapon
+Description: Wooden Dagger
+Power: 2
+Hands: 1
+MapImage: ../assets/dagger.png
+Message: A toy-like wooden dagger. Power 2. It may be too weak for a stubborn pig.
+
+[Block.18]
+NID: 1/3.8
+Type: Interaction
+Description: The Wayfarer's Sign
+MapImage: ../assets/sign.png
+Message: BRAMBLEWOOD TRAIL: Find a brass key for the first door. Wear boots for the mud. Wield a strong sword for the pig. Find the master key for the golden door. Rumor says one tree hides a shortcut...
+
+[Block.18.Choice.1]
+Text: Read the sign and continue
+Action: Attempt
+Pass.ReplaceBlock: 1/3.8
+Pass.Message: You tip your hat to the helpful sign. It stays planted beside the trail.
+
+[MapData]
+Format: Shorthand
+; The outside brick border. Every repetition extends RIGHT, never upward.
+(1,1)4(25) | (1,19)4(25)
+(1,2)4 | (25,2)4 | (1,3)4 | (25,3)4 | (1,4)4 | (25,4)4 | (1,5)4 | (25,5)4 | (1,6)4 | (25,6)4 | (1,7)4 | (25,7)4 | (1,8)4 | (25,8)4 | (1,9)4 | (25,9)4 | (1,10)4 | (25,10)4 | (1,11)4 | (25,11)4 | (1,12)4 | (25,12)4 | (1,13)4 | (25,13)4 | (1,14)4 | (25,14)4 | (1,15)4 | (25,15)4 | (1,16)4 | (25,16)4 | (1,17)4 | (25,17)4 | (1,18)4 | (25,18)4
+; Two north-south barriers, with gates overwritten below.
+(8,2)3 | (8,3)3 | (8,4)3 | (8,5)3 | (8,6)3 | (8,7)3 | (8,8)3 | (8,9)3 | (8,10)3 | (8,11)3 | (8,12)3 | (8,13)3 | (8,14)3 | (8,15)3 | (8,16)3 | (8,17)3 | (8,18)3
+(16,2)4 | (16,3)4 | (16,4)4 | (16,5)4 | (16,6)4 | (16,7)4 | (16,8)4 | (16,9)4 | (16,10)4 | (16,11)4 | (16,12)4 | (16,13)4 | (16,14)4 | (16,15)4 | (16,16)4 | (16,17)4 | (16,18)4
+; Smaller turns and a muddy crossing, then the pig's narrow passage.
+(2,8)3(4) | (4,12)3(3) | (2,16)3(4)
+(9,9)4(7) | (12,9)13
+(9,12)3(7) | (12,12)5
+(18,6)3(7) | (18,6)1 | (17,10)4(5) | (23,10)4(2) | (20,14)3(4)
+(9,5)2(7) | (17,14)2(3) | (19,15)2 | (19,16)2(4)
+; Last entry wins: doors, items, hidden tree, and built-in ending.
+(8,5)10 | (16,14)11 | (8,14)16
+(5,3)7 | (3,6)6 | (5,6)8 | (4,10)9 | (5,10)9 | (6,4)17
+(11,15)12 | (14,6)15 | (2,4)18 | (22,16)777
