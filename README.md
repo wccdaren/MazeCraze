@@ -47,6 +47,12 @@ preserves its changes. There is no save-to-disk feature in this draft.
 
 ## Create and edit maps
 
+For the complete illustrated handbook, download the
+[53-page Word user guide](docs/Maze-Craze-Map-Editor-User-Guide.docx) or its
+[printable PDF](docs/Maze-Craze-Map-Editor-User-Guide.pdf). Written for seventh-grade
+mapmakers, it covers every field, valid settings, examples, creative puzzle ideas,
+file relationships, importing/exporting, and a guided first-map project.
+
 **Double-click `editor.html` to open Map Studio.** This single file contains its
 JavaScript, styles, standard tile previews, and sample maps. It works locally
 without Python, npm, a web server, or an Internet connection. It can also be
@@ -165,6 +171,14 @@ npm run assets:png
 ```
 
 No npm dependencies need to be uploaded to the game host.
+
+The handbook's editable source is `docs/Map-Editor-User-Guide.md`. To regenerate
+the Word file, install `scripts/requirements-docs.txt` in your documentation Python
+environment and run `python3 scripts/build-user-guide.py --pages docs/guide-pages.json`.
+The build embeds the seven current-editor screenshots from `docs/manual-images/`.
+Word's contents page uses chapter page-reference fields, so page numbers can update
+if your Word installation paginates differently. The PDF is a checked 53-page print
+edition. Documentation tools are separate from game/editor runtime requirements.
 
 ## First-maze guide (spoilers)
 

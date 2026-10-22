@@ -1,5 +1,10 @@
 # Maze Craze Map Studio
 
+For a full seventh-grade-friendly manual with screenshots, every field explained,
+and puzzle recipes, use the [Word handbook](docs/Maze-Craze-Map-Editor-User-Guide.docx)
+or [PDF handbook](docs/Maze-Craze-Map-Editor-User-Guide.pdf). This Markdown guide is
+the short reference.
+
 Double-click **editor.html**. You can keep just that one file on your computer:
 its scripts, styles, standard tile previews, and both sample maps are inside it.
 It can also be served as an ordinary HTML page on your game host. The game still
