@@ -2,7 +2,8 @@
 
 Sebastian's graph-paper puzzle adventure: a happy gnome, 32×32 pixel tiles,
 one-based Cartesian coordinates, editable INI-style text, and no combat randomness.
-There is no runtime library, account, analytics, database, or build step.
+There is no runtime library, account, analytics, database, or required build step
+to play. The standalone map editor is already built and included.
 
 ![The first Maze Craze adventure](docs/first-look.png)
 
@@ -41,6 +42,28 @@ preserves its changes. There is no save-to-disk feature in this draft.
 | `js/app.js` | Browser controls, dialogs, loading | Main config URL near the top |
 | `styles.css` | Page and popup appearance | Layout, spacing, colors |
 | `SPECIFICATION.md` | Author's format reference | Rules, outcomes, coordinates |
+| `editor.html` | Standalone offline map editor | Open, paint, edit blocks, export `.txt` |
+| `EDITOR.md` | Editor field guide | Local files, tools, images, and publishing |
+
+## Create and edit maps
+
+**Double-click `editor.html` to open Map Studio.** This single file contains its
+JavaScript, styles, standard tile previews, and sample maps. It works locally
+without Python, npm, a web server, or an Internet connection. It can also be
+uploaded as one HTML page to your game host. There is a Map studio link in the game.
+
+Open a local `.txt` map or choose a bundled example. Map settings controls the
+dimensions (up to 100×100), starting point, viewing windows, default/border blocks,
+map variables, and output format. Create or edit Move, Wall, Interaction and
+Inventory blocks. Edit choices, item/equipment tests, messages, replacements,
+rewards, variable updates, and pass/fail transports through forms.
+
+Select a tile and paint by clicking/dragging, or drag a palette block onto the map.
+Rectangle, connected fill, erase, start, eyedropper, pan, zoom, undo and redo are
+included. Export map.txt downloads a compatible `map-N.txt` file. Move that file
+into your game's `maps/` folder, or upload it and set its URL in `main-config.txt`.
+Pictures stay separate, and their paths must match the final map file location.
+Read [the editor guide](EDITOR.md) for the complete workflow and limitations.
 
 ## WordPress deployment
 
@@ -112,6 +135,29 @@ matches, equipment, map travel, the secret tree, the ending, mobile controls,
 asymmetric views, nickname injection safety, and missing requests. Screenshots
 are written to the ignored `test-results/` directory.
 
+The editor has separate offline browser checks:
+
+```sh
+npm run test:editor-browser
+```
+
+They exercise local file opening and downloads, real palette drag/drop, painting,
+block/rule forms, reference changes, and 100×100/mobile rendering. The managed
+test browser blocks direct `file:` navigation, so these checks use an offline
+opaque-origin document with the same self-contained HTML and verify zero HTTP
+requests. The game browser suite also follows the hosted Map studio link.
+
+To regenerate the standalone editor after changing its sources or bundled assets:
+
+```sh
+npm run build:editor
+```
+
+Editor sources are `editor-shell.html`, `editor.css`, `js/editor-model.js`, and
+`js/editor-app.js`; the build also includes `js/spec.js`. Edit those sources, then
+rebuild `editor.html`. No bundler package is required; the build uses Node's
+standard library. Editing the generated file directly is not necessary.
+
 To refresh PNGs after editing the original SVG tiles, use:
 
 ```sh
@@ -145,7 +191,7 @@ same-origin HTTP for local development; fetches omit credentials and referrers.
 
 Maintain trusted configuration/image hosting. This static client game is not an
 anti-cheating or server-authoritative system. This iteration has no health,
-random battles, nested rule groups, persistent saves, map editor, sound, or touch
+random battles, nested rule groups, persistent game saves, sound, or touch
 swipe controls. There are on-screen touch arrows.
 
 The gnome is original generated artwork. The 18 other tiny tile designs were made

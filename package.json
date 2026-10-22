@@ -7,7 +7,9 @@
     "start": "python3 -m http.server 8000 --bind 0.0.0.0",
     "test": "node --test tests/*.test.js",
     "test:browser": "node tests/browser.cjs",
-    "assets:png": "node scripts/export-tiles.cjs"
+    "assets:png": "node scripts/export-tiles.cjs",
+    "build:editor": "node scripts/build-editor.mjs",
+    "test:editor-browser": "npm run build:editor && node tests/editor-browser.cjs"
   },
   "engines": {
     "node": ">=20"

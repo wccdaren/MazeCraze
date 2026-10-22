@@ -1,0 +1,3473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Maze Craze · Map Studio</title>
+    <style>
+      :root {
+  color-scheme: dark;
+  --bg: #10221e;
+  --panel: #19322a;
+  --line: #3b5141;
+  --text: #eff4e2;
+  --muted: #afbea5;
+  --accent: #cdeb92;
+  --ink: #24352b;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 90% 0, #2e4530, transparent 45%), var(--bg);
+  color: var(--text);
+  font:
+    14px/1.55 system-ui,
+    sans-serif;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+select {
+  cursor: pointer;
+}
+button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #253e30;
+  color: var(--text);
+  padding: 9px 12px;
+}
+button:hover:enabled {
+  background: #3b5438;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+canvas:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #20351f;
+  font-weight: 650;
+}
+.primary:hover:enabled {
+  background: #e0ffad;
+}
+.quiet {
+  background: transparent;
+}
+input,
+select,
+textarea {
+  color: var(--text);
+  border: 1px solid #53654a;
+  border-radius: 5px;
+  background: #10261f;
+  padding: 9px;
+  min-width: 0;
+}
+textarea {
+  resize: vertical;
+  width: 100%;
+}
+input[type="checkbox"] {
+  accent-color: #9fc36a;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+small,
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  font-weight: 400;
+}
+h1,
+h2,
+h3 {
+  font-family: Georgia, serif;
+  font-weight: 400;
+  line-height: 1.15;
+}
+h1 {
+  font-size: 39px;
+  margin: 0 0 10px;
+  letter-spacing: -0.7px;
+}
+h2 {
+  font-size: 25px;
+  margin: 0 0 12px;
+}
+h3 {
+  font-size: 22px;
+  margin: 15px 0 10px;
+}
+p {
+  margin: 8px 0 15px;
+}
+.eyebrow {
+  color: var(--accent);
+  letter-spacing: 1.8px;
+  font-size: 9px;
+  font-weight: 650;
+  margin: 0 0 10px;
+}
+.studio-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 30px;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  color: var(--text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: 2px;
+}
+.brand > span {
+  color: var(--accent);
+  font-size: 42px;
+}
+.brand small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 3px;
+  margin-top: 6px;
+}
+.header-note {
+  margin-left: auto;
+  font:
+    italic 15px Georgia,
+    serif;
+  color: var(--muted);
+}
+main {
+  padding: 0 30px;
+  max-width: 1800px;
+  margin: auto;
+}
+.studio-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 32px 0 24px;
+}
+.studio-intro > div > p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+.file-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.document-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 13px 16px;
+  background: #142b22;
+}
+.document-bar strong {
+  font-size: 13px;
+}
+#document-state {
+  color: var(--muted);
+  font-size: 10px;
+  margin-left: 12px;
+}
+.document-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.document-actions button,
+.document-actions select {
+  font-size: 11px;
+  padding: 7px 9px;
+}
+.status {
+  font-size: 12px;
+  min-height: 19px;
+  color: var(--accent);
+  margin: 13px 0;
+}
+.status.error {
+  color: #ffc2a6;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: 225px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.library-header {
+  padding: 17px;
+  border-bottom: 1px solid var(--line);
+}
+.library h2 {
+  font-size: 21px;
+}
+.library-header button,
+.library-header input,
+.library-header select {
+  width: 100%;
+  margin-top: 8px;
+}
+.library-header input,
+.library-header select {
+  font-size: 11px;
+  padding: 8px;
+}
+.palette {
+  max-height: 460px;
+  overflow: auto;
+  padding: 9px;
+  display: grid;
+  gap: 5px;
+}
+.palette-block {
+  display: flex;
+  text-align: left;
+  gap: 9px;
+  align-items: center;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+}
+.palette-block[aria-pressed="true"] {
+  background: #3f5734;
+  border-color: var(--accent);
+}
+.palette-block img,
+.block-thumbnail {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  border-radius: 3px;
+  flex: none;
+}
+.palette-block strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+}
+.palette-block small {
+  display: block;
+  font-size: 9px;
+}
+.selected-block {
+  border-top: 1px solid var(--line);
+  padding: 17px;
+}
+.selected-block strong {
+  font:
+    20px Georgia,
+    serif;
+}
+.selected-block p:not(.eyebrow) {
+  font-size: 10px;
+  color: var(--muted);
+}
+.selected-block button {
+  width: 100%;
+  font-size: 11px;
+}
+.canvas-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 19px 22px 12px;
+}
+.canvas-title h2 {
+  margin: 0;
+}
+.badge {
+  font-size: 12px;
+  border: 1px solid #677951;
+  padding: 5px 9px;
+  border-radius: 5px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.tool-row {
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-block: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.tools,
+.history-tools {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.tools button,
+.history-tools button,
+.history-tools select {
+  padding: 7px 9px;
+  font-size: 11px;
+}
+.tools button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.canvas-scroll {
+  overflow: auto;
+  max-height: 650px;
+  min-height: 300px;
+  background: #dedfc7;
+  padding: 16px;
+  overscroll-behavior: contain;
+}
+canvas {
+  display: block;
+  image-rendering: pixelated;
+  touch-action: none;
+  cursor: crosshair;
+}
+canvas[data-tool="pan"] {
+  cursor: grab;
+}
+.canvas-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 18px;
+  color: var(--muted);
+  font-size: 11px;
+  border-top: 1px solid var(--line);
+}
+#coordinate-readout {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.canvas-instructions {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 18px;
+}
+.jump-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px 18px;
+  flex-wrap: wrap;
+}
+.jump-controls label {
+  font-size: 11px;
+}
+.jump-controls input {
+  width: 65px;
+  padding: 6px;
+}
+.jump-controls button {
+  padding: 7px 10px;
+  font-size: 11px;
+}
+.validation,
+.image-settings {
+  padding: 15px 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+  background: #142c23;
+}
+summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+.validation li {
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+}
+.validation .validation-error {
+  color: #ffc2a6;
+}
+.image-settings p {
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 800px;
+}
+.image-settings input[type="url"] {
+  max-width: 600px;
+  width: 100%;
+}
+.image-settings label:not(.check) {
+  margin: 12px 0 6px;
+}
+.check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 14px 0;
+}
+.studio-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 25px 0;
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+dialog {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid #80945d;
+  border-radius: 12px;
+  padding: 25px;
+  width: min(720px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 100px #0009;
+}
+dialog::backdrop {
+  background: #081810dc;
+  backdrop-filter: blur(4px);
+}
+.large-dialog {
+  width: min(1000px, calc(100vw - 24px));
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.span-two {
+  grid-column: 1/-1;
+}
+.dialog-heading,
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 15px;
+}
+.section-heading {
+  align-items: center;
+  margin-top: 20px;
+}
+.section-heading h3 {
+  margin-bottom: 6px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  position: sticky;
+  bottom: -25px;
+  background: var(--panel);
+  padding-bottom: 12px;
+}
+.dialog-actions button {
+  font-size: 12px;
+}
+.danger {
+  color: #ffc6a7;
+}
+.error {
+  color: #ffc2a6;
+  font-size: 12px;
+  white-space: pre-line;
+}
+.error:empty {
+  display: none;
+}
+.choice-card {
+  border: 1px solid #607148;
+  border-radius: 8px;
+  padding: 17px;
+  margin: 15px 0;
+  background: #10281e;
+}
+.choice-heading {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.choice-heading strong {
+  margin-right: auto;
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+.choice-heading button,
+.rule-row button,
+.variable-row button {
+  padding: 6px 9px;
+  font-size: 11px;
+}
+.rule-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+  gap: 7px;
+  align-items: end;
+  margin: 10px 0;
+  padding: 10px;
+  background: #1d3728;
+  border-radius: 5px;
+}
+.rule-row input,
+.rule-row select {
+  width: 100%;
+  font-size: 11px;
+  padding: 7px;
+}
+.rule-row label {
+  font-size: 10px;
+}
+.rule-row .rule-variable {
+  grid-column: auto;
+}
+.outcomes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+  margin-top: 18px;
+}
+.outcome {
+  min-width: 0;
+  border: 1px solid #536749;
+  border-radius: 6px;
+  padding: 12px;
+}
+.outcome legend {
+  font:
+    19px Georgia,
+    serif;
+  padding: 0 5px;
+  color: var(--accent);
+}
+.outcome.fail legend {
+  color: #e8c59b;
+}
+.outcome label {
+  margin: 10px 0;
+}
+.outcome input,
+.outcome select,
+.outcome textarea {
+  width: 100%;
+  font-size: 11px;
+  padding: 8px;
+}
+.variable-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 7px;
+  margin: 8px 0;
+  align-items: end;
+}
+.variable-row input,
+.variable-row select {
+  width: 100%;
+  padding: 7px;
+  font-size: 11px;
+}
+.outcome .variable-row {
+  grid-template-columns: 1fr 1fr;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.outcome .variable-row button {
+  justify-self: start;
+}
+#source-text {
+  font:
+    12px/1.6 ui-monospace,
+    Consolas,
+    monospace;
+  min-height: 48vh;
+  white-space: pre;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+[hidden] {
+  display: none !important;
+}
+@media (min-width: 1400px) {
+  .canvas-scroll {
+    max-height: 760px;
+  }
+}
+@media (max-width: 1000px) {
+  main {
+    padding: 0 18px;
+  }
+  .studio-intro {
+    align-items: start;
+  }
+  h1 {
+    font-size: 33px;
+  }
+  .file-actions {
+    max-width: 260px;
+    justify-content: flex-end;
+  }
+  .document-bar {
+    align-items: start;
+  }
+  .document-bar > div:first-child {
+    min-width: 150px;
+  }
+  #document-state {
+    display: block;
+    margin: 5px 0 0;
+  }
+  .document-actions {
+    justify-content: flex-end;
+  }
+  .rule-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rule-row > button {
+    justify-self: start;
+  }
+}
+@media (max-width: 700px) {
+  .studio-header {
+    padding: 15px;
+  }
+  .header-note {
+    display: none;
+  }
+  #help-open {
+    margin-left: auto;
+    font-size: 11px;
+  }
+  main {
+    padding: 0 12px;
+  }
+  .studio-intro {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .file-actions {
+    max-width: none;
+    justify-content: start;
+  }
+  .file-actions button {
+    font-size: 11px;
+  }
+  h1 {
+    font-size: 31px;
+  }
+  .document-bar {
+    flex-direction: column;
+  }
+  .document-actions {
+    justify-content: start;
+  }
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  .library {
+    display: grid;
+    grid-template-columns: 155px minmax(0, 1fr);
+  }
+  .library-header {
+    padding: 12px;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+  .library h2 {
+    font-size: 20px;
+  }
+  .library .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .library-header button {
+    font-size: 11px;
+  }
+  .palette {
+    max-height: 230px;
+    padding: 5px;
+  }
+  .palette-block {
+    padding: 5px;
+  }
+  .selected-block {
+    grid-column: 1/-1;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .selected-block .eyebrow {
+    width: 100%;
+    margin: 0;
+  }
+  .selected-block strong {
+    font-size: 17px;
+  }
+  .selected-block p {
+    margin: 0;
+  }
+  .selected-block button {
+    width: auto;
+    margin-left: auto;
+    padding: 7px;
+  }
+  .canvas-title {
+    padding: 15px;
+  }
+  .canvas-title h2 {
+    font-size: 22px;
+  }
+  .canvas-scroll {
+    max-height: 520px;
+    padding: 10px;
+  }
+  .canvas-footer {
+    font-size: 9px;
+    padding-inline: 12px;
+  }
+  .form-grid,
+  .outcomes {
+    grid-template-columns: 1fr;
+  }
+  .span-two {
+    grid-column: auto;
+  }
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  dialog {
+    padding: 18px;
+  }
+  .dialog-actions {
+    bottom: -18px;
+  }
+  .rule-row {
+    grid-template-columns: 1fr;
+  }
+  .variable-row {
+    grid-template-columns: 1fr 1fr auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <header class="studio-header">
+      <a class="brand" href="index.html"
+        ><span aria-hidden="true">✳</span>
+        <div>MAZE CRAZE<small>MAP STUDIO</small></div></a
+      >
+      <div class="header-note">A little imagination. A whole new world.</div>
+      <button id="help-open" class="quiet">Field guide</button>
+    </header>
+    <main>
+      <section class="studio-intro">
+        <div>
+          <p class="eyebrow">SEBASTIAN’S WORLD-BUILDING DESK</p>
+          <h1>Draw the next adventure.</h1>
+          <p>
+            Create your blocks, lay a winding path, and give every door a
+            puzzle.
+          </p>
+        </div>
+        <div class="file-actions">
+          <button id="new-map">New map</button
+          ><button id="open-map">Open map file</button
+          ><button id="export-map" class="primary">Export map.txt ↓</button>
+        </div>
+      </section>
+      <div class="document-bar">
+        <div>
+          <strong id="document-name">A New Adventure</strong
+          ><span id="document-state">Ready to draw</span>
+        </div>
+        <div class="document-actions">
+          <label for="example-select" class="sr-only"
+            >Open a bundled example</label
+          ><select id="example-select">
+            <option value="">Open an example…</option>
+            <option value="1">Bramblewood · Map 1</option>
+            <option value="2">Little Clearing · Map 2</option></select
+          ><button id="source-open">Text / INI</button
+          ><button id="settings-open">Map settings</button>
+        </div>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">
+        Choose a block, then click or drag across the map.
+      </p>
+      <div class="workspace">
+        <aside class="library panel">
+          <div class="library-header">
+            <p class="eyebrow">YOUR BUILDING BLOCKS</p>
+            <h2>The block library</h2>
+            <button id="add-block" class="primary">＋ Create a block</button
+            ><label class="sr-only" for="block-search">Search blocks</label
+            ><input
+              id="block-search"
+              type="search"
+              placeholder="Find a block…"
+            /><label class="sr-only" for="type-filter">Filter block type</label
+            ><select id="type-filter">
+              <option value="">All four types</option>
+              <option>Move</option>
+              <option>Wall</option>
+              <option>Interaction</option>
+              <option>Inventory</option>
+            </select>
+          </div>
+          <div id="palette" class="palette" aria-label="Block palette"></div>
+          <div class="selected-block">
+            <p class="eyebrow">ON YOUR BRUSH</p>
+            <strong id="selected-name"></strong>
+            <p id="selected-details"></p>
+            <button id="edit-block">Edit selected block</button>
+          </div>
+        </aside>
+        <section class="canvas-panel panel" aria-labelledby="canvas-heading">
+          <div class="canvas-title">
+            <div>
+              <p class="eyebrow">GRAPH PAPER, WITH A LITTLE MAGIC</p>
+              <h2 id="canvas-heading">A New Adventure</h2>
+            </div>
+            <span id="dimensions-badge" class="badge">21 × 15</span>
+          </div>
+          <div class="tool-row">
+            <div class="tools" role="group" aria-label="Drawing tools">
+              <button data-tool="paint" aria-pressed="true" title="Paint (B)">
+                ✎ Paint</button
+              ><button
+                data-tool="erase"
+                aria-pressed="false"
+                title="Default block (E)"
+              >
+                Erase</button
+              ><button
+                data-tool="rectangle"
+                aria-pressed="false"
+                title="Filled rectangle (R)"
+              >
+                ▧ Rectangle</button
+              ><button
+                data-tool="fill"
+                aria-pressed="false"
+                title="Connected fill (F)"
+              >
+                Fill</button
+              ><button
+                data-tool="start"
+                aria-pressed="false"
+                title="Player start (S)"
+              >
+                ⚑ Start</button
+              ><button
+                data-tool="pick"
+                aria-pressed="false"
+                title="Pick a block (I)"
+              >
+                Pick</button
+              ><button
+                data-tool="pan"
+                aria-pressed="false"
+                title="Drag to scroll (H)"
+              >
+                Pan
+              </button>
+            </div>
+            <div class="history-tools">
+              <button id="undo" title="Undo (Ctrl/Cmd Z)">↶</button
+              ><button id="redo" title="Redo (Ctrl/Cmd Shift Z)">↷</button
+              ><label for="zoom" class="sr-only">Tile display size</label
+              ><select id="zoom">
+                <option value="16">50%</option>
+                <option value="24">75%</option>
+                <option value="32" selected>100%</option>
+              </select>
+            </div>
+          </div>
+          <div id="canvas-scroll" class="canvas-scroll">
+            <canvas
+              id="map-canvas"
+              tabindex="0"
+              role="img"
+              aria-label="Editable map"
+              aria-describedby="canvas-instructions"
+            ></canvas>
+          </div>
+          <div class="canvas-footer">
+            <span id="coordinate-readout">X 1 · Y 1</span
+            ><span>Bottom-left is (1,1) · X → · Y ↑</span>
+          </div>
+          <p id="canvas-instructions" class="canvas-instructions">
+            Click and drag to paint. Drag a palette tile onto a square. Arrow
+            keys move the cursor; Space applies the current tool.
+          </p>
+          <div class="jump-controls">
+            <label for="jump-x">X</label
+            ><input id="jump-x" type="number" min="1" value="1" /><label
+              for="jump-y"
+              >Y</label
+            ><input id="jump-y" type="number" min="1" value="1" /><button
+              id="jump-cell"
+            >
+              Go to cell</button
+            ><button id="apply-cell">Apply tool here</button>
+          </div>
+        </section>
+      </div>
+      <details id="validation-panel" class="validation">
+        <summary id="validation-summary">Map checks</summary>
+        <ul id="validation-list"></ul>
+        <button id="download-original" hidden>
+          Download original imported text
+        </button>
+      </details>
+      <details class="image-settings">
+        <summary>Image previews & local artwork</summary>
+        <p>
+          Built-in tiles work offline. Load your own PNG, JPEG, GIF, or WebP
+          files for local previews. Map exports keep the image paths you
+          specify; pictures are separate files.
+        </p>
+        <button id="load-images">Choose local images</button
+        ><label class="check"
+          ><input id="allow-image-urls" type="checkbox" /> Allow image requests
+          to URLs in this map</label
+        ><label for="image-base"
+          >Base URL for relative image paths (optional)</label
+        ><input
+          id="image-base"
+          type="url"
+          placeholder="https://your-site.example/maps/"
+        />
+        <p class="hint">
+          URL previews are off by default. Enable them only for a map and image
+          hosts you trust.
+        </p>
+      </details>
+      <footer class="studio-footer">
+        <span>LOCAL FILES. YOUR IDEAS. NO ACCOUNT NEEDED.</span
+        ><span>Maze Craze · Map Studio</span>
+      </footer>
+    </main>
+    <input id="map-file" type="file" accept=".txt,.ini,text/plain" hidden />
+    <input
+      id="image-files"
+      type="file"
+      accept="image/png,image/jpeg,image/webp,image/gif"
+      multiple
+      hidden
+    />
+    <datalist id="nid-suggestions"></datalist>
+    <datalist id="image-suggestions"></datalist>
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+      <form id="settings-form">
+        <p class="eyebrow">THE SHAPE OF YOUR WORLD</p>
+        <h2 id="settings-title">Map settings</h2>
+        <div class="form-grid">
+          <label
+            >Map number<input name="ID" type="number" min="1" required /></label
+          ><label>Map name<input name="Name" maxlength="160" required /></label
+          ><label
+            >Width · X columns<input
+              name="width"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label
+            >Height · Y rows<input
+              name="height"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label
+            >Start X<input
+              name="startX"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label
+            >Start Y<input
+              name="startY"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label>Default Move block<select name="DefaultBlock"></select></label
+          ><label>Border block<select name="BorderBlock"></select></label
+          ><label class="span-two"
+            >Viewing windows<input
+              name="ViewWindow"
+              placeholder="3333 | 3303 | 5555 | 9999"
+              required
+            /><small
+              >Each option: up, right, down, left. Separate options with
+              |.</small
+            ></label
+          ><label
+            >Export layout<select name="format">
+              <option>Shorthand</option>
+              <option>Longhand</option>
+            </select></label
+          >
+        </div>
+        <p class="hint">
+          Resizing keeps bottom-left coordinates. Shrinking can crop cells.
+          Changing the default replaces cells currently using the old default. A
+          new map number updates this map’s NIDs and their references; explicit
+          transport map numbers stay unchanged.
+        </p>
+        <h3>Map variables</h3>
+        <p class="hint">
+          Declare names used by Map.Variable tests and SetMapVariable outcomes.
+          Player variables are declared separately in main-config.txt.
+        </p>
+        <div id="map-variables"></div>
+        <button id="add-map-variable" type="button">＋ Add map variable</button>
+        <p id="settings-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button type="button" data-close="settings-dialog">Cancel</button
+          ><button type="submit" class="primary">Apply settings</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog
+      id="block-dialog"
+      class="large-dialog"
+      aria-labelledby="block-title"
+    >
+      <form id="block-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">ONE BLOCK. ENDLESS POSSIBILITIES.</p>
+            <h2 id="block-title">Create a block</h2>
+          </div>
+          <button
+            type="button"
+            data-close="block-dialog"
+            aria-label="Close block editor"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="form-grid">
+          <label
+            >Block index<input
+              name="index"
+              type="number"
+              min="1"
+              required
+            /><small>Used in the map layout. 777 is reserved.</small></label
+          ><label
+            >Type<select name="Type">
+              <option>Move</option>
+              <option>Wall</option>
+              <option>Interaction</option>
+              <option>Inventory</option>
+            </select></label
+          ><label
+            >Full NID<input name="NID" placeholder="1/3.1" required /><small
+              >Map / category.unique number.</small
+            ></label
+          ><label
+            >Name / description<input
+              name="Description"
+              required
+              maxlength="160" /></label
+          ><label
+            >Map image path<input
+              name="MapImage"
+              list="image-suggestions"
+              required
+              placeholder="../assets/tree.png" /></label
+          ><label data-block-group="popup"
+            >Popup image path<input
+              name="InteractionImage"
+              list="image-suggestions"
+              placeholder="Defaults to map image" /></label
+          ><label class="span-two" data-block-group="popup"
+            >Popup message<textarea name="Message" rows="3"></textarea
+            ><small
+              >Plain text. Line breaks in this form become spaces in the
+              file.</small
+            ></label
+          ><label data-block-group="interaction"
+            >Cancel text<input
+              name="CancelActionText"
+              placeholder="Leave" /></label
+          ><label data-block-group="interaction"
+            >Required power<input
+              name="RequiredPower"
+              type="number"
+              min="0"
+              placeholder="0" /></label
+          ><label data-block-group="inventory"
+            >Inventory kind<select name="ItemKind">
+              <option>Item</option>
+              <option>Weapon</option>
+              <option>Wearable</option>
+            </select></label
+          ><label data-block-group="inventory"
+            >Item state<input name="State" placeholder="Working" /></label
+          ><label data-block-group="weapon"
+            >Weapon power<input
+              name="Power"
+              type="number"
+              min="0"
+              placeholder="0" /></label
+          ><label data-block-group="weapon"
+            >Hands required<select name="Hands">
+              <option value="1">One hand</option>
+              <option value="2">Both hands</option>
+            </select></label
+          ><label data-block-group="wearable"
+            >Wear location<select name="WearLocation"></select
+          ></label>
+        </div>
+        <section id="choices-section">
+          <div class="section-heading">
+            <div>
+              <h3>Choices & puzzle rules</h3>
+              <p class="hint">
+                No tests means PASS. Successful item use consumes one regular
+                item; weapons and clothing remain owned.
+              </p>
+            </div>
+            <button id="add-choice" type="button">＋ Add choice</button>
+          </div>
+          <div id="choices-editor"></div>
+        </section>
+        <p id="inventory-note" class="hint" hidden>
+          Inventory blocks automatically offer Pick up and Leave. A successful
+          pickup gives one item and replaces its cell with the map default.
+        </p>
+        <p id="block-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="delete-block" type="button" class="danger">
+            Delete block</button
+          ><button id="duplicate-block" type="button">Duplicate</button
+          ><button type="button" data-close="block-dialog">Cancel</button
+          ><button type="submit" class="primary">Save block</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog
+      id="source-dialog"
+      class="large-dialog"
+      aria-labelledby="source-title"
+    >
+      <form id="source-form">
+        <p class="eyebrow">THE TEXT BEHIND THE WORLD</p>
+        <h2 id="source-title">Map specification</h2>
+        <p class="hint">
+          You can edit any supported field here. Apply text to update the canvas
+          and forms. Comments are retained together at the top when exported.
+        </p>
+        <textarea
+          id="source-text"
+          rows="22"
+          spellcheck="false"
+          aria-label="Complete map specification"
+        ></textarea>
+        <p id="source-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button type="button" data-close="source-dialog">Cancel</button
+          ><button type="submit" class="primary">Apply text</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <p class="eyebrow">THE MAPMAKER’S FIELD GUIDE</p>
+      <h2 id="help-title">Start with a winding path.</h2>
+      <p>
+        Choose New map, open a local .txt file, or open an example. Map settings
+        controls the size, starting location, default and border blocks, view
+        windows, variables, and export layout.
+      </p>
+      <p>
+        Select a palette block and paint by clicking or dragging. Drag a palette
+        tile onto the canvas to place it. Rectangle draws a filled rectangle;
+        Fill replaces a connected area; Erase uses the map default. Start sets
+        the player’s starting cell. Pick selects a placed block. Pan drags the
+        map without painting.
+      </p>
+      <p>
+        Double-click a palette block, or choose Edit selected block, to edit its
+        pictures, inventory properties, choices, tests, and pass/fail outcomes.
+        Each block type can have its own image; an interactive tree may look
+        identical to a wall tree.
+      </p>
+      <p>
+        Use Ctrl/Cmd Z to undo and Ctrl/Cmd Shift Z to redo. With the map
+        focused, arrow keys move the cursor and Space applies a tool.
+        B/E/R/F/S/I/H select tools. Go to cell also provides an exact coordinate
+        control.
+      </p>
+      <p>
+        Export downloads a game-compatible .txt file. Your original file is
+        never overwritten or uploaded. Pictures remain separate files. Imported
+        comments move together to the top; unknown settings are retained.
+        Skipped map rows are reported, and the original imported text can be
+        downloaded before making corrections.
+      </p>
+      <p>
+        This editor runs offline by double-clicking editor.html. The game itself
+        still needs HTTP(S). Player-variable definitions and the map file
+        directory live in main-config.txt, outside this map editor.
+      </p>
+      <button type="button" data-close="help-dialog" class="primary">
+        Back to the graph paper
+      </button>
+    </dialog>
+    <script>
+'use strict';
+(() => {
+const EDITOR_BUNDLED = {"images":{"bomb.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABb0lEQVR4AdSWPUsDQRCGX1LYCJLWykK0sEmTzk4rbQQbG/+IoLW9+AMU0oiVlZWVaJXGxkJJIRICqUIgKdIkvMUcw7J7u7nbveQCD/s5M8/tcuQa59dH81XSQKJf56INIa9EMoG8onotE9hqbkDQG2L0JS9bM18mYC6UHf/3piCXT93cVJnAeDSDkBthWbxtH8BEb5O8bPU8+5kAB6ugsADvk2jpq+43TPS6rV9YwJasyFy9BL5eRhDeH4cgHJ/efIKwL4SehvcE9nc2QUITyj7GEBm7Wq+AKzDWvFfg528CwoLbu3sIgXuf7/ogvitxCkigbo9PDqFhobI4BcomDo2vh4Dc+9vrB4TO/QMGvV8roU/PffU4AZqmwnoC5p9MquLMaxXgQlWsp4DtyyXViQSdgO11iyXkFGidNdFSLFtQx7LvincKuAJiz1cmwFdb0A9RmYAuqvvBArzHZdBF2OebJXAsBAtIQOw2uYBPeAEAAP//kq4hEgAAAAZJREFUAwAtUOch1dBHSAAAAABJRU5ErkJggg==","boots.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABH0lEQVR4AeyVLQ4CMRCFJyuQBAto7oAFh8BwCg7BQfAcAYHEcgQSFAKwBImBPDFJtzsdtmWyW7EkX9pO30zfDvtTrDbzT5sU1PIvHwP9QY8Y66ZwXYx+7Xw68Hq+iYHL+/5BGtD4hPTn3ZUA6vs5agfWizFJ+EXctaRHzNW4c9WAK/Tn+D+BH49dqwamswlJaIdIesRCOaqBUJJlPNkAbijwrxnVwOl4IQntUEmPWChHNRBKsox3BroOmHUg9a1oZiD1yTAzkPpSKhlwP6cxV8R5MTmsLRngYJ2RD8VYRw8NtAzWoGIA324GAgnex8j7mANe+yP2GHevYsDdbGLeGcivA9vDjWLg+yQlB7l5dWC0HFJT4OpBXh2AI2t+1fsCAAD//+H02mYAAAAGSURBVAMAy3kRMDkOQgoAAAAASUVORK5CYII=","brick.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA8ElEQVR4AeyUwQkCQQxFB6vwKNiDDSiIduzBBuxB8GgXui/whz0ENxlwdw8jfjIkebOfMGRzvZw+S2pTht/5eCgtGlD7t7AwwGaAw363LRnBjJVh6RVbDTxf75KRLlDMsPSKqwaUmDt2A30CNoHb/VFapAfbwsLAmwEOS2kdBliLnjQVrxbJTfHUwxNgfWbE5RGFDbA+M4p8nJ6wAZr/oW6gT8AmwFr0pEfn1SK5KZ66GeCwlNZhILJWvR5NzatFcvB1Apk1Sy/wWOQyElsNZNYsvbpAkVxG4qoBJeaO3UCfgE0gsla9Hj1Yr6bcrwj/BQAA///uWH6XAAAABklEQVQDAN8V5RDsBrT3AAAAAElFTkSuQmCC","chest.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABVklEQVR4AeyXsUoDURBFhxTpDFpaiCB+gG1aKysFK0H0BySVhY2NpbXEPxBs9SfS+QEWQipLJWBjo7nFhWF2HrO8zSMvkIXL7MzcnT07u832Tm8P/5apniz5qAdgsNkXatFL4VxEO7ueDcy+f4WylF1zzkW0s+rZgCWLcrxPKPJF/dXdQPRkbfvuBu52+hLpekMEiny670G5AJ6xVK0B8PH6Wepe4s1uAODuk8mXUMgp1qJIP6L2IrdyAaypZF4nwHC4JZR+etYQz29OxAp1KHWNrvO8zg2Qrk28Gj23sSU97gZSX26qzunsM0dkDRG5lQtgTSXzzgDjh7NOfNkAT/cvYpVDkg2QczPvmjWAu4HHt5lQF+OpUKxFkX5E7a3iFQzm/x8apLGBveNtiXQ02hco8un+weWuQGKOBoDpu+n79Ecgt5ko4p+A0pYsAD2g63lxgAjwHwAA//9ucTkkAAAABklEQVQDAMulDjBwx4DAAAAAAElFTkSuQmCC","dagger.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABwklEQVR4AcyWvy4EURTGb7agkN1IFCq2QbWdSqJATSKeQCJRUmipPAGlROIRJB6AQqJSaHV0OiEaDfubdeLkujvn3jsjO5t8c879c77vu39mM62tw7WvUaLlRvxrjoHO5JgT1L0pwkv0uZuzA2+vn07gu6zaFl6iz9WcHfCdWW3OE1jzrPFad+D59t3S+zNeqwHYD+Z6hGhkG+BCAVFi9SfbS0UTE6BoGA/TwEJ3woEyHi2u59Gv26HcNBAq0n2IyMp1f2xuGnh8+nAgRIh4qJ++/Ys7N7vcJi2FaaC0uj8YWn2seL/cZRtg9VXFkwycri46QFGZOOMpSN4BTIRWLqK99SlJo2KUAUQ1W3dmXDeLnHNPFacwysDe9b0DFJyf3RCcNoE4N54/JlBMiHwEDXR+Pk40B+cu4kSACRHXc1PyoAGfAPGNab930L48WhkkmU/TwDDxnd1fYe4IyPEQNMA5AgiHrXzzeHAXmAPkjpCnIGjAIrh6ccXfbK6o5k82IOJCggkg7dRoGniYbzsAsUTyumAaECER533n+wDIWEyUV5uo50cb0EV15lkG+D4AKUZ4qwS6LsuAJqia/7sBy+A3AAAA//8ebKO4AAAABklEQVQDAOH02iFd0qv0AAAAAElFTkSuQmCC","door.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABAElEQVR4AexXMQoCQQwMV1iKdvcHOxEEwcbO1g/Y6Ats/YIvsPIVNnaCpZ1/sFHE0kZJEQhZEw653QuLB8PmMtnbyXAQtpitJ+8mUUDDjx8B7U4LEPfDDWJCGu7HgefjBQiucDHogsSwLIIc1Wgc/6aM/TgglaV69+1Af9oDiflyFOSoRuMsN307YCmvizMdOO8vILHbnoIc1WicJdYUYG2si/sLyM+BzfEKhCr/SX4OVOma1+TnwGpcAoF3qsW+HaApx1dt4mGNxmndY963A6gwNkwHaMrxVZt4WKNxVhOmAGvjrxzePfje5AL44RgnFyDvHskFYNcc0QXww77FHwAAAP//QF4ScQAAAAZJREFUAwDCJwmKi4vM8QAAAABJRU5ErkJggg==","grass.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA8UlEQVR4AexVOwrDMAwVGboUSm/QrQfpEXqenrRbb1AKXbo0vEEgTMSLFYfIkMBDjvXx03NiD/fH7b8lBtn4yUPgdD6IorUoWhe2rJ1Hgc/7J4qS5dJ3rQtb1sqjQMmMvWM/ARbH/P0qwDqb6w8rgA8KmLuQF0cJXC9HAbwC3jxyAM+v85SABq5lKYHn6ytALQHkACyPEmAFlvp3As0UwKmoqNmWZgRqFrWxzQjgUFLYBdh4kkBESraQ558k4AWvMZ+TQGQvo+rkVCDaTSSvTwVwzwM1HeuvDWvz+lQA9zxgO2Fj/bNgbWyfCtgO2Jj5RwAAAP//FBGYgwAAAAZJREFUAwCBToQhigVX6wAAAABJRU5ErkJggg==","gravel.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA+UlEQVR4AeyUQQoCMQxFyxzCneBC8YbeQTyh6EJw5yWULBr+QDPtbzLMMCh8JqTJ72uEDLfr5bukhrTwLwTgfDwkS7X3hQDULpk6V4CWFzzen5Q1ZcqcKQDTFFkbAnB/vpKlGiwFcNrvUlbNuPVcAXpf0HqRVacAVsHc+T/A7BPIewO/+LdSANaykjyaMrECIKHEjImnVgE8Jp7e7QPkzYlfnBg1AWtbSh5NmVgBkFBixsRTqwAeE0/vtgFkQZWEE1vXBEq0mENy2ZYoPGPidU2AIY+q7Z6A7ApUL1A3QMuFsiFLwt4RQKkYc9gYFY8AokwZn9kBajA/AAAA//8SRj5UAAAABklEQVQDAJNG52FGCuCzAAAAAElFTkSuQmCC","key.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABjUlEQVR4AdxVsUpDQRBcUggiiE06xVR+gWJvZ2sKG1vRwsZS0MoPsLFQbG0s7ATBPxD9AisFuzQiiGCjzIMNw7193u49NWpg2L292bnJhst1VnaX3keJjoz483sMTE6NieKrh6K6iKl24wTGbwfiQSoYXQ8NPD+9iUJFDvYWJAflfhZVFzHlDQ2kGz+1rhnQsXsNKB/R28O8mgFs6tiRA5uX95ICdSDlohaBaSAi0Jb7fw3MzU4IkJuQawJHyz1JkRP27rsMeMWYd/fwIgDXrNw0sL1/Iwxu5DrnzInkNQOv811hRMRKuDUDXhE2qbm3l3nFBlgEOV46BdZehAx0pxfl9Hirwvn6qjC8B6a8kIG0mdd46RRcz+WmgZJR5g5q2jcNNJEHj9eytnFYoX9yJoymnlw9ZCAnVrJvGij5LUsOR49pABsWrFtg8SK1kIGIsJf7Nwzoo6M3AHHn6qK6Bd5vqlcbkXuyE9D/eY4z/R5rtMqzBix1vPOAtddU05uFyJwiAyzQNv92AzmDHwAAAP//T0l8CgAAAAZJREFUAwAUDPsh2yJ66gAAAABJRU5ErkJggg==","master-door.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABLUlEQVR4AeyXPQrCYAyGg0MnES/g4hXcFXRxE5w9ipM3cnNx0MXJK7h4AXGSDipv4Ssh0DSxX38Ghdcm+fLzNB1Ke+vt/NOmetTyrzsAg2FC0OvypjolF96dDTwfKUGccLfpUwzxntLuzgYkGfcnixV3cxtxKA/8YJg3IAdJX84uOw/5JoDrcZ/lFzWVcfihJitU/kwAvB7NIR6DHWLhiphFbgCtqXc4ekUFQEOvzADWZwoAT64ZAI3rkAsAd2aRB9QF4GlszXUBHE53ssg6HHkuABRwnW8JBfG4x64E4BlUlPsHqLSB6TiloKIVl8VdAMvZiCwqG8rPXQC8MJatAuDtFkMarAqgFcY6axwA3x4cXgWwvHgsOXygtFUAmRzDl98ejQPIm6gdQA6U/hcAAP//hLhixQAAAAZJREFUAwA65iRcF64jwAAAAABJRU5ErkJggg==","master-key.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABqklEQVR4AcyWvUoEMRzE4yE2gtj6GiJoZWFhqWBhYW3pI/gYFhbWFnb6CFYKvoetCDYinvc7mGWI2d1sdvc+uLn8PyaT2ZAcOzm7PpouE5Ow5M/qGNja3gjC1/N61r7AA21kdOExxtzaHWBCTPbc+x47R/H706/Cf2Nl4PPjOwibhz/h8WYv1AmrDgegqhqxQ3U00fcecWWAJAbiElBPOT3VFKununL1Vfex1sDp1ducx2QJaaQ2b9qPauJopC4to1dhrYGKMQsQccFZKfmFRyOHCw9kGYCIOCBugjgam7j0ag1waJq27vVuLTgQE3xxNNBSLx5rDcTEsfLVN8AWlj59ztziHdi/nAZHqclGAzo8PEkMXzDuKYcjDeIUGg2kJgxdazXAE8RImdg5mQTB+Smu11oNOHmMeBAD/PHcHu8G4f78IIAcw0kDvDiAHIG+nKSBvqJd5g9igGt38fASYuQYSRrgzQXkCPTlJA30Fe0yfxAD3AJOvbBwA10WjLmD7EAsmsq51oL3iw1w8h1+A3yBtrjIgP/XK25biFslOLfIgAv0jUc30GbwDwAA//8rCTemAAAABklEQVQDAMaiAzAyTDDVAAAAAElFTkSuQmCC","mud.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA5UlEQVR4AeyUQQqDMBBFh6yLu1LoCVz2DD1Cz9NDdukJCqU76b7iQhhG/P6JGQKiMGjMz+TNT5j0eN7/NSNJ5QcCNK+f5AZbFwRgk2zR1QdAFm+pjF0b5gAqTM+FAVR3IBvgemnEE+xGSzp4BG17FhtLiXL/Q4DcpJ51EKDrvmLDk5zRzgDen148wWyCNDMAJI6YOwCKOsD2D32URQF0YrZ/hAFoGPQdBsD2j6IAbP/QjhQF0InZbwjA3upRx25odRDAiiPGB0DqbyexMVnN3upRN63xvkOOwBaExiEAHhf2D7DmxgAAAP//SsuKOQAAAAZJREFUAwBxVQ1Q0VNvdQAAAABJRU5ErkJggg==","pig.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABpUlEQVR4AdSWP0oDQRTGHykECyXGXrBXD2Ch4BFyAUUEK2+gxBzB0ka0sDSNJ9BCsJPkAIp2FiFoIdgoP+GFx+yMM5NdyCbwY968P998md1iG+3jnZ9p0pAp/+pjYLE5J0rVl6K6rK52fW7gY/Qtiuuy7F51WV2t+tyAdda6mxcfYn48TzCpceibJTduMEHwBrq7bbGYmaTQzhKHhoIGQgNV5yc2wAsFZQ1lGeA5ppBjKstAjnBqb9RAc7UlcHZ6IDkwAzEjUQMxgbL1ZAP73XNRQodqnTXU4+aTDbiDVe1nx8BF51CU0L/XOmuox80n38B9byA5uAeF9skGQgJl81EDo+ehgD3ocvAg8F+OGbA9vjhqwDdUZW4iA3vrmwLWCHuwuZTYa2C4/SVHL9d/dK56AilitocZUB00bV1jrwGKr/1PAWK46T+KcvJ2Kz60zsoMoAHEPgoGaAZfc5kcmuBqFAy4DVXv3e/IgoGVjQWBqg9e21oWcHUbbkL3mABeHnhaehdFe9xV66zMABrA55ti54IGbBMxIjkwk0KygRQxX08s9wsAAP///2OZ/wAAAAZJREFUAwA4qTMwh+aIUwAAAABJRU5ErkJggg==","portal.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAB+klEQVR4AeyXIUsEURSFnwajGAR/hWIyCaJFsAgmm1mw2vwHVsFss1oEkwgmk+ivEAxitKz7DXuWM3fevJldwxpWPHvvu/fcc88bhWEXjy72BrPEYprxz/8xsLyylISuh/L+uJpyaJuTLjFyJnoCWhpFdO7qi+dxbOD76ycJTiCPwhsnhykCnhD50iWKozg2oEKMiHmNxX5WTh3oTIyz1CKKBqJAXBDFOEdO1IDjqBm4Pj9LQhyMwls7m8nhopHrvZjXDMSmzlGQxeopxprPxMtohtjLAEQhLlKdWOq1magZOL28SmD74Ba9Cn6T0oKKPPxwjs8OW9nfmoEso1DcX1tIoEDpbDUM+KPyG/jNUPXFntOLXGrAtTmDhgGKXYgL4edq1P0SnCOmMhBF/nKeG5g/gamewMPHoPF/l6tBeru5I6Tn++MKvGuqwuijYWB993PUSknDFF6eXglj+ELPIUQutTY0DLQRc3UWg1yvb63TQOkp5Jb47X2W9wvvGeBzWQP+Z3AyuS/g7Cj12jSzBhD1Ab8JvdyiWPMZ12Le0WrASeQuyJmFDmpC5Kqei0UD0Xkf4ciRBt8JBDdSNABRAuSABYDcQQ14Lc56T3mnAYgIAXKBZQ7ViXABucB3AkE1Yi8DEAGigDwHeiDXa6tNZEAiLMlBfY9d+S8AAAD//wqMf30AAAAGSURBVAMA67ogMMyIwp8AAAAASUVORK5CYII=","princess.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABq0lEQVR4AcSXoUtEQRDGxwsGBTFbrgnHBaMoBjGaRIvRbDGdoJisRsFstAj+BWIQDoPBJNj8D0S5YlG+B99jeMzu7L63xx18t7OzM9/83sLBu97+xc7fLNWTGX+SAW4P101U5CHrMJTXtTXA0vK8ULpAx01DvdcxerA/untBWPvCv0qorxpA5aIhjFHAFTHFHFfmY2sN8P31K5TVwKfBWWyAdUZfrOjXqgF00opXXidWOpg7Hz0Gz/RBMoBuKhlnAeCp5n6G4gl1qZBZANr0YHSjt1Vs5aqDyFdrgIhn1pELsNpfFKjpen913ExJM2f1NZtcgGZD6b0L8PE5EajN4JQ+F6DN4JyebICzy2vxNFWAHPOU2uQb6C9sCnSyeyqeUAcVBYDZ3vYWlqJKuoGN97WsoTmgJgBeHKCsqUZxCrgJoL1okvNUut+LXQDPoOu5CYA3F6iLOW+MNxjyMgFYzGaaMV9yjQKUHBTyCgLw6UONKXneXMwrCMABNOG+7YqfNaU9XICHp2fpIj3Mik2A2JVZJim54Xhg/u8wAcaDN5mGLFATwCpsm/P6/gEAAP//DL8cLwAAAAZJREFUAwCFsQkwX2IypQAAAABJRU5ErkJggg==","sign.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABGklEQVR4AeyXoQ7CQAxAmwnMwoKcGm4JX4DCYBA4ErIv4C8Q+w++YEEj+AR+YShQk4QEg4FUdLkjx+2uG7eRjOSl0CvtoxwCb7Wdv9rEg5Yf3REIRgMgml4K9cX42bvcQJ5dgSiOBTQJ9cVIfUmkFMDELl2CC3AWIQlQ0mXstsA+O0FdqrbZ7Q2skynU5b83UGXfxLn2DtheQI6QVoDT0PY9WgHbC2g7HOu1Aljwa3oBaQOb9AAuEL9WSUA8cPW8FAgXIRBxEgFCr1VxFvkgoqrR5egDlgKUcB2VAvfbExAXMkoBF4NpRi/A2kA89mmDxjH48r+DJWA81aCQJZBfHgat5RL8VRHiCUsAG5wnQxDBHAe2gOmwqro3AAAA//8LTUauAAAABklEQVQDAKVyUTAe22LeAAAAAElFTkSuQmCC","sword.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACIUlEQVR4AcyWMUscURSFHxYJJJDYpEmTLmmSLk3sYp0mkh8QCNHCfyA2Nv4ARSxE0EIsVAS11kLQxk4rG/EPiApaaKH7PTjD9Xln39vZFV32zLv3zn3nnHnzZmf7hsYH754TfeGZPy/HwLv+V0Ho9aKIlzHlfrIVONq5TrXcvDJweX4TBLezg6LEJ4Zn4yzxMsaCOVQGTK0n4dryYuTBBIiJc2hsgPsJUk6uXuKc29w/COD7t3+kj9DYwCOmVsETb5Xjd2FqOo7poWcGUnErhPjXn29sqYobG2BDAZg8cZadc+3EOZ818PnT2wBo9oB4Wi8VZ17WAE05pJtO/UN/PyisHbMGjk+vAvAYuPo6cZa+bp7lyhqwzTbOiddtOstBXGRg7s9gAEwAvRKHq8gAjQATqTh1gWUvvXLNyRpAVM2M+zO/GCrYHT/wuz++UauTBUHWwP/V7QAs18ezlZhKnARxxk6RNSDCH6NbYXNpV2mQCQoHh/PVm1Q/TtRL4BrgJQNEwH0fG3gfU0wAkpEvJ4H7TtwUrgFLZsVtXXG6J1QvHdsaqBOf3Lt4wM9GBQ+KhYlr4LL172hv/Txo2T2udGOmuTfHq7kGvEbVuHo9601FxcVYa0AiNAlWXDVMAOWdjrUGINp4fRsAsSdOvVu0NSBymVDO/wOgvGTksRZsf5EBJni3hHq3KDZghXjPA1vLxTxZgu1tZMASdBs/uYGcwXsAAAD//8PuRvYAAAAGSURBVAMAVaslMFG2xjQAAAAASUVORK5CYII=","tree.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABaklEQVR4AeyXMUsDQRCFx0gsjAYDESs7C7FR7APB3sbf458TS0G0sbKzEgQ1oIWFCa94MMzN7u1uNuSKBD7mMjvz9mV2A0nv5vZqvk56suZXdwwMD3aE1B4KdRGtdncmMPv6E2JdPt/PpATqUBeROcakCYzOxlICN4nFJAMxgWXXkgwcHe9KDjmmXAP2vCF4etgXC/IxPB1b7xqw522bUt+n6LgGUjeoUZdk4P3tV+4evxsg75FjLGog5eLlbObVRg14DbVzGwPdnoB3w21u2TvhTuDz5UM0pZtoDTx7Oq4Br3BVuW4amFyPBZxPhgJKPz16NZ6OOwH8cgFswPmVwP5YdA3EGmqvBQ28Pv0IKd2U/YghjYYBFAPdMNjfFs10719C6DqtAU2gc3huGEByldj/Bg0DJxcDAbVNXE5HAqxuwwALYELDPOLDVl9CYB3oXjzjW0WwToIGWMAIkRzY1xaTDbQJhdbb8gsAAAD//ysc9ocAAAAGSURBVAMAMqxSMJJ28DoAAAAASUVORK5CYII="},"samples":{"1":"; Sebastian's first maze. Coordinates start at bottom-left (1,1).\n; Block indices are local. Every NID includes its originating map number.\n[Map]\nID: 1\nName: The Bramblewood Maze\nDimensions: 25x19\nDefaultBlock: 1/1.1\nBorderBlock: 1/2.2\nStartingLocation: (3,3)\nViewWindow: 3333 | 3303 | 5555 | 9999\n\n[Variables]\nGardenOpen: 0\n\n[Block.1]\nNID: 1/1.1\nType: Move\nDescription: Grass\nMapImage: ../assets/grass.png\n\n[Block.2]\nNID: 1/1.2\nType: Move\nDescription: Gravel\nMapImage: ../assets/gravel.png\n\n[Block.3]\nNID: 1/2.1\nType: Wall\nDescription: Tree\nMapImage: ../assets/tree.png\n\n[Block.4]\nNID: 1/2.2\nType: Wall\nDescription: Brick wall\nMapImage: ../assets/brick.png\n\n[Block.5]\nNID: 1/3.1\nType: Interaction\nDescription: The Pig of the North Path\nMapImage: ../assets/pig.png\nInteractionImage: ../assets/pig.png\nRequiredPower: 6\nMessage: A pink snout pokes through the brambles. \"No passing!\" grunts the pig. It looks formidable, but perhaps a good sword would change its mind.\nCancelActionText: Back away quietly\n\n[Block.5.Choice.1]\nText: Attack with a wielded weapon\nAction: Attack\nSelectionPrompt: Which weapon will you wield against the pig?\nTestsMatch: All\nTest.1: SelectedItem.State | Equal | Working\nTest.2: SelectedItem.Power | GreaterThan | Target.RequiredPower\nPass.Message: Your {SelectedItem.Name} flashes in the sunlight. The pig drops a bomb and scampers into the woods. The path is clear!\nPass.GiveItems: 1/4.3\nPass.SetPlayerVariable.PuzzlesSolved: 1\nFail.Message: Your {SelectedItem.Name} is too weak to attack! The pig snorts. Perhaps there is a stronger weapon nearby.\n\n[Block.6]\nNID: 1/3.2\nType: Interaction\nDescription: Mossy Chest\nMapImage: ../assets/chest.png\nMessage: An old chest sits beneath the trees. Its brass clasp is open. Something sturdy is tucked inside.\n\n[Block.6.Choice.1]\nText: Open the chest\nAction: Attempt\nPass.GiveItems: 1/4.5\nPass.Message: You found boots! The chest magically disappears into a shower of leaves. Open your pack and WEAR the boots before crossing mud.\n\n[Block.7]\nNID: 1/4.1\nType: Inventory\nItemKind: Item\nDescription: Standard Key\nMapImage: ../assets/key.png\nMessage: A little brass key gleams in the grass. Perhaps it fits a nearby door.\n\n[Block.8]\nNID: 1/4.2\nType: Inventory\nItemKind: Weapon\nDescription: Bramble Sword\nPower: 8\nHands: 1\nState: Working\nMapImage: ../assets/sword.png\nMessage: A fine sword rests beside the path. Power 8. Put it in a hand from your pack before attacking.\n\n[Block.9]\nNID: 1/4.3\nType: Inventory\nItemKind: Item\nDescription: Bomb\nMapImage: ../assets/bomb.png\nMessage: A small, unlit puzzle bomb. Some trees may be less solid than they look. Only a successful match uses it up.\n\n[Block.10]\nNID: 1/3.3\nType: Interaction\nDescription: Standard Door\nMapImage: ../assets/door.png\nMessage: A wooden door blocks the narrow path. Its little brass keyhole is waiting for a matching key.\n\n[Block.10.Choice.1]\nText: Use an item from your pack\nAction: UseInventory\nSelectionPrompt: Which item fits this lock?\nTest.1: SelectedItem.ID | Equal | 1/4.1\nPass.Message: Click! The key fits and disappears. The door folds into a tiny wooden bird and flies away. You step onto the grass beyond.\nFail.Message: The {SelectedItem.Name} does not fit. You keep it and stay beside the door.\n\n[Block.11]\nNID: 1/3.4\nType: Interaction\nDescription: Master Door\nMapImage: ../assets/master-door.png\nMessage: A golden door guards the princess's garden. A crown-shaped keyhole glitters in its center.\n\n[Block.11.Choice.1]\nText: Try an item in the golden lock\nAction: UseInventory\nTest.1: SelectedItem.ID | Equal | 1/4.4\nPass.Message: The master key turns! Both key and door dissolve into golden sparks. The garden awaits.\nPass.SetMapVariable.GardenOpen: 1\nFail.Message: The golden lock refuses your {SelectedItem.Name}. It needs a master key. Your item stays in your pack.\n\n[Block.12]\nNID: 1/4.4\nType: Inventory\nItemKind: Item\nDescription: Master Key\nMapImage: ../assets/master-key.png\nMessage: A crown-topped key! This must open the golden door to the princess's garden.\n\n[Block.13]\nNID: 1/3.5\nType: Interaction\nDescription: Deep Mud\nMapImage: ../assets/mud.png\nMessage: Gloop! The path disappears into deep mud. Carrying boots is not enough. A sensible gnome WEARS them.\n\n[Block.13.Choice.1]\nText: Try to cross the mud\nAction: Attempt\nTest.1: Equipment.Worn | Contains | 1/4.5\nPass.ReplaceBlock: 1/1.2\nPass.Message: Your boots keep your toes dry! You press gravel into the mud, leaving a firm path behind you.\nFail.Message: Your feet would sink! Back away, open your pack, and wear the boots before trying again.\n\n[Block.14]\nNID: 1/4.5\nType: Inventory\nItemKind: Wearable\nWearLocation: Feet\nState: Working\nDescription: Trail Boots\nMapImage: ../assets/boots.png\nMessage: A pair of sturdy boots. These go on both feet and keep a gnome out of trouble.\n\n[Block.15]\nNID: 1/3.6\nType: Interaction\nDescription: The Lantern Gate\nMapImage: ../assets/portal.png\nMessage: A ring of blue light hums between the stones. A sign reads: \"The Little Clearing. Visitors welcome.\"\n\n[Block.15.Choice.1]\nText: Visit the Little Clearing\nAction: Attempt\nPass.ReplaceBlock: 1/3.6\nPass.Transport: (2)\nPass.Message: Blue light curls around your hat. You arrive in the Little Clearing. The gate behind you leads home.\n\n[Block.16]\nNID: 1/3.7\nType: Interaction\nDescription: Tree\nMapImage: ../assets/tree.png\nMessage: This tree has a hollow trunk. A tiny sign inside reads: \"A little BOOM might make a little room.\"\n\n[Block.16.Choice.1]\nText: Try an item on the hollow trunk\nAction: UseInventory\nTest.1: SelectedItem.ID | Equal | 1/4.3\nPass.Message: POP! The puzzle bomb bursts into harmless confetti. The hollow tree vanishes, revealing a secret shortcut!\nFail.Message: The tree does not budge. Your {SelectedItem.Name} is safely back in your pack.\n\n[Block.17]\nNID: 1/4.6\nType: Inventory\nItemKind: Weapon\nDescription: Wooden Dagger\nPower: 2\nHands: 1\nMapImage: ../assets/dagger.png\nMessage: A toy-like wooden dagger. Power 2. It may be too weak for a stubborn pig.\n\n[Block.18]\nNID: 1/3.8\nType: Interaction\nDescription: The Wayfarer's Sign\nMapImage: ../assets/sign.png\nMessage: BRAMBLEWOOD TRAIL: Find a brass key for the first door. Wear boots for the mud. Wield a strong sword for the pig. Find the master key for the golden door. Rumor says one tree hides a shortcut...\n\n[Block.18.Choice.1]\nText: Read the sign and continue\nAction: Attempt\nPass.ReplaceBlock: 1/3.8\nPass.Message: You tip your hat to the helpful sign. It stays planted beside the trail.\n\n[MapData]\nFormat: Shorthand\n; The outside brick border. Every repetition extends RIGHT, never upward.\n(1,1)4(25) | (1,19)4(25)\n(1,2)4 | (25,2)4 | (1,3)4 | (25,3)4 | (1,4)4 | (25,4)4 | (1,5)4 | (25,5)4 | (1,6)4 | (25,6)4 | (1,7)4 | (25,7)4 | (1,8)4 | (25,8)4 | (1,9)4 | (25,9)4 | (1,10)4 | (25,10)4 | (1,11)4 | (25,11)4 | (1,12)4 | (25,12)4 | (1,13)4 | (25,13)4 | (1,14)4 | (25,14)4 | (1,15)4 | (25,15)4 | (1,16)4 | (25,16)4 | (1,17)4 | (25,17)4 | (1,18)4 | (25,18)4\n; Two north-south barriers, with gates overwritten below.\n(8,2)3 | (8,3)3 | (8,4)3 | (8,5)3 | (8,6)3 | (8,7)3 | (8,8)3 | (8,9)3 | (8,10)3 | (8,11)3 | (8,12)3 | (8,13)3 | (8,14)3 | (8,15)3 | (8,16)3 | (8,17)3 | (8,18)3\n(16,2)4 | (16,3)4 | (16,4)4 | (16,5)4 | (16,6)4 | (16,7)4 | (16,8)4 | (16,9)4 | (16,10)4 | (16,11)4 | (16,12)4 | (16,13)4 | (16,14)4 | (16,15)4 | (16,16)4 | (16,17)4 | (16,18)4\n; Smaller turns and a muddy crossing, then the pig's narrow passage.\n(2,8)3(4) | (4,12)3(3) | (2,16)3(4)\n(9,9)4(7) | (12,9)13\n(9,12)3(7) | (12,12)5\n(18,6)3(7) | (18,6)1 | (17,10)4(5) | (23,10)4(2) | (20,14)3(4)\n(9,5)2(7) | (17,14)2(3) | (19,15)2 | (19,16)2(4)\n; Last entry wins: doors, items, hidden tree, and built-in ending.\n(8,5)10 | (16,14)11 | (8,14)16\n(5,3)7 | (3,6)6 | (5,6)8 | (4,10)9 | (5,10)9 | (6,4)17\n(11,15)12 | (14,6)15 | (2,4)18 | (22,16)777\n","2":"; A second map demonstrates retained map state and map-qualified item identity.\n[Map]\nID: 2\nName: The Little Clearing\nDimensions: 11x9\nDefaultBlock: 2/1.1\nBorderBlock: 2/2.1\nStartingLocation: (3,3)\nViewWindow: 3333 | 5555\n\n[Block.1]\nNID: 2/1.1\nType: Move\nDescription: Clearing Grass\nMapImage: ../assets/grass.png\n\n[Block.2]\nNID: 2/2.1\nType: Wall\nDescription: Tree\nMapImage: ../assets/tree.png\n\n[Block.3]\nNID: 2/3.1\nType: Interaction\nDescription: Gate to Bramblewood\nMapImage: ../assets/portal.png\nMessage: Through the blue light you can see the Bramblewood path. Everything you changed there will still be as you left it.\n\n[Block.3.Choice.1]\nText: Return to Bramblewood\nAction: Attempt\nPass.ReplaceBlock: 2/3.1\nPass.Transport: (1)(14,6)\nPass.Message: You step back into Bramblewood. The gate is beneath your boots; moving away will not trigger it again.\n\n[Block.4]\nNID: 2/3.2\nType: Interaction\nDescription: Sparkling Supply Chest\nMapImage: ../assets/chest.png\nMessage: A generous traveler left supplies here. The keys and bombs came from Bramblewood, so they retain their map 1 identities.\n\n[Block.4.Choice.1]\nText: Collect the supplies\nAction: Attempt\nPass.GiveItems: 1/4.1 | 1/4.3 | 1/4.3\nPass.Message: One brass key and two bombs go into your pack. The sparkling chest disappears. Happy exploring!\n\n[MapData]\nFormat: Shorthand\n(1,1)2(11) | (1,9)2(11)\n(1,2)2 | (11,2)2 | (1,3)2 | (11,3)2 | (1,4)2 | (11,4)2 | (1,5)2 | (11,5)2 | (1,6)2 | (11,6)2 | (1,7)2 | (11,7)2 | (1,8)2 | (11,8)2\n(3,3)3 | (7,5)4 | (5,4)2 | (5,5)2 | (5,6)2\n"}};
+// The specification is DATA. Never use eval(), HTML interpretation, or dynamic imports here.
+class SpecError extends Error {}
+const TYPES = new Set(['Move', 'Wall', 'Interaction', 'Inventory']);
+const ACTIONS = new Set(['Attempt', 'UseInventory', 'Attack']);
+const COMPARISONS = new Set(['Equal', 'NotEqual', 'GreaterThan', 'LessThan', 'GreaterOrEqual', 'LessOrEqual', 'Contains', 'NotContains']);
+const splitList = value => String(value ?? '').split('|').map(s => s.trim()).filter(Boolean);
+const isNID = value => /^[1-9]\d*\/[1-4]\.[1-9]\d*$/.test(String(value));
+const scalar = value => /^-?\d+(\.\d+)?$/.test(value) ? Number(value) : String(value);
+function integer(value, label, min = 1, max = Number.MAX_SAFE_INTEGER) {
+  if (!/^\d+$/.test(String(value)) || !Number.isSafeInteger(Number(value)) || Number(value) < min || Number(value) > max) throw new SpecError(`${label}: expected an integer from ${min} to ${max}.`);
+  return Number(value);
+}
+function coordinates(value) {
+  const match = /^\(\s*(\d+)\s*,\s*(\d+)\s*\)$/.exec(String(value));
+  return match ? { x: Number(match[1]), y: Number(match[2]) } : null;
+}
+function readINI(text, name = 'Specification') {
+  if (text.length > 2_000_000) throw new SpecError(`${name}: file exceeds 2 MB.`);
+  const sections = new Map();
+  let current;
+  for (const [index, original] of text.replace(/^\uFEFF/, '').split(/\r?\n/).entries()) {
+    const line = original.trim();
+    if (!line || line.startsWith(';')) continue;
+    const header = /^\[([^\]]+)\]$/.exec(line);
+    if (header) {
+      if (sections.has(header[1])) throw new SpecError(`${name}, line ${index + 1}: duplicate section ${header[1]}.`);
+      current = { fields: Object.create(null), rows: [], line: index + 1 };
+      sections.set(header[1], current);
+      continue;
+    }
+    if (!current) throw new SpecError(`${name}, line ${index + 1}: entry has no section.`);
+    const pair = /^([A-Za-z][A-Za-z0-9_.]*): (.*)$/.exec(line);
+    if (pair) {
+      if (Object.hasOwn(current.fields, pair[1])) throw new SpecError(`${name}, line ${index + 1}: duplicate field ${pair[1]}.`);
+      current.fields[pair[1]] = pair[2].trim();
+    } else current.rows.push({ text: line, line: index + 1 });
+  }
+  return sections;
+}
+const sectionFields = (sections, name) => sections.get(name)?.fields ?? Object.create(null);
+function parseMain(text) {
+  const sections = readINI(text, 'Main configuration');
+  for (const [name, section] of sections) {
+    if (!['Game', 'Maps', 'Images', 'Style', 'PlayerVariables'].includes(name) || section.rows.length) throw new SpecError(`Invalid main configuration section or entry: ${name}.`);
+  }
+  const game = sectionFields(sections, 'Game');
+  const maps = sectionFields(sections, 'Maps');
+  const startMap = integer(game.StartMap, 'StartMap');
+  const files = new Map();
+  for (const [key, url] of Object.entries(maps)) {
+    const match = /^Map\.([1-9]\d*)$/.exec(key);
+    if (!match || !url) throw new SpecError(`Invalid map directory field: ${key}.`);
+    files.set(Number(match[1]), url);
+  }
+  if (!files.has(startMap)) throw new SpecError('StartMap has no file in [Maps].');
+  const timeout = integer(game.RequestTimeoutMs ?? '10000', 'RequestTimeoutMs', 1000, 30000);
+  return { title: game.Title || 'Maze Craze', startMap, files, timeout, images: sectionFields(sections, 'Images'), style: sectionFields(sections, 'Style'), variables: Object.fromEntries(Object.entries(sectionFields(sections, 'PlayerVariables')).map(([key, value]) => [key, scalar(value)])) };
+}
+function parseMap(text, expectedId) {
+  const sections = readINI(text, `Map ${expectedId}`);
+  const warnings = [];
+  const warn = message => warnings.push(`Map ${expectedId}: ${message}`);
+  const data = sectionFields(sections, 'Map');
+  const id = integer(data.ID, 'Map.ID');
+  if (id !== expectedId) throw new SpecError(`Expected map ${expectedId}, received map ${id}.`);
+  const size = /^(\d+)x(\d+)$/.exec(data.Dimensions ?? '');
+  if (!size) throw new SpecError('Dimensions must look like 25x19.');
+  const width = integer(size[1], 'Width', 1, 100), height = integer(size[2], 'Height', 1, 100);
+  const start = coordinates(data.StartingLocation);
+  if (!start || start.x < 1 || start.y < 1 || start.x > width || start.y > height) throw new SpecError(`Map ${id}: invalid StartingLocation; a valid fallback is required.`);
+  const views = splitList(data.ViewWindow || '3333');
+  if (!views.length || views.some(view => !/^\d{4}$/.test(view))) throw new SpecError('ViewWindow entries must contain four digits: up, right, down, left.');
+  const blocks = new Map(), byNID = new Map();
+  const variables = Object.fromEntries(Object.entries(sectionFields(sections, 'Variables')).map(([key, value]) => [key, scalar(value)]));
+  const blockFields = new Set(['NID', 'Type', 'Description', 'MapImage', 'InteractionImage', 'Message', 'CancelActionText', 'RequiredPower', 'ItemKind', 'Power', 'State', 'WearLocation', 'Hands']);
+  for (const [name, section] of sections) {
+    const match = /^Block\.([1-9]\d*)$/.exec(name);
+    if (!match) continue;
+    const index = integer(match[1], 'Block index');
+    if (index === 777) throw new SpecError('Block 777 is reserved for the princess ending.');
+    const f = section.fields;
+    if (!isNID(f.NID) || !f.NID.startsWith(`${id}/`)) throw new SpecError(`${name}: NID must use this map's prefix, such as ${id}/3.1.`);
+    if (!TYPES.has(f.Type)) throw new SpecError(`${name}: invalid Type.`);
+    if (byNID.has(f.NID)) throw new SpecError(`Duplicate NID ${f.NID}.`);
+    const category = f.NID.split('/')[1].split('.')[0];
+    if (category !== String(['Move', 'Wall', 'Interaction', 'Inventory'].indexOf(f.Type) + 1)) throw new SpecError(`${name}: NID category does not match Type.`);
+    if (!f.Description || !f.MapImage) throw new SpecError(`${name}: Description and MapImage are required.`);
+    if (f.Type === 'Inventory' && !['Item', 'Weapon', 'Wearable'].includes(f.ItemKind)) throw new SpecError(`${name}: inventory requires ItemKind: Item, Weapon, or Wearable.`);
+    if (f.ItemKind === 'Wearable' && !['Head', 'Torso', 'Arms', 'LeftArm', 'RightArm', 'Legs', 'LeftLeg', 'RightLeg', 'Feet', 'LeftFoot', 'RightFoot', 'Hands', 'LeftHand', 'RightHand'].includes(f.WearLocation)) throw new SpecError(`${name}: invalid WearLocation.`);
+    const block = { index, nid: f.NID, type: f.Type, name: f.Description, image: f.MapImage, picture: f.InteractionImage || f.MapImage, message: f.Message || '', cancel: f.CancelActionText || 'Leave', requiredPower: integer(f.RequiredPower || '0', 'RequiredPower', 0), itemKind: f.ItemKind, power: integer(f.Power || '0', 'Power', 0), state: f.State || 'Working', wearLocation: f.WearLocation, hands: integer(f.Hands || '1', 'Hands', 1, 2), choices: [], mapId: id };
+    for (const key of Object.keys(f)) if (!blockFields.has(key)) warn(`${name}: unknown field ${key}.`);
+    if (section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
+    blocks.set(index, block); byNID.set(block.nid, block);
+  }
+  const effects = new Set(['Message', 'ReplaceBlock', 'GiveItems', 'TakeItems', 'AddState', 'RemoveState', 'Transport', 'EndGame']);
+  for (const [name, section] of sections) {
+    const match = /^Block\.([1-9]\d*)\.Choice\.([1-9]\d*)$/.exec(name);
+    if (!match) continue;
+    const block = blocks.get(Number(match[1])), f = section.fields;
+    if (!block || block.type !== 'Interaction') throw new SpecError(`${name}: choice needs an Interaction block.`);
+    if (!f.Text || !ACTIONS.has(f.Action)) throw new SpecError(`${name}: invalid choice Text or Action.`);
+    const mode = f.TestsMatch || 'All';
+    if (!['All', 'Any'].includes(mode)) throw new SpecError(`${name}: TestsMatch must be All or Any.`);
+    const tests = [];
+    for (const [key, value] of Object.entries(f)) {
+      if (/^Test\.[1-9]\d*$/.test(key)) {
+        const parts = splitList(value);
+        const subject = parts[0];
+        if (parts.length < 3 || parts.length > 4 || !COMPARISONS.has(parts[1]) || !/^(Player\.(HP|State|Variable\.[A-Za-z][A-Za-z0-9_]*)|Map\.Variable\.[A-Za-z][A-Za-z0-9_]*|SelectedItem\.(ID|State|Power)|Target\.RequiredPower|Inventory\.Quantity|Equipment\.(Worn|Wielded))$/.test(subject) || subject === 'Player.HP') throw new SpecError(`${name}: invalid rule ${key}; player health is not used.`);
+        if (subject === 'Inventory.Quantity' && (!isNID(parts[3]))) throw new SpecError(`${name}: Inventory.Quantity requires an item NID as its fourth field.`);
+        tests.push({ order: Number(key.slice(5)), subject, comparison: parts[1], value: parts[2], qualifier: parts[3] });
+      } else if (key.startsWith('Pass.') || key.startsWith('Fail.')) {
+        const effect = key.slice(5);
+        if (!effects.has(effect) && !/^Set(Player|Map)Variable\.[A-Za-z][A-Za-z0-9_]*$/.test(effect)) throw new SpecError(`${name}: unknown outcome setting ${key}.`);
+        if (effect === 'ReplaceBlock' && !isNID(value)) throw new SpecError(`${name}: ReplaceBlock requires a full NID.`);
+        if (['GiveItems', 'TakeItems'].includes(effect) && splitList(value).some(nid => !isNID(nid))) throw new SpecError(`${name}: ${key} requires full NIDs.`);
+        if (effect === 'EndGame' && !['Yes', 'No'].includes(value)) throw new SpecError(`${name}: EndGame must be Yes or No.`);
+      } else if (!['Text', 'Action', 'SelectionPrompt', 'TestsMatch'].includes(key)) warn(`${name}: unknown field ${key}.`);
+    }
+    if (section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
+    block.choices.push({ order: Number(match[2]), text: f.Text, action: f.Action, prompt: f.SelectionPrompt || 'Choose an item.', mode, tests: tests.sort((a, b) => a.order - b.order), fields: f });
+  }
+  for (const block of blocks.values()) {
+    block.choices.sort((a, b) => a.order - b.order);
+    if (block.type === 'Interaction' && !block.choices.length) throw new SpecError(`${block.name}: Interaction requires at least one choice.`);
+  }
+  const defaultBlock = byNID.get(data.DefaultBlock), border = byNID.get(data.BorderBlock);
+  if (defaultBlock?.type !== 'Move') throw new SpecError('DefaultBlock must reference a local Move block.');
+  if (!border) throw new SpecError('BorderBlock must reference a local block.');
+  const cells = Array.from({ length: height }, () => Array(width).fill(defaultBlock.nid));
+  const mapData = sections.get('MapData');
+  const format = mapData?.fields.Format;
+  if (!['Longhand', 'Shorthand'].includes(format)) throw new SpecError('MapData.Format must be Longhand or Shorthand.');
+  for (const [rowIndex, row] of mapData.rows.entries()) {
+    try {
+      const updates = [];
+      const entries = row.text.split('|').map(s => s.trim());
+      let cursor = 1;
+      if (format === 'Longhand' && rowIndex >= height) throw new SpecError('extra row outside map height');
+      for (const entry of entries) {
+        const match = (format === 'Longhand' ? /^(\d+)(?:\((\d+)\))?$/ : /^\((\d+),(\d+)\)(\d+)(?:\((\d+)\))?$/).exec(entry);
+        if (!match) throw new SpecError(`invalid entry "${entry}"`);
+        const x = format === 'Longhand' ? cursor : integer(match[1], 'X', 1, width);
+        const y = format === 'Longhand' ? height - rowIndex : integer(match[2], 'Y', 1, height);
+        const index = integer(format === 'Longhand' ? match[1] : match[3], 'Block index');
+        const count = integer((format === 'Longhand' ? match[2] : match[4]) ?? '1', 'Count', 1, width);
+        if (x + count - 1 > width) throw new SpecError('entry extends beyond map width');
+        const nid = index === 777 ? '@princess' : blocks.get(index)?.nid;
+        if (!nid) throw new SpecError(`undefined block index ${index}`);
+        for (let n = 0; n < count; n++) updates.push({ x: x + n, y, nid });
+        cursor += count;
+      }
+      if (format === 'Longhand' && cursor !== width + 1) throw new SpecError(`expected ${width} cells; found ${cursor - 1}`);
+      for (const update of updates) cells[update.y - 1][update.x - 1] = update.nid;
+    } catch (error) { warn(`file line ${row.line}: skipped ${format === 'Longhand' ? `map row Y=${height - rowIndex}` : 'shorthand line'}: ${error.message}.`); }
+  }
+  if (format === 'Longhand' && mapData.rows.length < height) warn(`only ${mapData.rows.length} of ${height} map rows supplied; remaining cells retain defaults.`);
+  for (const [name, section] of sections) {
+    if (!['Map', 'MapData', 'Variables'].includes(name) && !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name)) warn(`unknown section [${name}].`);
+    if (['Map', 'Variables'].includes(name) && section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
+  }
+  for (const key of Object.keys(data)) if (!['ID', 'Name', 'Dimensions', 'DefaultBlock', 'BorderBlock', 'StartingLocation', 'ViewWindow'].includes(key)) warn(`Map: unknown field ${key}.`);
+  for (const key of Object.keys(mapData.fields)) if (key !== 'Format') warn(`MapData: unknown field ${key}.`);
+  return { id, name: data.Name || `Map ${id}`, width, height, start, views, defaultNID: defaultBlock.nid, borderNID: border.nid, blocks, byNID, cells, variables, warnings };
+}
+
+
+
+// Plain data only. This module is also included in the standalone editor build.
+const EDITOR_TYPES = ["Move", "Wall", "Interaction", "Inventory"];
+const EDITOR_SUBJECTS = [
+  "SelectedItem.ID",
+  "SelectedItem.State",
+  "SelectedItem.Power",
+  "Target.RequiredPower",
+  "Inventory.Quantity",
+  "Equipment.Worn",
+  "Equipment.Wielded",
+  "Player.State",
+  "Player.Variable.",
+  "Map.Variable.",
+];
+const EDITOR_COMPARISONS = [
+  "Equal",
+  "NotEqual",
+  "GreaterThan",
+  "LessThan",
+  "GreaterOrEqual",
+  "LessOrEqual",
+  "Contains",
+  "NotContains",
+];
+const EDITOR_LOCATIONS = [
+  "Head",
+  "Torso",
+  "Arms",
+  "LeftArm",
+  "RightArm",
+  "Legs",
+  "LeftLeg",
+  "RightLeg",
+  "Feet",
+  "LeftFoot",
+  "RightFoot",
+  "Hands",
+  "LeftHand",
+  "RightHand",
+];
+const cloneDocument = (document) => JSON.parse(JSON.stringify(document));
+
+function importMap(text, filename = "map.txt") {
+  const sections = readINI(text, filename);
+  const id = integer(sections.get("Map")?.fields.ID, "Map.ID");
+  const parsed = parseMap(text, id);
+  const blocks = [];
+  for (const [name, section] of sections) {
+    const match = /^Block\.([1-9]\d*)$/.exec(name);
+    if (!match) continue;
+    const index = Number(match[1]),
+      choices = [];
+    for (const [choiceName, choice] of sections) {
+      const choiceMatch = new RegExp(
+        `^Block\\.${index}\\.Choice\\.([1-9]\\d*)$`,
+      ).exec(choiceName);
+      if (choiceMatch)
+        choices.push({
+          index: Number(choiceMatch[1]),
+          fields: { ...choice.fields },
+        });
+    }
+    blocks.push({
+      index,
+      fields: { ...section.fields },
+      choices: choices.sort((a, b) => a.index - b.index),
+    });
+  }
+  const indices = new Map(
+    blocks.map((block) => [block.fields.NID, block.index]),
+  );
+  const extras = [...sections]
+    .filter(
+      ([name]) =>
+        !["Map", "Variables", "MapData"].includes(name) &&
+        !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name),
+    )
+    .map(([name, section]) => ({
+      name,
+      fields: { ...section.fields },
+      rows: section.rows.map((row) => row.text),
+    }));
+  return {
+    filename,
+    map: { ...sections.get("Map").fields, ID: String(parsed.id) },
+    variables: { ...sections.get("Variables")?.fields },
+    blocks: blocks.sort((a, b) => a.index - b.index),
+    width: parsed.width,
+    height: parsed.height,
+    cells: parsed.cells.map((row) =>
+      row.map((nid) => (nid === "@princess" ? 777 : indices.get(nid))),
+    ),
+    format: sections.get("MapData").fields.Format,
+    dataExtras: Object.fromEntries(
+      Object.entries(sections.get("MapData").fields).filter(
+        ([key]) => key !== "Format",
+      ),
+    ),
+    extras,
+    comments: [
+      ...new Set(
+        text
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(
+            (line) =>
+              line.startsWith(";") &&
+              !line.startsWith("; Exported by Maze Craze"),
+          ),
+      ),
+    ],
+    importWarnings: [...parsed.warnings],
+  };
+}
+
+function createMap() {
+  return importMap(
+    `[Map]\nID: 1\nName: A New Adventure\nDimensions: 21x15\nDefaultBlock: 1/1.1\nBorderBlock: 1/2.2\nStartingLocation: (2,2)\nViewWindow: 3333 | 3303 | 5555 | 9999\n\n[Block.1]\nNID: 1/1.1\nType: Move\nDescription: Grass\nMapImage: ../assets/grass.png\n\n[Block.2]\nNID: 1/1.2\nType: Move\nDescription: Gravel\nMapImage: ../assets/gravel.png\n\n[Block.3]\nNID: 1/2.1\nType: Wall\nDescription: Tree\nMapImage: ../assets/tree.png\n\n[Block.4]\nNID: 1/2.2\nType: Wall\nDescription: Brick wall\nMapImage: ../assets/brick.png\n\n[MapData]\nFormat: Shorthand\n`,
+    "map-1.txt",
+  );
+}
+
+function writeFields(fields) {
+  return Object.entries(fields).map(([key, value]) => {
+    if (!/^[A-Za-z][A-Za-z0-9_.]*$/.test(key))
+      throw new Error(`Invalid field name: ${key}`);
+    if (/[\r\n]/.test(String(value)))
+      throw new Error(`${key} must fit on one physical line.`);
+    if (String(value).trim() === "")
+      throw new Error(`${key} is empty; remove the optional setting instead.`);
+    return `${key}: ${value}`;
+  });
+}
+
+function exportMap(document) {
+  const lines = [
+    "; Exported by Maze Craze Map Studio — coordinates begin at (1,1).",
+  ];
+  for (const comment of document.comments)
+    if (comment.startsWith(";") && !/[\r\n]/.test(comment)) lines.push(comment);
+  lines.push("", "[Map]", ...writeFields(document.map));
+  if (Object.keys(document.variables).length)
+    lines.push("", "[Variables]", ...writeFields(document.variables));
+  for (const block of [...document.blocks].sort((a, b) => a.index - b.index)) {
+    lines.push("", `[Block.${block.index}]`, ...writeFields(block.fields));
+    for (const choice of [...block.choices].sort((a, b) => a.index - b.index))
+      lines.push(
+        "",
+        `[Block.${block.index}.Choice.${choice.index}]`,
+        ...writeFields(choice.fields),
+      );
+  }
+  for (const section of document.extras) {
+    if (!section.name || /[\r\n\[\]]/.test(section.name))
+      throw new Error("Invalid extra section name.");
+    if (section.rows.some((row) => /[\r\n]/.test(row)))
+      throw new Error("Extra section rows must be single lines.");
+    lines.push(
+      "",
+      `[${section.name}]`,
+      ...writeFields(section.fields),
+      ...section.rows,
+    );
+  }
+  lines.push(
+    "",
+    "[MapData]",
+    `Format: ${document.format}`,
+    ...writeFields(document.dataExtras),
+  );
+  const defaultIndex = document.blocks.find(
+    (block) => block.fields.NID === document.map.DefaultBlock,
+  )?.index;
+  if (
+    document.cells.length !== document.height ||
+    document.cells.some((row) => row.length !== document.width)
+  )
+    throw new Error("Cell grid and dimensions disagree.");
+  const known = new Set([777, ...document.blocks.map((block) => block.index)]);
+  for (let y = document.height; y >= 1; y--) {
+    const row = document.cells[y - 1],
+      runs = [];
+    for (let x = 0; x < row.length; ) {
+      const index = row[x];
+      if (!known.has(index))
+        throw new Error(
+          `Cell (${x + 1},${y}) references missing block ${index}.`,
+        );
+      let count = 1;
+      while (x + count < row.length && row[x + count] === index) count++;
+      const repeated = `${index}${count > 1 ? `(${count})` : ""}`;
+      if (document.format === "Longhand") runs.push(repeated);
+      else if (index !== defaultIndex) runs.push(`(${x + 1},${y})${repeated}`);
+      x += count;
+    }
+    if (runs.length) lines.push(runs.join(" | "));
+  }
+  const text = `${lines.join("\n")}\n`;
+  if (new TextEncoder().encode(text).byteLength > 2_000_000)
+    throw new Error("Map exceeds the 2 MB game limit.");
+  return text;
+}
+
+function nextBlock(document, type = "Interaction") {
+  const category = EDITOR_TYPES.indexOf(type) + 1;
+  if (!category) throw new Error("Unknown block type.");
+  let index = 1,
+    suffix = 1;
+  const indices = new Set(document.blocks.map((block) => block.index));
+  while (indices.has(index) || index === 777) index++;
+  const nids = new Set(document.blocks.map((block) => block.fields.NID));
+  while (nids.has(`${document.map.ID}/${category}.${suffix}`)) suffix++;
+  const fields = {
+    NID: `${document.map.ID}/${category}.${suffix}`,
+    Type: type,
+    Description: `New ${type} block`,
+    MapImage: `../assets/${{ Move: "grass", Wall: "tree", Interaction: "chest", Inventory: "key" }[type]}.png`,
+  };
+  if (type === "Inventory") fields.ItemKind = "Item";
+  return {
+    index,
+    fields,
+    choices:
+      type === "Interaction"
+        ? [
+            {
+              index: 1,
+              fields: {
+                Text: "Try it",
+                Action: "Attempt",
+                "Pass.Message": "The puzzle yields. The way is clear!",
+              },
+            },
+          ]
+        : [],
+  };
+}
+
+function allFieldSets(document) {
+  return [
+    document.map,
+    ...document.blocks.flatMap((block) => [
+      block.fields,
+      ...block.choices.map((choice) => choice.fields),
+    ]),
+  ];
+}
+function referenceField(key) {
+  return (
+    ["NID", "DefaultBlock", "BorderBlock"].includes(key) ||
+    /^Test\.[1-9]\d*$/.test(key) ||
+    /^(Pass|Fail)\.(ReplaceBlock|GiveItems|TakeItems)$/.test(key)
+  );
+}
+function remapReferences(document, replacements) {
+  for (const fields of allFieldSets(document))
+    for (const [key, value] of Object.entries(fields)) {
+      if (!referenceField(key)) continue;
+      fields[key] = String(value)
+        .split("|")
+        .map((part) => replacements.get(part.trim()) ?? part.trim())
+        .join(" | ");
+    }
+}
+function saveBlock(document, previousIndex, replacement) {
+  integer(replacement.index, "Block index");
+  if (replacement.index === 777)
+    throw new Error("777 is reserved for the princess ending.");
+  if (
+    document.blocks.some(
+      (block) =>
+        block.index === replacement.index && block.index !== previousIndex,
+    )
+  )
+    throw new Error("That block index is already in use.");
+  if (
+    document.blocks.some(
+      (block) =>
+        block.fields.NID === replacement.fields.NID &&
+        block.index !== previousIndex,
+    )
+  )
+    throw new Error("That NID is already in use.");
+  const existing = document.blocks.find(
+    (block) => block.index === previousIndex,
+  );
+  if (existing) {
+    const oldNID = existing.fields.NID;
+    document.blocks[document.blocks.indexOf(existing)] =
+      cloneDocument(replacement);
+    remapReferences(document, new Map([[oldNID, replacement.fields.NID]]));
+    for (const row of document.cells)
+      for (let x = 0; x < row.length; x++)
+        if (row[x] === previousIndex) row[x] = replacement.index;
+  } else document.blocks.push(cloneDocument(replacement));
+}
+function duplicateBlock(document, index) {
+  const source = document.blocks.find((block) => block.index === index);
+  if (!source) throw new Error("Select a normal block to duplicate.");
+  const copy = cloneDocument(source),
+    next = nextBlock(document, source.fields.Type);
+  copy.index = next.index;
+  copy.fields.NID = next.fields.NID;
+  copy.fields.Description = `${source.fields.Description} copy`;
+  for (const choice of copy.choices)
+    for (const [key, value] of Object.entries(choice.fields))
+      if (referenceField(key))
+        choice.fields[key] = value
+          .split("|")
+          .map((part) =>
+            part.trim() === source.fields.NID ? copy.fields.NID : part.trim(),
+          )
+          .join(" | ");
+  document.blocks.push(copy);
+  return copy.index;
+}
+function deleteBlock(document, index) {
+  const block = document.blocks.find((block) => block.index === index);
+  if (!block) throw new Error("Select a block to delete.");
+  if (
+    [document.map.DefaultBlock, document.map.BorderBlock].includes(
+      block.fields.NID,
+    )
+  )
+    throw new Error(
+      "Change the map’s default/border settings before deleting this block.",
+    );
+  for (const other of document.blocks.filter((other) => other !== block))
+    for (const choice of other.choices)
+      for (const [key, value] of Object.entries(choice.fields)) {
+        if (referenceField(key) && splitList(value).includes(block.fields.NID))
+          throw new Error(
+            `${other.fields.Description} references this block in ${key}; edit that reference first.`,
+          );
+      }
+  const defaultIndex = document.blocks.find(
+    (candidate) => candidate.fields.NID === document.map.DefaultBlock,
+  ).index;
+  document.blocks = document.blocks.filter((candidate) => candidate !== block);
+  for (const row of document.cells)
+    for (let x = 0; x < row.length; x++)
+      if (row[x] === index) row[x] = defaultIndex;
+}
+
+function applyMapSettings(document, fields, variables, format) {
+  const id = integer(fields.ID, "Map.ID"),
+    size = /^(\d+)x(\d+)$/.exec(fields.Dimensions);
+  if (!size) throw new Error("Dimensions must look like 21x15.");
+  const width = integer(size[1], "Width", 1, 100),
+    height = integer(size[2], "Height", 1, 100);
+  const oldID = document.map.ID;
+  const replacements = new Map(
+    document.blocks.map((block) => [
+      block.fields.NID,
+      block.fields.NID.replace(`${oldID}/`, `${id}/`),
+    ]),
+  );
+  const oldDefault = document.blocks.find(
+    (block) => block.fields.NID === document.map.DefaultBlock,
+  ).index;
+  const defaultIndex = document.blocks.find(
+    (block) =>
+      block.fields.NID === fields.DefaultBlock ||
+      replacements.get(block.fields.NID) === fields.DefaultBlock,
+  )?.index;
+  if (!defaultIndex)
+    throw new Error("Select a defined Move block for the default.");
+  document.cells = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => {
+      const value = document.cells[y]?.[x];
+      return value === undefined || value === oldDefault ? defaultIndex : value;
+    }),
+  );
+  document.map = { ...fields, ID: String(id) };
+  document.variables = { ...variables };
+  if (String(id) !== String(oldID)) remapReferences(document, replacements);
+  document.width = width;
+  document.height = height;
+  document.format = format;
+}
+
+function lineCells(from, to) {
+  const cells = [];
+  let x = from.x,
+    y = from.y;
+  const dx = Math.abs(to.x - x),
+    sx = x < to.x ? 1 : -1;
+  const dy = -Math.abs(to.y - y),
+    sy = y < to.y ? 1 : -1;
+  let error = dx + dy;
+  while (true) {
+    cells.push({ x, y });
+    if (x === to.x && y === to.y) break;
+    const twice = 2 * error;
+    if (twice >= dy) {
+      error += dy;
+      x += sx;
+    }
+    if (twice <= dx) {
+      error += dx;
+      y += sy;
+    }
+  }
+  return cells;
+}
+function fillCells(document, x, y, index) {
+  const original = document.cells[y - 1]?.[x - 1];
+  if (original === undefined || original === index) return;
+  const queue = [[x - 1, y - 1]];
+  document.cells[y - 1][x - 1] = index;
+  while (queue.length) {
+    const [cx, cy] = queue.pop();
+    for (const [nx, ny] of [
+      [cx - 1, cy],
+      [cx + 1, cy],
+      [cx, cy - 1],
+      [cx, cy + 1],
+    ])
+      if (document.cells[ny]?.[nx] === original) {
+        document.cells[ny][nx] = index;
+        queue.push([nx, ny]);
+      }
+  }
+}
+
+function validateDocument(document) {
+  const errors = [],
+    warnings = [];
+  let parsed;
+  try {
+    parsed = parseMap(exportMap(document), Number(document.map.ID));
+  } catch (error) {
+    return { errors: [error.message], warnings };
+  }
+  warnings.push(...parsed.warnings);
+  const definitions = new Map(
+    document.blocks.map((block) => [block.fields.NID, block]),
+  );
+  const checkNID = (nid, label, kind) => {
+    if (!isNID(nid)) {
+      errors.push(`${label}: invalid NID ${nid}.`);
+      return;
+    }
+    const def = definitions.get(nid);
+    if (!def) {
+      if (nid.startsWith(`${document.map.ID}/`))
+        errors.push(`${label}: ${nid} is not defined in this map.`);
+      else
+        warnings.push(
+          `${label}: external reference ${nid}; ensure its map is listed in the main configuration.`,
+        );
+    } else if (kind === "Inventory" && def.fields.Type !== "Inventory")
+      errors.push(`${label}: ${nid} must be an Inventory block.`);
+    else if (
+      kind === "Item" &&
+      (def.fields.Type !== "Inventory" || def.fields.ItemKind !== "Item")
+    )
+      errors.push(`${label}: only regular items can be consumed.`);
+  };
+  for (const key of Object.keys(document.variables))
+    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(key))
+      errors.push(`Invalid map variable name ${key}.`);
+  for (const block of document.blocks) {
+    for (const key of ["MapImage", "InteractionImage"]) {
+      const value = block.fields[key];
+      if (
+        value &&
+        /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value) &&
+        !/^https?:\/\//.test(value)
+      )
+        errors.push(
+          `${block.fields.Description}: ${key} must be a relative path or HTTP(S) URL.`,
+        );
+    }
+  }
+  for (const block of document.blocks)
+    for (const choice of block.choices) {
+      const label = `${block.fields.Description}, choice ${choice.index}`;
+      for (const [key, value] of Object.entries(choice.fields)) {
+        if (/^Test\./.test(key)) {
+          const [subject, comparison, expected, qualifier] = splitList(value);
+          const collection = [
+            "Equipment.Worn",
+            "Equipment.Wielded",
+            "Player.State",
+          ].includes(subject);
+          if (collection !== ["Contains", "NotContains"].includes(comparison))
+            errors.push(
+              `${label}: ${subject} requires ${collection ? "Contains or NotContains" : "a scalar comparison"}.`,
+            );
+          if (
+            ["SelectedItem.ID", "Equipment.Worn", "Equipment.Wielded"].includes(
+              subject,
+            )
+          )
+            checkNID(expected, label, "Inventory");
+          if (subject === "Inventory.Quantity")
+            checkNID(qualifier, label, "Inventory");
+          if (
+            subject.startsWith("Map.Variable.") &&
+            !Object.hasOwn(document.variables, subject.slice(13))
+          )
+            errors.push(
+              `${label}: declare map variable ${subject.slice(13)} in map settings.`,
+            );
+          if (subject.startsWith("Player.Variable."))
+            warnings.push(
+              `${label}: player variable ${subject.slice(16)} must be declared in the main configuration.`,
+            );
+          if (
+            subject.startsWith("SelectedItem.") &&
+            choice.fields.Action === "Attempt"
+          )
+            warnings.push(
+              `${label}: Attempt does not select an item; use UseInventory or Attack for this test.`,
+            );
+          if (
+            [
+              "GreaterThan",
+              "LessThan",
+              "GreaterOrEqual",
+              "LessOrEqual",
+            ].includes(comparison) &&
+            expected !== "Target.RequiredPower" &&
+            !/^-?\d+(\.\d+)?$/.test(expected)
+          )
+            errors.push(
+              `${label}: numeric comparison needs a number or Target.RequiredPower.`,
+            );
+        }
+        if (/^(Pass|Fail)\.ReplaceBlock$/.test(key)) checkNID(value, label);
+        if (/^(Pass|Fail)\.(GiveItems|TakeItems)$/.test(key))
+          for (const nid of splitList(value))
+            checkNID(
+              nid,
+              label,
+              key.endsWith("TakeItems") ? "Item" : "Inventory",
+            );
+        if (key === "Fail.TakeItems")
+          errors.push(`${label}: FAIL cannot consume items.`);
+        if (
+          /^(Pass|Fail)\.SetMapVariable\./.test(key) &&
+          !Object.hasOwn(
+            document.variables,
+            key.slice(key.indexOf("SetMapVariable.") + 15),
+          )
+        )
+          errors.push(`${label}: outcome sets an undeclared map variable.`);
+        if (/^(Pass|Fail)\.SetPlayerVariable\./.test(key))
+          warnings.push(
+            `${label}: outcome player variable must be declared in the main configuration.`,
+          );
+        if (/^(Pass|Fail)\.Transport$/.test(key)) {
+          const match = /^(?:\(([1-9]\d*)\))?(\(\d+,\d+\))?$/.exec(value);
+          const coord = match?.[2] ? coordinates(match[2]) : null;
+          if (!match || (!match[1] && !coord))
+            warnings.push(
+              `${label}: malformed transport falls back to the map start.`,
+            );
+          else if (match[1] && match[1] !== document.map.ID)
+            warnings.push(
+              `${label}: destination map ${match[1]} must exist in the main configuration.`,
+            );
+          else if (
+            coord &&
+            (coord.x < 1 ||
+              coord.y < 1 ||
+              coord.x > document.width ||
+              coord.y > document.height)
+          )
+            warnings.push(
+              `${label}: transport coordinate is outside this map; the game uses its start.`,
+            );
+        }
+      }
+    }
+  return { errors: [...new Set(errors)], warnings: [...new Set(warnings)] };
+}
+
+class EditorHistory {
+  constructor(document) {
+    this.reset(document);
+  }
+  reset(document) {
+    this.undoStack = [];
+    this.redoStack = [];
+    this.saved = JSON.stringify(document);
+  }
+  push(document, label) {
+    this.undoStack.push({ text: JSON.stringify(document), label });
+    this.redoStack = [];
+    while (
+      this.undoStack.length > 40 ||
+      (this.undoStack.length > 1 &&
+        this.undoStack.reduce((sum, entry) => sum + entry.text.length, 0) >
+          4_000_000)
+    )
+      this.undoStack.shift();
+  }
+  undo(document) {
+    const entry = this.undoStack.pop();
+    if (!entry) return document;
+    this.redoStack.push({ text: JSON.stringify(document), label: entry.label });
+    return JSON.parse(entry.text);
+  }
+  redo(document) {
+    const entry = this.redoStack.pop();
+    if (!entry) return document;
+    this.undoStack.push({ text: JSON.stringify(document), label: entry.label });
+    return JSON.parse(entry.text);
+  }
+  dirty(document) {
+    return JSON.stringify(document) !== this.saved;
+  }
+  markSaved(document) {
+    this.saved = JSON.stringify(document);
+  }
+}
+
+
+
+
+// This source is bundled into editor.html; the distributed editor needs no server.
+const studio = (id) => document.getElementById(id);
+const formControl = (form, name) => form.elements.namedItem(name);
+const singleLine = (value) =>
+  String(value)
+    .replace(/\s*[\r\n]+\s*/g, " ")
+    .trim();
+const ORIGIN = 28;
+let draft = createMap(),
+  history = new EditorHistory(draft),
+  selectedIndex = 3,
+  activeTool = "paint";
+let editingIndex = null,
+  blockOriginal,
+  originalText = "",
+  cursor = { x: 1, y: 1 },
+  stroke = null,
+  drawQueued = false;
+const localImages = new Map(),
+  decodedImages = new Map();
+
+function node(tag, text = "", className = "") {
+  const element = document.createElement(tag);
+  element.textContent = text;
+  element.className = className;
+  return element;
+}
+function actionButton(text, action, className = "") {
+  const button = node("button", text, className);
+  button.type = "button";
+  button.addEventListener("click", action);
+  return button;
+}
+function selectControl(options, value) {
+  const select = document.createElement("select");
+  for (const option of options) {
+    const el = node(
+      "option",
+      typeof option === "string" ? option : option.label,
+    );
+    el.value = typeof option === "string" ? option : option.value;
+    select.append(el);
+  }
+  select.value = value ?? options[0]?.value ?? options[0] ?? "";
+  return select;
+}
+function field(label, value = "", options = {}) {
+  const wrapper = node("label", label),
+    input = options.options
+      ? selectControl(options.options, value)
+      : document.createElement(options.multiline ? "textarea" : "input");
+  if (!options.options) input.value = value;
+  if (options.multiline) input.rows = 2;
+  if (options.list) input.setAttribute("list", options.list);
+  if (options.placeholder) input.placeholder = options.placeholder;
+  if (options.required) input.required = true;
+  if (options.pattern) input.pattern = options.pattern;
+  input.classList.add("control");
+  wrapper.append(input);
+  return { wrapper, input };
+}
+function tell(message, error = false) {
+  studio("status").textContent = message;
+  studio("status").classList.toggle("error", error);
+}
+function report(error, element) {
+  if (element) element.textContent = error.message;
+  else tell(error.message, true);
+}
+function canReplace() {
+  return (
+    !history.dirty(draft) ||
+    window.confirm(
+      "You have changes that have not been exported. Replace this map?",
+    )
+  );
+}
+function parsedDraft(candidate) {
+  return parseMap(exportMap(candidate), Number(candidate.map.ID));
+}
+function commit(candidate, label) {
+  parsedDraft(candidate);
+  history.push(draft, label);
+  draft = candidate;
+  renderStudio();
+  tell(label);
+}
+function change(label, edit) {
+  const candidate = cloneDocument(draft);
+  const result = edit(candidate);
+  commit(candidate, label);
+  return result;
+}
+function replaceDocument(candidate, text = "") {
+  draft = candidate;
+  history.reset(draft);
+  originalText = text;
+  selectedIndex = draft.blocks[0].index;
+  cursor = { x: 1, y: 1 };
+  renderStudio();
+  tell(
+    `${draft.map.Name || draft.filename} opened. ${draft.importWarnings.length ? "Some original map rows were skipped; review Map checks below." : "Ready to draw."}`,
+  );
+}
+function closeStudioDialog(id) {
+  studio(id).close();
+  studio("map-canvas").focus({ preventScroll: true });
+}
+function downloadText(text, filename) {
+  const url = URL.createObjectURL(
+    new Blob([text], { type: "text/plain;charset=utf-8" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename.replace(/[^A-Za-z0-9_.-]/g, "_");
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function basename(value) {
+  return String(value || "")
+    .replace(/\\/g, "/")
+    .split("/")
+    .pop()
+    .split(/[?#]/)[0];
+}
+function previewSource(value) {
+  if (!value) return null;
+  const name = basename(value);
+  if (localImages.has(name)) return localImages.get(name);
+  if (EDITOR_BUNDLED.images[name]) return EDITOR_BUNDLED.images[name];
+  if (!studio("allow-image-urls").checked) return null;
+  try {
+    const base =
+      studio("image-base").value.trim() ||
+      new URL("./maps/", location.href).href;
+    const url = new URL(value, base);
+    if (
+      url.username ||
+      url.password ||
+      (url.protocol !== "https:" &&
+        !(url.protocol === "http:" && url.origin === location.origin))
+    )
+      return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+function previewImage(value) {
+  const source = previewSource(value);
+  if (!source) return null;
+  if (!decodedImages.has(source)) {
+    const image = new Image();
+    decodedImages.set(source, image);
+    image.referrerPolicy = "no-referrer";
+    image.onload = scheduleDraw;
+    image.onerror = scheduleDraw;
+    image.src = source;
+  }
+  const image = decodedImages.get(source);
+  return image.complete && image.naturalWidth > 0 ? image : null;
+}
+function thumbnail(value, description) {
+  const source = previewSource(value);
+  if (!source) return node("span", "◇", "block-thumbnail");
+  const image = document.createElement("img");
+  image.src = source;
+  image.alt = description;
+  image.referrerPolicy = "no-referrer";
+  image.addEventListener(
+    "error",
+    () => {
+      image.replaceWith(node("span", "◇", "block-thumbnail"));
+    },
+    { once: true },
+  );
+  return image;
+}
+function blockFor(index) {
+  return index === 777
+    ? {
+        index: 777,
+        fields: {
+          Description: "Save the princess!",
+          Type: "Interaction",
+          NID: "Built-in 777",
+          MapImage: "../assets/princess.png",
+        },
+        choices: [],
+      }
+    : draft.blocks.find((block) => block.index === index);
+}
+function selectBlock(index) {
+  selectedIndex = index;
+  // Keep palette elements in place: replacing a dragged element cancels a native drag.
+  for (const button of studio("palette").querySelectorAll(".palette-block"))
+    button.setAttribute(
+      "aria-pressed",
+      String(Number(button.dataset.index) === index),
+    );
+  renderSelected();
+}
+function renderSelected() {
+  const block = blockFor(selectedIndex);
+  studio("selected-name").textContent = block.fields.Description;
+  studio("selected-details").textContent =
+    `${block.index} · ${block.fields.Type} · ${block.fields.NID}`;
+  studio("edit-block").disabled = selectedIndex === 777;
+}
+function renderPalette() {
+  const palette = studio("palette");
+  palette.replaceChildren();
+  const query = studio("block-search").value.toLowerCase(),
+    type = studio("type-filter").value;
+  for (const block of [...draft.blocks, blockFor(777)]) {
+    const fields = block.fields;
+    if (
+      (type && fields.Type !== type) ||
+      !`${fields.Description} ${fields.NID} ${block.index}`
+        .toLowerCase()
+        .includes(query)
+    )
+      continue;
+    const button = actionButton(
+      "",
+      () => selectBlock(block.index),
+      "palette-block",
+    );
+    button.setAttribute("aria-pressed", String(block.index === selectedIndex));
+    button.dataset.index = block.index;
+    button.draggable = true;
+    button.append(thumbnail(fields.MapImage, fields.Description));
+    const info = node("span");
+    info.append(
+      node("strong", `${block.index} · ${fields.Description}`),
+      node("small", `${fields.Type} · ${fields.NID}`),
+    );
+    button.append(info);
+    button.addEventListener("dblclick", () => {
+      if (block.index !== 777) openBlock(block.index);
+    });
+    button.addEventListener("dragstart", (event) => {
+      event.dataTransfer.setData(
+        "application/x-mazecraze-block",
+        String(block.index),
+      );
+      event.dataTransfer.effectAllowed = "copy";
+      selectBlock(block.index);
+    });
+    palette.append(button);
+  }
+  if (!palette.childNodes.length)
+    palette.append(node("p", "No matching blocks.", "hint"));
+}
+function scheduleDraw() {
+  if (!drawQueued) {
+    drawQueued = true;
+    requestAnimationFrame(() => {
+      drawQueued = false;
+      drawCanvas();
+    });
+  }
+}
+function drawCanvas() {
+  const canvas = studio("map-canvas"),
+    size = Number(studio("zoom").value),
+    context = canvas.getContext("2d");
+  const width = ORIGIN + draft.width * size,
+    height = ORIGIN + draft.height * size;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+  context.imageSmoothingEnabled = false;
+  context.fillStyle = "#dedfc7";
+  context.fillRect(0, 0, width, height);
+  context.font = "10px system-ui";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = "#4e5b44";
+  context.fillText("Y/X", 14, 13);
+  for (let x = 1; x <= draft.width; x++)
+    context.fillText(String(x), ORIGIN + (x - 0.5) * size, 13);
+  for (let y = draft.height; y >= 1; y--)
+    context.fillText(String(y), 13, ORIGIN + (draft.height - y + 0.5) * size);
+  const blocks = new Map(draft.blocks.map((block) => [block.index, block]));
+  blocks.set(777, blockFor(777));
+  for (let y = 1; y <= draft.height; y++)
+    for (let x = 1; x <= draft.width; x++) {
+      const block = blocks.get(draft.cells[y - 1][x - 1]),
+        px = ORIGIN + (x - 1) * size,
+        py = ORIGIN + (draft.height - y) * size;
+      const image = block && previewImage(block.fields.MapImage);
+      if (image) context.drawImage(image, px, py, size, size);
+      else {
+        context.fillStyle =
+          {
+            Move: "#85a363",
+            Wall: "#62765b",
+            Interaction: "#c7a264",
+            Inventory: "#9cafa1",
+          }[block?.fields.Type] || "#9b7370";
+        context.fillRect(px, py, size, size);
+        context.fillStyle = "#243b28";
+        context.font = `${Math.max(9, size / 3)}px system-ui`;
+        context.fillText(
+          String(block?.index ?? "?"),
+          px + size / 2,
+          py + size / 2,
+        );
+      }
+    }
+  context.strokeStyle = "#173c2c35";
+  context.lineWidth = 1;
+  context.beginPath();
+  for (let x = 0; x <= draft.width; x++) {
+    context.moveTo(ORIGIN + x * size + 0.5, ORIGIN);
+    context.lineTo(ORIGIN + x * size + 0.5, height);
+  }
+  for (let y = 0; y <= draft.height; y++) {
+    context.moveTo(ORIGIN, ORIGIN + y * size + 0.5);
+    context.lineTo(width, ORIGIN + y * size + 0.5);
+  }
+  context.stroke();
+  const start = coordinates(draft.map.StartingLocation);
+  if (start) {
+    const px = ORIGIN + (start.x - 0.5) * size,
+      py = ORIGIN + (draft.height - start.y + 0.5) * size;
+    context.fillStyle = "#102c21e0";
+    context.beginPath();
+    context.arc(px, py, Math.max(7, size * 0.34), 0, Math.PI * 2);
+    context.fill();
+    context.strokeStyle = "#edffb5";
+    context.stroke();
+    context.fillStyle = "#edffb5";
+    context.font = `bold ${Math.max(10, size * 0.4)}px system-ui`;
+    context.fillText("S", px, py);
+  }
+  if (stroke?.tool === "rectangle") {
+    const minX = Math.min(stroke.from.x, stroke.to.x),
+      maxX = Math.max(stroke.from.x, stroke.to.x);
+    const minY = Math.min(stroke.from.y, stroke.to.y),
+      maxY = Math.max(stroke.from.y, stroke.to.y);
+    context.fillStyle = "#edffb560";
+    context.fillRect(
+      ORIGIN + (minX - 1) * size,
+      ORIGIN + (draft.height - maxY) * size,
+      (maxX - minX + 1) * size,
+      (maxY - minY + 1) * size,
+    );
+  }
+  context.strokeStyle = "#f8efb1";
+  context.lineWidth = 2;
+  context.strokeRect(
+    ORIGIN + (cursor.x - 1) * size + 1,
+    ORIGIN + (draft.height - cursor.y) * size + 1,
+    size - 2,
+    size - 2,
+  );
+  canvas.dataset.tool = activeTool;
+  canvas.setAttribute(
+    "aria-label",
+    `${draft.map.Name}. ${draft.width} columns, ${draft.height} rows. Cursor X ${cursor.x}, Y ${cursor.y}.`,
+  );
+  const here = blockFor(draft.cells[cursor.y - 1]?.[cursor.x - 1]);
+  studio("coordinate-readout").textContent =
+    `X ${cursor.x} · Y ${cursor.y}${here ? ` · ${here.fields.Description}` : ""}`;
+}
+function renderValidation() {
+  const result = validateDocument(draft),
+    list = studio("validation-list");
+  list.replaceChildren();
+  const imported = draft.importWarnings.map(
+    (message) => `Original import: ${message}`,
+  );
+  studio("validation-summary").textContent =
+    `Map checks · ${result.errors.length} errors · ${result.warnings.length + imported.length} notes`;
+  for (const message of result.errors)
+    list.append(node("li", message, "validation-error"));
+  for (const message of [...imported, ...result.warnings])
+    list.append(node("li", message));
+  if (!list.childNodes.length)
+    list.append(
+      node("li", "Ready to export. The map matches the game format."),
+    );
+  if (result.errors.length || imported.length)
+    studio("validation-panel").open = true;
+  studio("download-original").hidden = !originalText;
+  return result;
+}
+function renderStudio() {
+  if (!blockFor(selectedIndex)) selectedIndex = draft.blocks[0].index;
+  cursor.x = Math.min(draft.width, Math.max(1, cursor.x));
+  cursor.y = Math.min(draft.height, Math.max(1, cursor.y));
+  studio("document-name").textContent = draft.map.Name || draft.filename;
+  studio("canvas-heading").textContent = draft.map.Name || draft.filename;
+  studio("document-state").textContent =
+    `${draft.filename} · ${history.dirty(draft) ? "Unexported changes" : "No unexported changes"}`;
+  studio("dimensions-badge").textContent = `${draft.width} × ${draft.height}`;
+  studio("undo").disabled = !history.undoStack.length;
+  studio("redo").disabled = !history.redoStack.length;
+  studio("undo").setAttribute(
+    "aria-label",
+    `Undo ${history.undoStack.at(-1)?.label || ""}`,
+  );
+  studio("redo").setAttribute(
+    "aria-label",
+    `Redo ${history.redoStack.at(-1)?.label || ""}`,
+  );
+  studio("jump-x").max = draft.width;
+  studio("jump-y").max = draft.height;
+  const nids = studio("nid-suggestions");
+  nids.replaceChildren();
+  for (const block of draft.blocks) {
+    const option = node("option");
+    option.value = block.fields.NID;
+    option.label = block.fields.Description;
+    nids.append(option);
+  }
+  renderPalette();
+  renderSelected();
+  drawCanvas();
+  renderValidation();
+}
+function setTool(tool) {
+  activeTool = tool;
+  document
+    .querySelectorAll("button[data-tool]")
+    .forEach((button) =>
+      button.setAttribute("aria-pressed", String(button.dataset.tool === tool)),
+    );
+  scheduleDraw();
+}
+function eventCell(event) {
+  const rect = studio("map-canvas").getBoundingClientRect(),
+    size = Number(studio("zoom").value);
+  const x = Math.floor((event.clientX - rect.left - ORIGIN) / size) + 1,
+    y = draft.height - Math.floor((event.clientY - rect.top - ORIGIN) / size);
+  return x >= 1 && x <= draft.width && y >= 1 && y <= draft.height
+    ? { x, y }
+    : null;
+}
+function currentPaintIndex() {
+  return activeTool === "erase"
+    ? draft.blocks.find((block) => block.fields.NID === draft.map.DefaultBlock)
+        .index
+    : selectedIndex;
+}
+function applyAt(cell) {
+  if (activeTool === "pick") {
+    selectBlock(draft.cells[cell.y - 1][cell.x - 1]);
+    tell(`Picked ${blockFor(selectedIndex).fields.Description}.`);
+    return;
+  }
+  if (activeTool === "pan") return;
+  change(
+    activeTool === "start"
+      ? "Starting location updated"
+      : activeTool === "fill"
+        ? "Connected area filled"
+        : "Cell painted",
+    (next) => {
+      if (activeTool === "start")
+        next.map.StartingLocation = `(${cell.x},${cell.y})`;
+      else if (activeTool === "fill")
+        fillCells(next, cell.x, cell.y, selectedIndex);
+      else next.cells[cell.y - 1][cell.x - 1] = currentPaintIndex();
+    },
+  );
+}
+function paintStroke(cell) {
+  const index = stroke.index;
+  for (const point of lineCells(stroke.to, cell))
+    if (draft.cells[point.y - 1][point.x - 1] !== index) {
+      draft.cells[point.y - 1][point.x - 1] = index;
+      stroke.changed = true;
+    }
+  stroke.to = cell;
+  scheduleDraw();
+}
+const canvas = studio("map-canvas");
+canvas.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || stroke) return;
+  canvas.focus({ preventScroll: true });
+  if (activeTool === "pan") {
+    stroke = {
+      tool: "pan",
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      left: studio("canvas-scroll").scrollLeft,
+      top: studio("canvas-scroll").scrollTop,
+    };
+    canvas.setPointerCapture(event.pointerId);
+    return;
+  }
+  const cell = eventCell(event);
+  if (!cell) return;
+  event.preventDefault();
+  cursor = cell;
+  if (["fill", "start", "pick"].includes(activeTool)) {
+    try {
+      applyAt(cell);
+    } catch (error) {
+      report(error);
+    }
+    return;
+  }
+  stroke = {
+    tool: activeTool,
+    pointerId: event.pointerId,
+    before: cloneDocument(draft),
+    from: cell,
+    to: cell,
+    index: currentPaintIndex(),
+    changed: false,
+  };
+  canvas.setPointerCapture(event.pointerId);
+  if (activeTool !== "rectangle") paintStroke(cell);
+  else scheduleDraw();
+});
+canvas.addEventListener("pointermove", (event) => {
+  if (stroke?.tool === "pan") {
+    studio("canvas-scroll").scrollLeft = stroke.left + stroke.x - event.clientX;
+    studio("canvas-scroll").scrollTop = stroke.top + stroke.y - event.clientY;
+    return;
+  }
+  const cell = eventCell(event);
+  if (!cell) return;
+  cursor = cell;
+  if (stroke && event.pointerId === stroke.pointerId) {
+    if (stroke.tool === "rectangle") stroke.to = cell;
+    else paintStroke(cell);
+  }
+  scheduleDraw();
+});
+function finishStroke(event, cancelled = false) {
+  if (!stroke || event.pointerId !== stroke.pointerId) return;
+  const ended = stroke;
+  if (cancelled && ended.before) draft = ended.before;
+  else if (ended.tool === "rectangle") {
+    for (
+      let y = Math.min(ended.from.y, ended.to.y);
+      y <= Math.max(ended.from.y, ended.to.y);
+      y++
+    )
+      for (
+        let x = Math.min(ended.from.x, ended.to.x);
+        x <= Math.max(ended.from.x, ended.to.x);
+        x++
+      ) {
+        if (draft.cells[y - 1][x - 1] !== ended.index) {
+          draft.cells[y - 1][x - 1] = ended.index;
+          ended.changed = true;
+        }
+      }
+  }
+  stroke = null;
+  if (!cancelled && ended.changed) {
+    history.push(
+      ended.before,
+      ended.tool === "rectangle" ? "Draw rectangle" : "Paint stroke",
+    );
+    tell("Map updated. Undo is available.");
+  }
+  if (canvas.hasPointerCapture(event.pointerId))
+    canvas.releasePointerCapture(event.pointerId);
+  renderStudio();
+}
+canvas.addEventListener("pointerup", (event) => finishStroke(event));
+canvas.addEventListener("pointercancel", (event) => finishStroke(event, true));
+canvas.addEventListener("lostpointercapture", (event) => {
+  if (stroke) finishStroke(event, true);
+});
+canvas.addEventListener("dragover", (event) => {
+  if ([...event.dataTransfer.types].includes("application/x-mazecraze-block")) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  }
+});
+canvas.addEventListener("drop", (event) => {
+  event.preventDefault();
+  const cell = eventCell(event),
+    index = Number(event.dataTransfer.getData("application/x-mazecraze-block"));
+  if (!cell || !blockFor(index)) return;
+  try {
+    selectBlock(index);
+    cursor = cell;
+    change("Block dropped onto map", (next) => {
+      next.cells[cell.y - 1][cell.x - 1] = index;
+    });
+  } catch (error) {
+    report(error);
+  }
+});
+
+function variableRow(container, name = "", value = "", scope) {
+  const row = node("div", "", "variable-row");
+  if (scope) {
+    const fieldScope = field("Variable belongs to", scope, {
+      options: ["Map", "Player"],
+    });
+    fieldScope.input.classList.add("variable-scope");
+    row.append(fieldScope.wrapper);
+  }
+  const key = field("Name", name, {
+      required: true,
+      pattern: "[A-Za-z][A-Za-z0-9_]*",
+    }),
+    val = field("Value", value, { required: true });
+  key.input.classList.add("variable-name");
+  val.input.classList.add("variable-value");
+  row.append(
+    key.wrapper,
+    val.wrapper,
+    actionButton("Remove", () => row.remove()),
+  );
+  container.append(row);
+  return row;
+}
+function openSettings() {
+  const form = studio("settings-form"),
+    start = coordinates(draft.map.StartingLocation);
+  for (const [name, value] of Object.entries({
+    ID: draft.map.ID,
+    Name: draft.map.Name || "",
+    width: draft.width,
+    height: draft.height,
+    startX: start.x,
+    startY: start.y,
+    ViewWindow: draft.map.ViewWindow,
+    format: draft.format,
+  }))
+    formControl(form, name).value = value;
+  for (const name of ["DefaultBlock", "BorderBlock"]) {
+    const control = formControl(form, name);
+    control.replaceChildren();
+    for (const block of draft.blocks.filter(
+      (block) => name !== "DefaultBlock" || block.fields.Type === "Move",
+    )) {
+      const option = node(
+        "option",
+        `${block.fields.Description} · ${block.fields.NID}`,
+      );
+      option.value = block.fields.NID;
+      control.append(option);
+    }
+    control.value = draft.map[name];
+  }
+  studio("map-variables").replaceChildren();
+  for (const [name, value] of Object.entries(draft.variables))
+    variableRow(studio("map-variables"), name, value);
+  studio("settings-error").textContent = "";
+  studio("settings-dialog").showModal();
+}
+studio("settings-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  try {
+    const form = event.currentTarget,
+      get = (name) => formControl(form, name).value.trim(),
+      width = Number(get("width")),
+      height = Number(get("height"));
+    if (
+      (width < draft.width || height < draft.height) &&
+      !window.confirm(
+        "Shrinking the map crops cells beyond its new edges. Continue? You can undo this change.",
+      )
+    )
+      return;
+    const fields = {
+      ...draft.map,
+      ID: get("ID"),
+      Name: singleLine(get("Name")),
+      Dimensions: `${get("width")}x${get("height")}`,
+      StartingLocation: `(${get("startX")},${get("startY")})`,
+      ViewWindow: get("ViewWindow"),
+      DefaultBlock: get("DefaultBlock"),
+      BorderBlock: get("BorderBlock"),
+    };
+    const variables = Object.create(null);
+    for (const row of studio("map-variables").children) {
+      const name = row.querySelector(".variable-name").value.trim(),
+        value = singleLine(row.querySelector(".variable-value").value);
+      if (Object.hasOwn(variables, name))
+        throw new Error(`Duplicate variable ${name}.`);
+      variables[name] = value;
+    }
+    change("Map settings applied", (next) =>
+      applyMapSettings(next, fields, variables, get("format")),
+    );
+    closeStudioDialog("settings-dialog");
+  } catch (error) {
+    report(error, studio("settings-error"));
+  }
+});
+
+function addRule(container, value = "SelectedItem.ID | Equal | ") {
+  const [
+    subject = "SelectedItem.ID",
+    comparison = "Equal",
+    expected = "",
+    qualifier = "",
+  ] = value.split("|").map((part) => part.trim());
+  const base = subject.startsWith("Map.Variable.")
+    ? "Map.Variable."
+    : subject.startsWith("Player.Variable.")
+      ? "Player.Variable."
+      : subject;
+  const row = node("div", "", "rule-row");
+  const subjectField = field("Test subject", base, {
+      options: EDITOR_SUBJECTS,
+    }),
+    comparisonField = field("Comparison", comparison, {
+      options: EDITOR_COMPARISONS,
+    });
+  const variable = field(
+    "Variable name",
+    base.endsWith(".") ? subject.slice(base.length) : "",
+    { required: true, pattern: "[A-Za-z][A-Za-z0-9_]*" },
+  );
+  const required = field("Required value", expected, {
+    required: true,
+    list: "nid-suggestions",
+    placeholder: "1/4.1 or Target.RequiredPower",
+  });
+  const item = field("Count this item NID", qualifier, {
+    required: true,
+    list: "nid-suggestions",
+  });
+  subjectField.input.classList.add("rule-subject");
+  comparisonField.input.classList.add("rule-comparison");
+  variable.input.classList.add("rule-variable");
+  required.input.classList.add("rule-value");
+  item.input.classList.add("rule-qualifier");
+  const toggle = () => {
+    const name = subjectField.input.value;
+    variable.wrapper.hidden = !name.endsWith(".");
+    variable.input.disabled = variable.wrapper.hidden;
+    item.wrapper.hidden = name !== "Inventory.Quantity";
+    item.input.disabled = item.wrapper.hidden;
+  };
+  subjectField.input.addEventListener("change", () => {
+    comparisonField.input.value = [
+      "Equipment.Worn",
+      "Equipment.Wielded",
+      "Player.State",
+    ].includes(subjectField.input.value)
+      ? "Contains"
+      : "Equal";
+    toggle();
+  });
+  row.append(
+    subjectField.wrapper,
+    variable.wrapper,
+    comparisonField.wrapper,
+    required.wrapper,
+    item.wrapper,
+    actionButton("Remove rule", () => row.remove()),
+  );
+  container.append(row);
+  toggle();
+}
+function addOutcome(parent, fields, prefix) {
+  const box = node(
+    "fieldset",
+    "",
+    `outcome ${prefix === "Fail" ? "fail" : ""}`,
+  );
+  box.dataset.prefix = prefix;
+  box.append(node("legend", prefix === "Pass" ? "On PASS" : "On FAIL"));
+  const definitions = [
+    ["Message", "Outcome message", { multiline: true }],
+    [
+      "ReplaceBlock",
+      "Replacement NID",
+      {
+        list: "nid-suggestions",
+        placeholder:
+          prefix === "Pass" ? "Blank = map default" : "Blank = leave unchanged",
+      },
+    ],
+    [
+      "GiveItems",
+      "Give items · NIDs separated by |",
+      { placeholder: "1/4.1 | 1/4.3" },
+    ],
+    ...(prefix === "Pass"
+      ? [
+          [
+            "TakeItems",
+            "Take additional items · NIDs separated by |",
+            { placeholder: "Do not repeat the automatically used item" },
+          ],
+        ]
+      : []),
+    ["AddState", "Add player states", { placeholder: "Blessed | Muddy" }],
+    ["RemoveState", "Remove player states", {}],
+    [
+      "Transport",
+      "Transport destination",
+      { placeholder: "(12,8) or (2)(3,3) or (2)" },
+    ],
+    [
+      "EndGame",
+      "End game",
+      { options: [{ value: "", label: "Continue playing" }, "Yes", "No"] },
+    ],
+  ];
+  for (const [key, label, options] of definitions) {
+    const entry = field(label, fields[`${prefix}.${key}`] || "", options);
+    entry.input.dataset.effect = key;
+    box.append(entry.wrapper);
+  }
+  const updates = node("div", "", "outcome-variables");
+  for (const [key, value] of Object.entries(fields)) {
+    const match = new RegExp(
+      `^${prefix}\\.Set(Player|Map)Variable\\.(.+)$`,
+    ).exec(key);
+    if (match) variableRow(updates, match[2], value, match[1]);
+  }
+  box.append(
+    node("p", "Set declared variables (optional)", "hint"),
+    updates,
+    actionButton("＋ Set a variable", () =>
+      variableRow(updates, "", "", "Map"),
+    ),
+  );
+  parent.append(box);
+}
+function updateChoiceNumbers() {
+  [...studio("choices-editor").children].forEach((card, index) => {
+    card.querySelector(".choice-heading strong").textContent =
+      `Choice ${index + 1}`;
+  });
+}
+function addChoice(
+  choice = { fields: { Text: "Try it", Action: "Attempt" } },
+  scroll = false,
+) {
+  const fields = choice.fields,
+    card = node("article", "", "choice-card");
+  card._fields = { ...fields };
+  const heading = node("div", "", "choice-heading");
+  heading.append(node("strong", "Choice"));
+  heading.append(
+    actionButton("↑", () => {
+      if (card.previousElementSibling)
+        card.parentNode.insertBefore(card, card.previousElementSibling);
+      updateChoiceNumbers();
+    }),
+    actionButton("↓", () => {
+      if (card.nextElementSibling)
+        card.parentNode.insertBefore(card.nextElementSibling, card);
+      updateChoiceNumbers();
+    }),
+    actionButton("Remove choice", () => {
+      card.remove();
+      updateChoiceNumbers();
+    }),
+  );
+  const grid = node("div", "", "form-grid");
+  for (const [key, label, options] of [
+    ["Text", "Choice text", { required: true }],
+    ["Action", "Action", { options: ["Attempt", "UseInventory", "Attack"] }],
+    ["SelectionPrompt", "Item selection prompt", {}],
+    ["TestsMatch", "Rules must match", { options: ["All", "Any"] }],
+  ]) {
+    const entry = field(
+      label,
+      fields[key] || { Action: "Attempt", TestsMatch: "All" }[key] || "",
+      options,
+    );
+    entry.input.dataset.choice = key;
+    grid.append(entry.wrapper);
+  }
+  const rules = node("div", "", "rules-editor");
+  for (const [key, value] of Object.entries(fields)
+    .filter(([key]) => /^Test\.[1-9]\d*$/.test(key))
+    .sort(([a], [b]) => Number(a.slice(5)) - Number(b.slice(5))))
+    addRule(rules, value);
+  const outcomes = node("div", "", "outcomes");
+  addOutcome(outcomes, fields, "Pass");
+  addOutcome(outcomes, fields, "Fail");
+  card.append(
+    heading,
+    grid,
+    node("h3", "Puzzle tests"),
+    rules,
+    actionButton("＋ Add a test", () => addRule(rules)),
+    outcomes,
+  );
+  studio("choices-editor").append(card);
+  updateChoiceNumbers();
+  if (scroll) card.scrollIntoView({ block: "nearest" });
+}
+function toggleBlockFields() {
+  const form = studio("block-form"),
+    type = formControl(form, "Type").value,
+    kind = formControl(form, "ItemKind").value;
+  for (const element of document.querySelectorAll("[data-block-group]")) {
+    const group = element.dataset.blockGroup;
+    const show =
+      group === "popup"
+        ? ["Interaction", "Inventory"].includes(type)
+        : group === "interaction"
+          ? type === "Interaction"
+          : group === "inventory"
+            ? type === "Inventory"
+            : group === "weapon"
+              ? type === "Inventory" && kind === "Weapon"
+              : type === "Inventory" && kind === "Wearable";
+    element.hidden = !show;
+    for (const input of element.querySelectorAll("input,select,textarea"))
+      input.disabled = !show;
+  }
+  studio("choices-section").hidden = type !== "Interaction";
+  for (const input of studio("choices-section").querySelectorAll(
+    "input,select,textarea",
+  ))
+    input.disabled = type !== "Interaction" || input.closest("label")?.hidden;
+  studio("inventory-note").hidden = type !== "Inventory";
+}
+function openBlock(index = null) {
+  editingIndex = index;
+  blockOriginal = cloneDocument(
+    index === null ? nextBlock(draft) : blockFor(index),
+  );
+  const form = studio("block-form");
+  form.reset();
+  formControl(form, "index").value = blockOriginal.index;
+  for (const name of [
+    "NID",
+    "Type",
+    "Description",
+    "MapImage",
+    "InteractionImage",
+    "Message",
+    "CancelActionText",
+    "RequiredPower",
+    "ItemKind",
+    "State",
+    "Power",
+    "Hands",
+    "WearLocation",
+  ]) {
+    formControl(form, name).value =
+      blockOriginal.fields[name] ??
+      { ItemKind: "Item", Hands: "1", WearLocation: "Feet" }[name] ??
+      "";
+  }
+  studio("choices-editor").replaceChildren();
+  blockOriginal.choices.forEach((choice) => addChoice(choice));
+  studio("block-title").textContent =
+    index === null
+      ? "Create a block"
+      : `Edit ${blockOriginal.fields.Description}`;
+  studio("delete-block").hidden = index === null;
+  studio("duplicate-block").hidden = index === null;
+  studio("block-error").textContent = "";
+  toggleBlockFields();
+  studio("block-dialog").showModal();
+}
+function readChoices() {
+  return [...studio("choices-editor").children].map((card, index) => {
+    const fields = { ...card._fields };
+    for (const key of Object.keys(fields))
+      if (
+        /^Test\./.test(key) ||
+        /^(Pass|Fail)\./.test(key) ||
+        ["Text", "Action", "SelectionPrompt", "TestsMatch"].includes(key)
+      )
+        delete fields[key];
+    for (const input of card.querySelectorAll("[data-choice]")) {
+      const value = singleLine(input.value);
+      if (value) fields[input.dataset.choice] = value;
+    }
+    [...card.querySelector(".rules-editor").children].forEach(
+      (row, ruleIndex) => {
+        let subject = row.querySelector(".rule-subject").value;
+        if (subject.endsWith("."))
+          subject += row.querySelector(".rule-variable").value.trim();
+        const parts = [
+          subject,
+          row.querySelector(".rule-comparison").value,
+          row.querySelector(".rule-value").value.trim(),
+        ];
+        if (subject === "Inventory.Quantity")
+          parts.push(row.querySelector(".rule-qualifier").value.trim());
+        fields[`Test.${ruleIndex + 1}`] = parts.join(" | ");
+      },
+    );
+    for (const outcome of card.querySelectorAll(".outcome")) {
+      const prefix = outcome.dataset.prefix;
+      for (const input of outcome.querySelectorAll("[data-effect]")) {
+        const value = singleLine(input.value);
+        if (value) fields[`${prefix}.${input.dataset.effect}`] = value;
+      }
+      for (const row of outcome.querySelector(".outcome-variables").children) {
+        const scope = row.querySelector(".variable-scope").value,
+          name = row.querySelector(".variable-name").value.trim(),
+          key = `${prefix}.Set${scope}Variable.${name}`;
+        if (Object.hasOwn(fields, key))
+          throw new Error(`Duplicate variable update ${key}.`);
+        fields[key] = singleLine(row.querySelector(".variable-value").value);
+      }
+    }
+    return { index: index + 1, fields };
+  });
+}
+studio("block-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  try {
+    const form = event.currentTarget,
+      type = formControl(form, "Type").value;
+    if (
+      type !== "Interaction" &&
+      blockOriginal.choices.length &&
+      editingIndex !== null &&
+      !window.confirm(
+        "This type has no interaction choices. Remove this block’s existing choices?",
+      )
+    )
+      return;
+    const fields = { ...blockOriginal.fields };
+    for (const key of [
+      "NID",
+      "Type",
+      "Description",
+      "MapImage",
+      "InteractionImage",
+      "Message",
+      "CancelActionText",
+      "RequiredPower",
+      "ItemKind",
+      "State",
+      "Power",
+      "Hands",
+      "WearLocation",
+    ]) {
+      const input = formControl(form, key);
+      delete fields[key];
+      if (!input.disabled && singleLine(input.value))
+        fields[key] = singleLine(input.value);
+    }
+    const replacement = {
+      index: Number(formControl(form, "index").value),
+      fields,
+      choices: type === "Interaction" ? readChoices() : [],
+    };
+    change("Block saved", (next) => saveBlock(next, editingIndex, replacement));
+    selectedIndex = replacement.index;
+    renderStudio();
+    closeStudioDialog("block-dialog");
+  } catch (error) {
+    report(error, studio("block-error"));
+  }
+});
+formControl(studio("block-form"), "Type").addEventListener("change", () => {
+  const form = studio("block-form"),
+    type = formControl(form, "Type").value;
+  const suggestion = nextBlock(draft, type);
+  formControl(form, "NID").value = suggestion.fields.NID;
+  if (type === "Interaction" && !studio("choices-editor").children.length)
+    addChoice();
+  toggleBlockFields();
+});
+formControl(studio("block-form"), "ItemKind").addEventListener(
+  "change",
+  toggleBlockFields,
+);
+
+studio("new-map").addEventListener("click", () => {
+  if (canReplace()) {
+    replaceDocument(createMap());
+    tell("New map ready. Use Map settings to choose dimensions.");
+  }
+});
+studio("open-map").addEventListener("click", () => {
+  studio("map-file").value = "";
+  studio("map-file").click();
+});
+studio("map-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file || !canReplace()) return;
+  try {
+    if (file.size > 2_000_000)
+      throw new Error("Map files must be no larger than 2 MB.");
+    const text = await file.text();
+    replaceDocument(importMap(text, file.name), text);
+  } catch (error) {
+    report(error);
+  }
+});
+studio("example-select").addEventListener("change", (event) => {
+  const id = event.target.value;
+  event.target.value = "";
+  if (!id || !canReplace()) return;
+  try {
+    const text = EDITOR_BUNDLED.samples[id];
+    replaceDocument(importMap(text, `map-${id}.txt`), text);
+  } catch (error) {
+    report(error);
+  }
+});
+studio("export-map").addEventListener("click", () => {
+  try {
+    const result = renderValidation();
+    if (result.errors.length)
+      throw new Error(
+        `Fix the ${result.errors.length} error(s) in Map checks before exporting.`,
+      );
+    downloadText(exportMap(draft), `map-${draft.map.ID}.txt`);
+    history.markSaved(draft);
+    renderStudio();
+    tell(
+      `Downloaded map-${draft.map.ID}.txt. Your original file was not overwritten.`,
+    );
+  } catch (error) {
+    report(error);
+  }
+});
+studio("download-original").addEventListener("click", () =>
+  downloadText(originalText, `original-${draft.filename}`),
+);
+studio("source-open").addEventListener("click", () => {
+  try {
+    studio("source-text").value = exportMap(draft);
+    studio("source-error").textContent = "";
+    studio("source-dialog").showModal();
+  } catch (error) {
+    report(error);
+  }
+});
+studio("source-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  try {
+    commit(
+      importMap(studio("source-text").value, draft.filename),
+      "Text changes applied",
+    );
+    closeStudioDialog("source-dialog");
+  } catch (error) {
+    report(error, studio("source-error"));
+  }
+});
+studio("settings-open").addEventListener("click", openSettings);
+studio("add-map-variable").addEventListener("click", () =>
+  variableRow(studio("map-variables")),
+);
+studio("add-block").addEventListener("click", () => openBlock());
+studio("edit-block").addEventListener("click", () => openBlock(selectedIndex));
+studio("add-choice").addEventListener("click", () =>
+  addChoice(undefined, true),
+);
+studio("duplicate-block").addEventListener("click", () => {
+  try {
+    const index = change("Block duplicated", (next) =>
+      duplicateBlock(next, editingIndex),
+    );
+    closeStudioDialog("block-dialog");
+    selectBlock(index);
+    openBlock(index);
+  } catch (error) {
+    report(error, studio("block-error"));
+  }
+});
+studio("delete-block").addEventListener("click", () => {
+  if (
+    !window.confirm(
+      "Delete this block and replace its map placements with the default? You can undo this.",
+    )
+  )
+    return;
+  try {
+    change("Block deleted", (next) => deleteBlock(next, editingIndex));
+    closeStudioDialog("block-dialog");
+  } catch (error) {
+    report(error, studio("block-error"));
+  }
+});
+studio("block-search").addEventListener("input", renderPalette);
+studio("type-filter").addEventListener("change", renderPalette);
+document
+  .querySelectorAll("button[data-tool]")
+  .forEach((button) =>
+    button.addEventListener("click", () => setTool(button.dataset.tool)),
+  );
+studio("undo").addEventListener("click", () => {
+  draft = history.undo(draft);
+  renderStudio();
+  tell("Change undone.");
+});
+studio("redo").addEventListener("click", () => {
+  draft = history.redo(draft);
+  renderStudio();
+  tell("Change restored.");
+});
+studio("zoom").addEventListener("change", drawCanvas);
+studio("jump-cell").addEventListener("click", () => {
+  const x = Number(studio("jump-x").value),
+    y = Number(studio("jump-y").value);
+  if (
+    !Number.isInteger(x) ||
+    !Number.isInteger(y) ||
+    x < 1 ||
+    y < 1 ||
+    x > draft.width ||
+    y > draft.height
+  ) {
+    tell("Choose coordinates inside this map.", true);
+    return;
+  }
+  cursor = { x, y };
+  drawCanvas();
+  const size = Number(studio("zoom").value);
+  studio("canvas-scroll").scrollTo({
+    left: Math.max(0, ORIGIN + (x - 1) * size - 100),
+    top: Math.max(0, ORIGIN + (draft.height - y) * size - 100),
+  });
+  canvas.focus({ preventScroll: true });
+});
+studio("apply-cell").addEventListener("click", () => {
+  try {
+    applyAt(cursor);
+  } catch (error) {
+    report(error);
+  }
+});
+document
+  .querySelectorAll("[data-close]")
+  .forEach((button) =>
+    button.addEventListener("click", () =>
+      closeStudioDialog(button.dataset.close),
+    ),
+  );
+studio("help-open").addEventListener("click", () =>
+  studio("help-dialog").showModal(),
+);
+document.addEventListener("keydown", (event) => {
+  if (
+    document.querySelector("dialog[open]") ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)
+  )
+    return;
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+    event.preventDefault();
+    studio(event.shiftKey ? "redo" : "undo").click();
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
+    event.preventDefault();
+    studio("redo").click();
+    return;
+  }
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const shortcuts = {
+    b: "paint",
+    e: "erase",
+    r: "rectangle",
+    f: "fill",
+    s: "start",
+    i: "pick",
+    h: "pan",
+  };
+  if (shortcuts[event.key.toLowerCase()]) {
+    event.preventDefault();
+    setTool(shortcuts[event.key.toLowerCase()]);
+    return;
+  }
+  if (document.activeElement !== canvas) return;
+  const directions = {
+    ArrowUp: [0, 1],
+    ArrowDown: [0, -1],
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+  };
+  if (directions[event.key]) {
+    event.preventDefault();
+    const [dx, dy] = directions[event.key];
+    cursor = {
+      x: Math.max(1, Math.min(draft.width, cursor.x + dx)),
+      y: Math.max(1, Math.min(draft.height, cursor.y + dy)),
+    };
+    scheduleDraw();
+  }
+  if (event.key === " " || event.key === "Enter") {
+    event.preventDefault();
+    try {
+      applyAt(cursor);
+    } catch (error) {
+      report(error);
+    }
+  }
+});
+window.addEventListener("beforeunload", (event) => {
+  if (history.dirty(draft)) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+});
+studio("load-images").addEventListener("click", () => {
+  studio("image-files").value = "";
+  studio("image-files").click();
+});
+studio("image-files").addEventListener("change", async (event) => {
+  try {
+    const files = [...event.target.files];
+    if (
+      files.length > 64 ||
+      files.reduce((sum, file) => sum + file.size, 0) > 15_000_000
+    )
+      throw new Error(
+        "Load up to 64 pictures totaling at most 15 MB at a time.",
+      );
+    const nextImages = new Map(localImages);
+    for (const file of files) {
+      if (
+        !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(
+          file.type,
+        ) ||
+        file.size > 2_000_000
+      )
+        throw new Error(
+          `${file.name}: use a PNG, JPEG, WebP, or GIF up to 2 MB.`,
+        );
+      const data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () =>
+          reject(new Error(`Could not read ${file.name}.`));
+        reader.readAsDataURL(file);
+      });
+      const image = new Image();
+      image.src = data;
+      await image.decode();
+      if (image.naturalWidth > 4096 || image.naturalHeight > 4096)
+        throw new Error(
+          `${file.name}: image dimensions must not exceed 4096 pixels.`,
+        );
+      if (image.naturalWidth > 128 || image.naturalHeight > 128) {
+        const preview = document.createElement("canvas"),
+          ratio = Math.min(128 / image.naturalWidth, 128 / image.naturalHeight);
+        preview.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+        preview.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+        preview
+          .getContext("2d")
+          .drawImage(image, 0, 0, preview.width, preview.height);
+        nextImages.set(file.name, preview.toDataURL("image/png"));
+      } else nextImages.set(file.name, data);
+    }
+    if (
+      nextImages.size > 64 ||
+      [...nextImages.values()].reduce((sum, data) => sum + data.length, 0) >
+        20_000_000
+    )
+      throw new Error(
+        "The local preview library is full (64 pictures or 20 MB). Reload the editor after exporting your map to clear it.",
+      );
+    localImages.clear();
+    for (const [name, data] of nextImages) localImages.set(name, data);
+    decodedImages.clear();
+    renderStudio();
+    tell(
+      "Local image previews loaded. Upload pictures separately when publishing your map.",
+    );
+  } catch (error) {
+    report(error);
+  }
+});
+for (const id of ["allow-image-urls", "image-base"])
+  studio(id).addEventListener("change", () => {
+    decodedImages.clear();
+    renderStudio();
+  });
+for (const location of EDITOR_LOCATIONS) {
+  const option = node("option", location);
+  option.value = location;
+  formControl(studio("block-form"), "WearLocation").append(option);
+}
+for (const name of Object.keys(EDITOR_BUNDLED.images)) {
+  const option = node("option");
+  option.value = `../assets/${name}`;
+  studio("image-suggestions").append(option);
+}
+renderStudio();
+
+})();
+</script>
+  </body>
+</html>

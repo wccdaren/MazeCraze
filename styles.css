@@ -108,6 +108,11 @@ a {
   gap:14px
 }
 
+.masthead nav a {
+  display:inline-block;
+  padding:10px 15px
+}
+
 .quiet {
   background:transparent
 }

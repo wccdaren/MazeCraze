@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Maze Craze · Map Studio</title>
+    <style>
+      /*EDITOR_CSS*/
+    </style>
+  </head>
+  <body>
+    <header class="studio-header">
+      <a class="brand" href="index.html"
+        ><span aria-hidden="true">✳</span>
+        <div>MAZE CRAZE<small>MAP STUDIO</small></div></a
+      >
+      <div class="header-note">A little imagination. A whole new world.</div>
+      <button id="help-open" class="quiet">Field guide</button>
+    </header>
+    <main>
+      <section class="studio-intro">
+        <div>
+          <p class="eyebrow">SEBASTIAN’S WORLD-BUILDING DESK</p>
+          <h1>Draw the next adventure.</h1>
+          <p>
+            Create your blocks, lay a winding path, and give every door a
+            puzzle.
+          </p>
+        </div>
+        <div class="file-actions">
+          <button id="new-map">New map</button
+          ><button id="open-map">Open map file</button
+          ><button id="export-map" class="primary">Export map.txt ↓</button>
+        </div>
+      </section>
+      <div class="document-bar">
+        <div>
+          <strong id="document-name">A New Adventure</strong
+          ><span id="document-state">Ready to draw</span>
+        </div>
+        <div class="document-actions">
+          <label for="example-select" class="sr-only"
+            >Open a bundled example</label
+          ><select id="example-select">
+            <option value="">Open an example…</option>
+            <option value="1">Bramblewood · Map 1</option>
+            <option value="2">Little Clearing · Map 2</option></select
+          ><button id="source-open">Text / INI</button
+          ><button id="settings-open">Map settings</button>
+        </div>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">
+        Choose a block, then click or drag across the map.
+      </p>
+      <div class="workspace">
+        <aside class="library panel">
+          <div class="library-header">
+            <p class="eyebrow">YOUR BUILDING BLOCKS</p>
+            <h2>The block library</h2>
+            <button id="add-block" class="primary">＋ Create a block</button
+            ><label class="sr-only" for="block-search">Search blocks</label
+            ><input
+              id="block-search"
+              type="search"
+              placeholder="Find a block…"
+            /><label class="sr-only" for="type-filter">Filter block type</label
+            ><select id="type-filter">
+              <option value="">All four types</option>
+              <option>Move</option>
+              <option>Wall</option>
+              <option>Interaction</option>
+              <option>Inventory</option>
+            </select>
+          </div>
+          <div id="palette" class="palette" aria-label="Block palette"></div>
+          <div class="selected-block">
+            <p class="eyebrow">ON YOUR BRUSH</p>
+            <strong id="selected-name"></strong>
+            <p id="selected-details"></p>
+            <button id="edit-block">Edit selected block</button>
+          </div>
+        </aside>
+        <section class="canvas-panel panel" aria-labelledby="canvas-heading">
+          <div class="canvas-title">
+            <div>
+              <p class="eyebrow">GRAPH PAPER, WITH A LITTLE MAGIC</p>
+              <h2 id="canvas-heading">A New Adventure</h2>
+            </div>
+            <span id="dimensions-badge" class="badge">21 × 15</span>
+          </div>
+          <div class="tool-row">
+            <div class="tools" role="group" aria-label="Drawing tools">
+              <button data-tool="paint" aria-pressed="true" title="Paint (B)">
+                ✎ Paint</button
+              ><button
+                data-tool="erase"
+                aria-pressed="false"
+                title="Default block (E)"
+              >
+                Erase</button
+              ><button
+                data-tool="rectangle"
+                aria-pressed="false"
+                title="Filled rectangle (R)"
+              >
+                ▧ Rectangle</button
+              ><button
+                data-tool="fill"
+                aria-pressed="false"
+                title="Connected fill (F)"
+              >
+                Fill</button
+              ><button
+                data-tool="start"
+                aria-pressed="false"
+                title="Player start (S)"
+              >
+                ⚑ Start</button
+              ><button
+                data-tool="pick"
+                aria-pressed="false"
+                title="Pick a block (I)"
+              >
+                Pick</button
+              ><button
+                data-tool="pan"
+                aria-pressed="false"
+                title="Drag to scroll (H)"
+              >
+                Pan
+              </button>
+            </div>
+            <div class="history-tools">
+              <button id="undo" title="Undo (Ctrl/Cmd Z)">↶</button
+              ><button id="redo" title="Redo (Ctrl/Cmd Shift Z)">↷</button
+              ><label for="zoom" class="sr-only">Tile display size</label
+              ><select id="zoom">
+                <option value="16">50%</option>
+                <option value="24">75%</option>
+                <option value="32" selected>100%</option>
+              </select>
+            </div>
+          </div>
+          <div id="canvas-scroll" class="canvas-scroll">
+            <canvas
+              id="map-canvas"
+              tabindex="0"
+              role="img"
+              aria-label="Editable map"
+              aria-describedby="canvas-instructions"
+            ></canvas>
+          </div>
+          <div class="canvas-footer">
+            <span id="coordinate-readout">X 1 · Y 1</span
+            ><span>Bottom-left is (1,1) · X → · Y ↑</span>
+          </div>
+          <p id="canvas-instructions" class="canvas-instructions">
+            Click and drag to paint. Drag a palette tile onto a square. Arrow
+            keys move the cursor; Space applies the current tool.
+          </p>
+          <div class="jump-controls">
+            <label for="jump-x">X</label
+            ><input id="jump-x" type="number" min="1" value="1" /><label
+              for="jump-y"
+              >Y</label
+            ><input id="jump-y" type="number" min="1" value="1" /><button
+              id="jump-cell"
+            >
+              Go to cell</button
+            ><button id="apply-cell">Apply tool here</button>
+          </div>
+        </section>
+      </div>
+      <details id="validation-panel" class="validation">
+        <summary id="validation-summary">Map checks</summary>
+        <ul id="validation-list"></ul>
+        <button id="download-original" hidden>
+          Download original imported text
+        </button>
+      </details>
+      <details class="image-settings">
+        <summary>Image previews & local artwork</summary>
+        <p>
+          Built-in tiles work offline. Load your own PNG, JPEG, GIF, or WebP
+          files for local previews. Map exports keep the image paths you
+          specify; pictures are separate files.
+        </p>
+        <button id="load-images">Choose local images</button
+        ><label class="check"
+          ><input id="allow-image-urls" type="checkbox" /> Allow image requests
+          to URLs in this map</label
+        ><label for="image-base"
+          >Base URL for relative image paths (optional)</label
+        ><input
+          id="image-base"
+          type="url"
+          placeholder="https://your-site.example/maps/"
+        />
+        <p class="hint">
+          URL previews are off by default. Enable them only for a map and image
+          hosts you trust.
+        </p>
+      </details>
+      <footer class="studio-footer">
+        <span>LOCAL FILES. YOUR IDEAS. NO ACCOUNT NEEDED.</span
+        ><span>Maze Craze · Map Studio</span>
+      </footer>
+    </main>
+    <input id="map-file" type="file" accept=".txt,.ini,text/plain" hidden />
+    <input
+      id="image-files"
+      type="file"
+      accept="image/png,image/jpeg,image/webp,image/gif"
+      multiple
+      hidden
+    />
+    <datalist id="nid-suggestions"></datalist>
+    <datalist id="image-suggestions"></datalist>
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+      <form id="settings-form">
+        <p class="eyebrow">THE SHAPE OF YOUR WORLD</p>
+        <h2 id="settings-title">Map settings</h2>
+        <div class="form-grid">
+          <label
+            >Map number<input name="ID" type="number" min="1" required /></label
+          ><label>Map name<input name="Name" maxlength="160" required /></label
+          ><label
+            >Width · X columns<input
+              name="width"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label
+            >Height · Y rows<input
+              name="height"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label
+            >Start X<input
+              name="startX"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label
+            >Start Y<input
+              name="startY"
+              type="number"
+              min="1"
+              max="100"
+              required /></label
+          ><label>Default Move block<select name="DefaultBlock"></select></label
+          ><label>Border block<select name="BorderBlock"></select></label
+          ><label class="span-two"
+            >Viewing windows<input
+              name="ViewWindow"
+              placeholder="3333 | 3303 | 5555 | 9999"
+              required
+            /><small
+              >Each option: up, right, down, left. Separate options with
+              |.</small
+            ></label
+          ><label
+            >Export layout<select name="format">
+              <option>Shorthand</option>
+              <option>Longhand</option>
+            </select></label
+          >
+        </div>
+        <p class="hint">
+          Resizing keeps bottom-left coordinates. Shrinking can crop cells.
+          Changing the default replaces cells currently using the old default. A
+          new map number updates this map’s NIDs and their references; explicit
+          transport map numbers stay unchanged.
+        </p>
+        <h3>Map variables</h3>
+        <p class="hint">
+          Declare names used by Map.Variable tests and SetMapVariable outcomes.
+          Player variables are declared separately in main-config.txt.
+        </p>
+        <div id="map-variables"></div>
+        <button id="add-map-variable" type="button">＋ Add map variable</button>
+        <p id="settings-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button type="button" data-close="settings-dialog">Cancel</button
+          ><button type="submit" class="primary">Apply settings</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog
+      id="block-dialog"
+      class="large-dialog"
+      aria-labelledby="block-title"
+    >
+      <form id="block-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">ONE BLOCK. ENDLESS POSSIBILITIES.</p>
+            <h2 id="block-title">Create a block</h2>
+          </div>
+          <button
+            type="button"
+            data-close="block-dialog"
+            aria-label="Close block editor"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="form-grid">
+          <label
+            >Block index<input
+              name="index"
+              type="number"
+              min="1"
+              required
+            /><small>Used in the map layout. 777 is reserved.</small></label
+          ><label
+            >Type<select name="Type">
+              <option>Move</option>
+              <option>Wall</option>
+              <option>Interaction</option>
+              <option>Inventory</option>
+            </select></label
+          ><label
+            >Full NID<input name="NID" placeholder="1/3.1" required /><small
+              >Map / category.unique number.</small
+            ></label
+          ><label
+            >Name / description<input
+              name="Description"
+              required
+              maxlength="160" /></label
+          ><label
+            >Map image path<input
+              name="MapImage"
+              list="image-suggestions"
+              required
+              placeholder="../assets/tree.png" /></label
+          ><label data-block-group="popup"
+            >Popup image path<input
+              name="InteractionImage"
+              list="image-suggestions"
+              placeholder="Defaults to map image" /></label
+          ><label class="span-two" data-block-group="popup"
+            >Popup message<textarea name="Message" rows="3"></textarea
+            ><small
+              >Plain text. Line breaks in this form become spaces in the
+              file.</small
+            ></label
+          ><label data-block-group="interaction"
+            >Cancel text<input
+              name="CancelActionText"
+              placeholder="Leave" /></label
+          ><label data-block-group="interaction"
+            >Required power<input
+              name="RequiredPower"
+              type="number"
+              min="0"
+              placeholder="0" /></label
+          ><label data-block-group="inventory"
+            >Inventory kind<select name="ItemKind">
+              <option>Item</option>
+              <option>Weapon</option>
+              <option>Wearable</option>
+            </select></label
+          ><label data-block-group="inventory"
+            >Item state<input name="State" placeholder="Working" /></label
+          ><label data-block-group="weapon"
+            >Weapon power<input
+              name="Power"
+              type="number"
+              min="0"
+              placeholder="0" /></label
+          ><label data-block-group="weapon"
+            >Hands required<select name="Hands">
+              <option value="1">One hand</option>
+              <option value="2">Both hands</option>
+            </select></label
+          ><label data-block-group="wearable"
+            >Wear location<select name="WearLocation"></select
+          ></label>
+        </div>
+        <section id="choices-section">
+          <div class="section-heading">
+            <div>
+              <h3>Choices & puzzle rules</h3>
+              <p class="hint">
+                No tests means PASS. Successful item use consumes one regular
+                item; weapons and clothing remain owned.
+              </p>
+            </div>
+            <button id="add-choice" type="button">＋ Add choice</button>
+          </div>
+          <div id="choices-editor"></div>
+        </section>
+        <p id="inventory-note" class="hint" hidden>
+          Inventory blocks automatically offer Pick up and Leave. A successful
+          pickup gives one item and replaces its cell with the map default.
+        </p>
+        <p id="block-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="delete-block" type="button" class="danger">
+            Delete block</button
+          ><button id="duplicate-block" type="button">Duplicate</button
+          ><button type="button" data-close="block-dialog">Cancel</button
+          ><button type="submit" class="primary">Save block</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog
+      id="source-dialog"
+      class="large-dialog"
+      aria-labelledby="source-title"
+    >
+      <form id="source-form">
+        <p class="eyebrow">THE TEXT BEHIND THE WORLD</p>
+        <h2 id="source-title">Map specification</h2>
+        <p class="hint">
+          You can edit any supported field here. Apply text to update the canvas
+          and forms. Comments are retained together at the top when exported.
+        </p>
+        <textarea
+          id="source-text"
+          rows="22"
+          spellcheck="false"
+          aria-label="Complete map specification"
+        ></textarea>
+        <p id="source-error" class="error" role="alert"></p>
+        <div class="dialog-actions">
+          <button type="button" data-close="source-dialog">Cancel</button
+          ><button type="submit" class="primary">Apply text</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <p class="eyebrow">THE MAPMAKER’S FIELD GUIDE</p>
+      <h2 id="help-title">Start with a winding path.</h2>
+      <p>
+        Choose New map, open a local .txt file, or open an example. Map settings
+        controls the size, starting location, default and border blocks, view
+        windows, variables, and export layout.
+      </p>
+      <p>
+        Select a palette block and paint by clicking or dragging. Drag a palette
+        tile onto the canvas to place it. Rectangle draws a filled rectangle;
+        Fill replaces a connected area; Erase uses the map default. Start sets
+        the player’s starting cell. Pick selects a placed block. Pan drags the
+        map without painting.
+      </p>
+      <p>
+        Double-click a palette block, or choose Edit selected block, to edit its
+        pictures, inventory properties, choices, tests, and pass/fail outcomes.
+        Each block type can have its own image; an interactive tree may look
+        identical to a wall tree.
+      </p>
+      <p>
+        Use Ctrl/Cmd Z to undo and Ctrl/Cmd Shift Z to redo. With the map
+        focused, arrow keys move the cursor and Space applies a tool.
+        B/E/R/F/S/I/H select tools. Go to cell also provides an exact coordinate
+        control.
+      </p>
+      <p>
+        Export downloads a game-compatible .txt file. Your original file is
+        never overwritten or uploaded. Pictures remain separate files. Imported
+        comments move together to the top; unknown settings are retained.
+        Skipped map rows are reported, and the original imported text can be
+        downloaded before making corrections.
+      </p>
+      <p>
+        This editor runs offline by double-clicking editor.html. The game itself
+        still needs HTTP(S). Player-variable definitions and the map file
+        directory live in main-config.txt, outside this map editor.
+      </p>
+      <button type="button" data-close="help-dialog" class="primary">
+        Back to the graph paper
+      </button>
+    </dialog>
+    <!--EDITOR_SCRIPT-->
+  </body>
+</html>
