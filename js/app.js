@@ -1,5 +1,6 @@
 import { parseMain, parseMap, SpecError } from './spec.js';
 import { Game } from './engine.js';
+import { playtestMessage, isPlaytestMessage, validTestSnapshot } from './playtest-protocol.js';
 
 // WORDPRESS SETUP: Change this ONE URL to your uploaded main-config.txt URL.
 // Relative map/image URLs resolve against their own configuration file, not the WordPress page.
@@ -8,6 +9,13 @@ const MAIN_CONFIG_URL = new URL('../main-config.txt', import.meta.url).href;
 const $ = id => document.getElementById(id);
 const dialogs = ['welcome-dialog', 'interaction-dialog', 'pack-dialog', 'help-dialog'];
 let config, game, welcomeComplete = false, viewIndex = 0, cachedMaps = new Map(), lastMapId;
+const testSession = new URLSearchParams(location.search).get('editorTest');
+const editorTest = window.parent !== window && ['http:', 'https:'].includes(location.protocol)
+  && /^[a-f0-9]{32}$/.test(testSession || '');
+let testSource = null, testStarting = false, testFocus = null;
+const tellEditor = (type, details = {}) => {
+  if (editorTest) window.parent.postMessage(playtestMessage(testSession, type, details), location.origin);
+};
 const warnings = new Set();
 const button = (text, action, className = '') => {
   const element = document.createElement('button');
@@ -44,7 +52,8 @@ function addWarning(message) {
 async function loadMap(id) {
   if (cachedMaps.has(id)) return cachedMaps.get(id);
   if (!config.files.has(id)) throw new SpecError(`Map ${id} has no URL in the main configuration.`);
-  const url = config.files.get(id), map = parseMap(await readText(url), id);
+  const url = config.files.get(id);
+  const map = parseMap(testSource?.id === id ? testSource.text : await readText(url), id);
   for (const block of map.blocks.values()) { block.image = resourceURL(block.image, url); block.picture = resourceURL(block.picture, url); }
   for (const warning of map.warnings) addWarning(warning);
   cachedMaps.set(id, map); return map;
@@ -134,7 +143,9 @@ function choose(index) {
   choices.append(button('← Back to choices', showInteraction, 'quiet'));
 }
 async function finishChoice(index, uid) {
+  if (game?.paused) return;
   $('interaction-error').textContent = '';
+  tellEditor('busy', { busy: true });
   const controls = [...$('interaction-dialog').querySelectorAll('button')]; controls.forEach(el => { el.disabled = true; });
   try {
     const result = await game.resolve(index, uid);
@@ -149,10 +160,10 @@ async function finishChoice(index, uid) {
     if (!$('interaction-dialog').open) $('interaction-dialog').showModal();
     $('interaction-choices').querySelector('button').focus();
   } catch (error) { $('interaction-error').textContent = `This interaction could not finish: ${error.message} No outcome was applied. You can leave and try again.`; }
-  finally { controls.forEach(el => { el.disabled = false; }); }
+  finally { controls.forEach(el => { el.disabled = false; }); tellEditor('busy', { busy: false }); }
 }
 function move(dx, dy) {
-  if (!welcomeComplete || dialogs.some(id => $(id).open)) return;
+  if (!welcomeComplete || game?.paused || dialogs.some(id => $(id).open)) return;
   try {
     const result = game.move(dx, dy);
     if (result.kind === 'wall') log(result.message);
@@ -201,19 +212,59 @@ async function boot() {
     }
     $('hero-gnome').src = config.images.Player;
     document.title = `${config.title} · A gnome-sized adventure`; applyStyle(config.style);
+    if (editorTest) {
+      document.body.classList.add('editor-test');
+      $('boot-message').textContent = 'Waiting for the editor’s map…';
+      tellEditor('ready'); return;
+    }
     await loadMap(config.startMap);
     $('boot-message').textContent = '';
     $('welcome-dialog').showModal(); $('player-name').select();
-  } catch (error) { $('boot-message').textContent = `The adventure could not load: ${error.message} Check the configuration URL and serve the files over HTTP(S), then reload.`; }
+  } catch (error) {
+    $('boot-message').textContent = `The adventure could not load: ${error.message} Check the configuration URL and serve the files over HTTP(S), then reload.`;
+    tellEditor('error', { message: error.message });
+  }
 }
+async function startGame(name) {
+  game = new Game(config, loadMap); await game.start(name);
+  lastMapId = undefined; viewIndex = 0; welcomeComplete = true;
+  $('adventure').hidden = false; $('restart-button').disabled = false;
+  $('boot-message').textContent = '';
+  $('journal').replaceChildren();
+  log(`Welcome to ${game.map.name}, ${game.player.name}. Your adventure begins at (${game.player.x},${game.player.y}).`);
+  render(); $('board').focus({ preventScroll: true });
+}
+window.addEventListener('message', async event => {
+  if (!editorTest || event.origin !== location.origin || event.source !== window.parent
+      || !isPlaytestMessage(event.data, testSession)) return;
+  const data = event.data;
+  if (data.type === 'start' && config && !game && !testStarting) {
+    if (!validTestSnapshot(data)) { tellEditor('error', { message: 'Invalid or oversized editor map.' }); return; }
+    testStarting = true;
+    try {
+      // The edited map overrides its server file for this test. Other maps still
+      // come from the master directory. Relative artwork uses that map's URL.
+      parseMap(data.text, data.mapId);
+      testSource = { id: data.mapId, text: data.text };
+      if (!config.files.has(data.mapId)) config.files.set(data.mapId, new URL(`../maps/map-${data.mapId}.txt`, import.meta.url).href);
+      config.startMap = data.mapId;
+      await startGame('Map tester'); tellEditor('running');
+    } catch (error) { tellEditor('error', { message: error.message }); }
+    finally { testStarting = false; }
+  } else if (data.type === 'pause' && game && !game.paused) {
+    if (!game.pause()) { tellEditor('pause-busy'); return; }
+    testFocus = document.activeElement; document.body.inert = true;
+    tellEditor('paused');
+  } else if (data.type === 'resume' && game?.paused) {
+    game.resume(); document.body.inert = false;
+    tellEditor('running');
+    (testFocus?.isConnected ? testFocus : $('board')).focus({ preventScroll: true });
+  }
+});
 $('welcome-form').addEventListener('submit', async event => {
   event.preventDefault(); const submit = event.submitter; if (submit.disabled) return; submit.disabled = true;
   try {
-    game = new Game(config, loadMap); await game.start($('player-name').value);
-    lastMapId = undefined; welcomeComplete = true;
-    $('adventure').hidden = false; $('restart-button').disabled = false;
-    $('journal').replaceChildren(); log(`Welcome to Bramblewood, ${game.player.name}. A key glints to the east. A chest waits north of here. Your adventure begins at (${game.player.x},${game.player.y}).`);
-    render(); closeDialog('welcome-dialog');
+    await startGame($('player-name').value); closeDialog('welcome-dialog');
   } catch (error) { $('welcome-error').textContent = error.message; }
   finally { submit.disabled = false; }
 });
@@ -231,7 +282,7 @@ for (const id of dialogs) $(id).addEventListener('cancel', event => {
 });
 document.querySelectorAll('[data-move]').forEach(el => el.addEventListener('click', () => move(...el.dataset.move.split(',').map(Number))));
 document.addEventListener('keydown', event => {
-  if (!welcomeComplete || dialogs.some(id => $(id).open) || event.altKey || event.ctrlKey || event.metaKey || ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
+  if (!welcomeComplete || game?.paused || dialogs.some(id => $(id).open) || event.altKey || event.ctrlKey || event.metaKey || ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) return;
   const directions = { ArrowUp: [0,1], ArrowRight: [1,0], ArrowDown: [0,-1], ArrowLeft: [-1,0], Numpad8: [0,1], Numpad6: [1,0], Numpad2: [0,-1], Numpad4: [-1,0] };
   const direction = directions[event.code] || directions[event.key];
   if (direction) { event.preventDefault(); if (!event.repeat) move(...direction); }

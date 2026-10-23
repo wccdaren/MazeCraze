@@ -197,3 +197,57 @@ test('the supplied maze is solvable from the real start without teleporting or g
   await walkTo(11,15,true); await walkTo(16,14,true,0,()=>game.player.inventory.find(i=>i.nid==='1/4.4').uid);
   await walkTo(22,16,true); assert.equal(game.ended,true);
 });
+
+test('FAIL takes explicit regular items, preserves the selected wrong item, and does not grant entry', async () => {
+  const game = await fixture(), bomb = give(game, '1/4.3');
+  give(game, '1/4.1'); give(game, '1/4.1'); give(game, '1/4.1');
+  const choice = game.block('1/3.3').choices[0];
+  choice.fields['Fail.TakeItems'] = '1/4.1 | 1/4.1';
+  choice.fields['Fail.Message'] = 'The guard keeps two keys. Your {SelectedItem.Name} stays in your pack.';
+  approach(game, 8, 5);
+  const result = await game.resolve(0, bomb.uid);
+  assert.equal(result.passed, false); assert.match(result.message, /Bomb stays/);
+  assert.equal(game.quantity('1/4.1'), 1); assert.equal(game.quantity(bomb.nid), 1);
+  assert.equal(game.player.x, 7); assert.equal(game.at(8, 5).nid, '1/3.3');
+});
+test('FAIL can explicitly take the selected item, once, without an automatic extra cost', async () => {
+  const game = await fixture(), bomb = give(game, '1/4.3'); give(game, bomb.nid);
+  game.block('1/3.3').choices[0].fields['Fail.TakeItems'] = bomb.nid;
+  approach(game, 8, 5); await game.resolve(0, bomb.uid);
+  assert.equal(game.quantity(bomb.nid), 1);
+});
+test('missing explicit FAIL costs abort all effects atomically; equipment cannot be taken', async () => {
+  const game = await fixture(), bomb = give(game, '1/4.3'); give(game, '1/4.1');
+  const fields = game.block('1/3.3').choices[0].fields;
+  fields['Fail.TakeItems'] = '1/4.1 | 1/4.1';
+  fields['Fail.GiveItems'] = '1/4.3'; fields['Fail.ReplaceBlock'] = '1/1.2';
+  fields['Fail.SetMapVariable.DoorOpened'] = '1';
+  approach(game, 8, 5);
+  await assert.rejects(game.resolve(0, bomb.uid), /Cannot consume/);
+  assert.equal(game.quantity('1/4.1'), 1); assert.equal(game.quantity(bomb.nid), 1);
+  assert.equal(game.at(8, 5).nid, '1/3.3'); assert.ok(game.pending);
+  const sword = give(game, '1/4.2'); fields['Fail.TakeItems'] = sword.nid;
+  await assert.rejects(game.resolve(0, bomb.uid), /clothing\/a weapon/);
+  assert.equal(game.quantity(sword.nid), 1);
+});
+test('paused tests cannot move, change equipment, cancel, or resolve a pending interaction', async () => {
+  const game = await fixture(), key = give(game, '1/4.1'), sword = give(game, '1/4.2');
+  assert.equal(game.pause(), true); assert.equal(game.move(0, 1).kind, 'ignored');
+  game.equip(sword.uid); assert.equal(game.equipment('weapons').length, 0);
+  game.resume(); game.equip(sword.uid); approach(game, 8, 5);
+  game.pause(); game.cancel(); game.unequip(sword.uid);
+  assert.ok(game.pending); assert.equal(game.equipment('weapons').length, 1);
+  await assert.rejects(game.resolve(0, key.uid), /No interaction/);
+  game.resume(); assert.equal((await game.resolve(0, key.uid)).passed, true);
+  game.busy = true; assert.equal(game.pause(), false); assert.equal(game.paused, false);
+});
+test('a failed weak attack can take a coin while the weapon stays wielded', async () => {
+  const game = await fixture(), dagger = give(game, '1/4.6'); give(game, '1/4.1');
+  game.equip(dagger.uid, 'Left');
+  approach(game, 12, 12, 0, 1);
+  game.pending.block.choices[0].fields['Fail.TakeItems'] = '1/4.1';
+  assert.equal((await game.resolve(0, dagger.uid)).passed, false);
+  assert.equal(game.quantity('1/4.1'), 0);
+  assert.equal(game.player.weapons.get('leftHand'), dagger.uid);
+  assert.equal(game.quantity(dagger.nid), 1); assert.equal(game.player.y, 11);
+});

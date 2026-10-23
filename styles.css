@@ -841,3 +841,8 @@ dialog .primary {
     scroll-behavior:auto!important
   }
 }
+
+/* Editor playtests use the same game page in a smaller frame. */
+body.editor-test .intro, body.editor-test .masthead, body.editor-test .site-footer { display: none; }
+body.editor-test .shell { padding-top: 16px; }
+body.editor-test .adventure { margin-top: 0; }

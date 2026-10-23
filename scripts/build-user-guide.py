@@ -256,7 +256,7 @@ def build(pages):
     document.core_properties.subject = 'Illustrated user manual for seventh-grade mapmakers'
     document.core_properties.author = 'Maze Craze'
     document.core_properties.keywords = 'Maze Craze, map editor, Sebastian, coordinates, puzzles, user guide'
-    document.core_properties.comments = 'Documentation checked against editor/game source at d6eefcc. Does not change game behavior.'
+    document.core_properties.comments = 'Documents integrated playtesting and explicit PASS/FAIL item costs. Documentation only.'
     update_fields = OxmlElement('w:updateFields')
     update_fields.set(qn('w:val'), 'true')
     document.settings.element.append(update_fields)
@@ -271,8 +271,8 @@ def build(pages):
     document.add_paragraph('A complete, illustrated guide for Sebastian and fellow seventh-grade mapmakers.')
     for text in ['A guided first map you can build and play', 'Every editor field, valid settings, examples, and creative uses', 'Recipes for keys, doors, chests, equipment, secrets, and travel', 'The file relationships that make the whole adventure work']:
         document.add_paragraph(text, 'List Bullet')
-    document.add_paragraph('First editor edition • October 2026', 'Guide Small')
-    document.add_paragraph('Reference build: d6eefcc • The editor works offline; the game uses HTTP(S).', 'Guide Small')
+    document.add_paragraph('Playtesting edition • October 2026', 'Guide Small')
+    document.add_paragraph('Offline editing and export • Integrated playtests use the same HTTP(S) game website.', 'Guide Small')
     document.add_page_break()
     title = document.add_paragraph('Contents', 'Title')
     title.paragraph_format.space_after = Pt(12)

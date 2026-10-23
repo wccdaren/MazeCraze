@@ -1,4 +1,5 @@
 import { parseMap, coordinates, splitList } from "./spec.js";
+import { playtestMessage, isPlaytestMessage } from "./playtest-protocol.js";
 import {
   EDITOR_TYPES,
   EDITOR_SUBJECTS,
@@ -444,6 +445,7 @@ function renderStudio() {
   renderSelected();
   drawCanvas();
   renderValidation();
+  refreshTestControls();
 }
 function setTool(tool) {
   activeTool = tool;
@@ -807,15 +809,13 @@ function addOutcome(parent, fields, prefix) {
       "Give items · NIDs separated by |",
       { placeholder: "1/4.1 | 1/4.3" },
     ],
-    ...(prefix === "Pass"
-      ? [
-          [
-            "TakeItems",
-            "Take additional items · NIDs separated by |",
-            { placeholder: "Do not repeat the automatically used item" },
-          ],
-        ]
-      : []),
+    [
+      "TakeItems",
+      "Take additional items · NIDs separated by |",
+      { placeholder: prefix === "Pass"
+        ? "Do not repeat the automatically used item"
+        : "Blank = keep items; list explicit failure costs" },
+    ],
     ["AddState", "Add player states", { placeholder: "Blessed | Muddy" }],
     ["RemoveState", "Remove player states", {}],
     [
@@ -1261,6 +1261,7 @@ studio("help-open").addEventListener("click", () =>
 );
 document.addEventListener("keydown", (event) => {
   if (
+    studio("editor-pane").hidden ||
     document.querySelector("dialog[open]") ||
     ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)
   )
@@ -1405,4 +1406,101 @@ for (const name of Object.keys(EDITOR_BUNDLED.images)) {
   option.value = `../assets/${name}`;
   studio("image-suggestions").append(option);
 }
+// A paused iframe retains its own Game instance. No runtime state is copied
+// back into the editable document, and no map data is uploaded to the server.
+let testFrame = null, testSession = '', testPhase = 'idle', testBusy = false;
+let testSnapshot = '', testTimer, testNotice = '';
+function refreshTestControls() {
+  studio('test-start').disabled = ['starting', 'pausing', 'resuming'].includes(testPhase) || testBusy;
+  studio('test-edit').hidden = !['starting', 'running', 'pausing', 'resuming'].includes(testPhase);
+  studio('test-edit').disabled = testPhase !== 'running' || testBusy;
+  studio('test-resume').hidden = testPhase !== 'paused';
+  const changed = testPhase === 'paused' && exportMap(draft) !== testSnapshot;
+  studio('test-status').textContent = changed
+    ? 'Your map has changed. Resume continues the previous test. Test from Start uses your changes.'
+    : testNotice || 'Test a fresh copy of your map without exporting. Your design stays on this desk.';
+}
+function showTestEditor() {
+  studio('editor-pane').hidden = false;
+  studio('test-panel').hidden = true;
+  studio('new-map').disabled = false;
+  studio('open-map').disabled = false;
+  studio('export-map').disabled = false;
+}
+function showTestGame() {
+  studio('editor-pane').hidden = true;
+  studio('test-panel').hidden = false;
+  studio('new-map').disabled = true;
+  studio('open-map').disabled = true;
+  studio('export-map').disabled = true;
+}
+function sendTestCommand(type, details = {}) {
+  testFrame?.contentWindow.postMessage(playtestMessage(testSession, type, details), location.origin);
+}
+function failTest(message) {
+  clearTimeout(testTimer);
+  testFrame?.remove(); testFrame = null; testPhase = 'idle'; testBusy = false;
+  testNotice = message; showTestEditor(); refreshTestControls();
+  studio('test-status').classList.add('error');
+}
+function startTest() {
+  if (!['http:', 'https:'].includes(location.protocol)) {
+    failTest('Editing and export work offline. To playtest, open editor.html on the same HTTP(S) website as the game, with all game files installed.');
+    return;
+  }
+  const validation = renderValidation();
+  if (validation.errors.length) {
+    testNotice = 'Fix the errors in Map checks before testing.';
+    tell(testNotice, true); refreshTestControls(); return;
+  }
+  let text;
+  try { text = exportMap(draft); } catch (error) { report(error); return; }
+  clearTimeout(testTimer); testFrame?.remove();
+  testSession = [...crypto.getRandomValues(new Uint32Array(4))].map(n => n.toString(16).padStart(8, '0')).join('');
+  testSnapshot = text; testPhase = 'starting'; testBusy = false;
+  testNotice = 'Opening a fresh test…';
+  studio('test-status').classList.remove('error');
+  testFrame = document.createElement('iframe');
+  testFrame.title = 'Maze Craze map playtest';
+  testFrame.setAttribute('referrerpolicy', 'no-referrer');
+  const url = new URL('index.html', location.href);
+  url.searchParams.set('editorTest', testSession);
+  testFrame.src = url.href;
+  studio('test-frame-host').replaceChildren(testFrame);
+  showTestGame(); refreshTestControls();
+  testTimer = setTimeout(() => failTest('The game did not become ready. Check that index.html, main-config.txt, js/, styles.css, maps/, and assets/ are deployed together with this editor. Reload after updating the files.'), 45000);
+}
+studio('test-start').addEventListener('click', startTest);
+studio('test-edit').addEventListener('click', () => {
+  if (testPhase !== 'running' || testBusy) return;
+  testPhase = 'pausing'; refreshTestControls(); sendTestCommand('pause');
+});
+studio('test-resume').addEventListener('click', () => {
+  if (testPhase !== 'paused') return;
+  testPhase = 'resuming'; showTestGame(); refreshTestControls(); sendTestCommand('resume');
+});
+window.addEventListener('message', event => {
+  if (!testFrame || event.origin !== location.origin || event.source !== testFrame.contentWindow
+      || !isPlaytestMessage(event.data, testSession)) return;
+  const data = event.data;
+  if (data.type === 'ready' && testPhase === 'starting') {
+    sendTestCommand('start', { mapId: Number(draft.map.ID), text: testSnapshot });
+  } else if (data.type === 'running' && ['starting', 'resuming'].includes(testPhase)) {
+    clearTimeout(testTimer); testPhase = 'running'; testBusy = false;
+    testNotice = 'Test copy running. Back to Edit pauses it. Test from Start resets all test progress.';
+    testFrame.focus();
+  } else if (data.type === 'busy' && typeof data.busy === 'boolean' && testPhase === 'running') {
+    testBusy = data.busy;
+    testNotice = data.busy ? 'Finishing an interaction or loading a map…'
+      : 'Test copy running. Back to Edit pauses it. Test from Start resets all test progress.';
+  } else if (data.type === 'paused' && testPhase === 'pausing') {
+    testPhase = 'paused'; testNotice = 'Test paused. Resume keeps its progress. Test from Start uses your current design and resets everything.';
+    showTestEditor(); studio('map-canvas').focus({ preventScroll: true });
+  } else if (data.type === 'pause-busy' && testPhase === 'pausing') {
+    testPhase = 'running'; testBusy = true; testNotice = 'Wait for the current interaction to finish, then choose Back to Edit.';
+  } else if (data.type === 'error' && typeof data.message === 'string') {
+    failTest(`Test could not start: ${data.message.slice(0, 1000)}`); return;
+  }
+  refreshTestControls();
+});
 renderStudio();

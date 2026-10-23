@@ -12,9 +12,9 @@ Read Chapters 1–4 first and make the small practice map. After that, use the f
 
 **The game** is `index.html`, together with its JavaScript, artwork, and configuration files. The game loads map text and JavaScript modules, so it needs an HTTP or HTTPS server. Opening the game directly from a Windows `file:///C:/...` address causes a browser security error. That restriction does not apply to the self-contained editor.
 
-The editor does not run a full game simulation. A map can be written correctly but still have an impossible puzzle. You must play the exported map to find design problems, such as putting a key behind the door that needs it.
+When editor.html is on the same HTTP(S) website as the full game, Test from Start runs the existing game right inside the editor. No export is needed for that test. Offline editing still works; offline playtesting does not. A map can be written correctly but still have an impossible puzzle, such as a key behind the door that needs it. Chapter 17 explains how to test, pause, edit, resume, and restart.
 
-## The most important habit: apply, export, then test
+## The most important habit: apply, back up, and test
 
 Think of three different kinds of saving. **Save block** puts the block form’s changes into the current editor document. **Apply settings** does the same for the map settings. Neither button writes a file to your computer. **Export map.txt** downloads the actual map file.
 
@@ -193,6 +193,8 @@ The door does not have to be called an enemy. It simply uses the same flexible c
 
 ## Step 6 — Export and connect it to the game
 
+If editor.html and the full game are on the same HTTP(S) website, you can preview this new map immediately with Test from Start, even before adding Map.3 to the master directory. See Chapter 17 for pause/resume. Export and connect the map when you are ready to publish it.
+
 Read Map checks and fix errors. Export downloads `map-3.txt`. Put it in your game’s `maps/` folder. In `main-config.txt`, add `Map.3: maps/map-3.txt` under [Maps]. To start directly in this tutorial, set `StartMap: 3` under [Game]. Keep the other master settings and image entries.
 
 The master file is outside the editor; use a plain-text editor for that small change. If you are working inside WordPress uploads, use the real uploaded map URL rather than assuming the filename stays unchanged.
@@ -201,7 +203,7 @@ The master file is outside the editor; use a plain-text editor for that small ch
 
 Run the game through HTTP(S). First try the door without a key. You should not be able to enter. Then start a fresh adventure, collect the key, approach the door, choose the key, and check that the door becomes grass. Reach the princess to finish.
 
-If you need a wrong-item test, add a regular bomb item with a different NID and choose it at the door. A FAIL must preserve that bomb and the player’s position. Make a note of the expected result before you test.
+If you need a wrong-item test, add a regular bomb item with a different NID and choose it at the door. With Take additional items blank on FAIL, the attempt must preserve that bomb and the player’s position. Make a note of the expected result before you test.
 
 > DESIGN CHALLENGE: Add a second door with the same key rule. How many keys must you provide? If a successful use consumes a key, one key will not open two separate doors unless another reward supplies a replacement key.
 
@@ -639,6 +641,8 @@ Add a test adds another rule to this choice only. Remove rule removes that quest
 
 # 10. Every PASS and FAIL outcome field
 
+![Both outcome forms include explicit item costs](manual-images/outcome-fields.png)
+
 An outcome is a set of effects. A PASS means the chosen tests matched. A FAIL means they did not. Neither is a random dice roll. Cancel is separate and applies neither outcome.
 
 The game checks needed definitions, item removals, variables, and a destination map before committing an outcome. If a required destination cannot load, it leaves the interaction unapplied instead of spending the player’s key first and getting stuck halfway through.
@@ -690,15 +694,26 @@ Replacing a cell never automatically triggers its new block. An outcome changes 
 
 **Connections:** These items do not need their own placed cells to be awarded, but their Inventory definitions must exist. Foreign-map items retain their originating NIDs and require that map’s directory entry. Repeating a reward-producing Interaction can create unlimited items if it keeps replacing itself; decide whether that is intentional.
 
-## Take additional items — Pass.TakeItems
+## Take additional items — Pass.TakeItems and Fail.TakeItems
 
-**Valid setting:** PASS-only list of full regular Item NIDs, separated by ` | `. Clothing and weapons cannot be consumed this way. Repeated entries require repeated owned copies. Blank removes no additional objects.
+**Valid setting:** A list of full regular Item NIDs, separated by ` | `, on either PASS or FAIL. Clothing and weapons cannot be consumed this way. Repeated entries require repeated owned copies. Blank removes no additional objects. A failed selected item is never removed automatically.
 
 **Example:** An Attempt toll with Inventory.Quantity GreaterOrEqual 2 can remove two tokens by listing the token NID twice. A UseInventory toll already consumes the selected token automatically, so list it only once more if the intended total cost is two.
 
-**Creative idea:** Trade several collectibles for passage or a reward. Tell the player the cost in the message before they choose, rather than hiding it as a surprise.
+**Creative idea:** Trade several collectibles for passage or a reward. An enemy can pocket a gold coin after a failed riddle or a weak attack. Tell the player the cost before they choose, and put a spare-coin chest nearby so a failed puzzle can be tried again.
 
-**Connections:** A successful UseInventory selection consumes one regular Item automatically. Listing the same NID in Take additional items is an extra cost, not a reminder. Test enough quantity first. If a needed extra item is absent, the outcome cannot complete. FAIL has no TakeItems field and must preserve inventory removals; hand-written Fail.TakeItems is forbidden.
+**Connections:** A successful UseInventory selection consumes one regular Item automatically. Listing the same NID in PASS Take additional items is an extra cost, not a reminder. FAIL takes only the explicitly listed copies: if you list the selected item’s NID there, one copy is removed, with no automatic extra charge. Every required copy must be owned before applying the outcome. Items awarded in Give items during this same outcome cannot pay the cost. A missing copy or equipment NID causes an authoring error and applies no effects: no reward, replacement, state change, variable update, transport, or partial removal. Cancel never takes anything.
+
+| Outcome | Automatic selected Item cost | Allowed examples |
+| --- | --- | --- |
+| PASS with UseInventory | One selected regular Item, plus every listed cost | Selected key plus Pass.TakeItems: 1/4.3 spends a key and a bomb |
+| FAIL | None; only the listed regular Items | Fail.TakeItems: 1/4.7 takes one defined gold coin |
+| FAIL with repeated NIDs | One copy for each listed occurrence | List 1/4.7 twice to take two coins |
+| Cancel / Leave | None; outcomes do not run | Leave a trickster without answering |
+
+To build the coin-stealing enemy, first create an Inventory block with Item kind Item and full NID such as `1/4.7`. Name it Gold Coin and make sure the player can collect a coin before reaching the enemy. In the enemy’s Attack choice, keep the weapon-power test. Under On FAIL, put `1/4.7` in Take additional items and write “Your sword is too weak. The pig pockets one gold coin!” The sword remains reusable. The player stays beside the pig unless a transport is explicitly set. The coin definition must be in the map matching its prefix; a foreign-map prefix needs a master directory entry.
+
+Plan for players who run out of coins: provide a clearly labeled alternative choice without a cost, or a reachable repeating supply chest. Repeating a cost-bearing FAIL without its required items reports an authoring error; the game does not invent a coin, allow a negative quantity, or silently skip a listed cost.
 
 ## Add player states — AddState
 
@@ -805,7 +820,7 @@ Use walls to give the map a meaningful structure: a narrow passage, a room bound
 
 Choose Type=Inventory and ItemKind=Item. Use category-4 NIDs and suitable names/images. In the sample, Standard Key is `1/4.1`, Bomb is `1/4.3`, and Master Key is `1/4.4`. Place them as cells or list their NIDs in a chest’s Give items.
 
-Pickup is automatic through the built-in choices. Using a selected regular item on a matching Interaction consumes one on PASS; a wrong match preserves it. The special power of a master key comes from doors testing its NID, not from the word Master in its name.
+Pickup is automatic through the built-in choices. Using a selected regular item on a matching Interaction consumes one on PASS; a wrong match preserves it unless Fail.TakeItems explicitly lists a cost. The special power of a master key comes from doors testing its NID, not from the word Master in its name.
 
 Creative variations include a flute, a shiny pebble, a ferry ticket, or a mushroom. Each needs an accepting Interaction. Do not assume merely naming an item Bomb makes it remove every nearby wall.
 
@@ -1088,17 +1103,54 @@ For local game testing on Windows, open a terminal in the full MazeCraze game fo
 
 For WordPress, host the static game files in a location that serves HTML, JavaScript, styles, text, and pictures correctly, then embed the game page with the project’s iframe example. A Custom HTML block containing only a copied game page is not a replacement for the external module/configuration files.
 
-The editor itself can be hosted as a single editor.html page. It reads local map files in the visitor’s browser and exports downloads; it does not write back to your website. Publishing a changed map remains a separate upload step. Ask the site administrator for the intended static hosting directory instead of enabling unrestricted upload types.
+The editor itself can be hosted as a single editor.html page for editing. Its integrated playtest also needs the full game files on that same HTTP(S) origin. It reads local map files in the visitor’s browser and exports downloads; it does not write back to your website. Publishing a changed map remains a separate upload step. Ask the site administrator for the intended static hosting directory instead of enabling unrestricted upload types.
 
 # 17. Testing and troubleshooting like a mapmaker
 
+## Test from Start, Back to Edit, and Resume Test
+
+![A playtest running inside Map Studio](manual-images/playtest-running.png)
+
+These controls appear above your editing document. Use them on your game website, with editor.html beside index.html and all the game files. The game runs inside a frame, like a small window in the editor. It uses the normal game program and popup choices; there is no second set of puzzle rules to learn.
+
+| Control | What it does | Allowed examples |
+| --- | --- | --- |
+| Test from Start | Starts a fresh run from the latest applied editor document | Test your new door without exporting |
+| Back to Edit | Pauses and hides the current run; keeps its memory and dialogs | Return to graph paper after a failed guess |
+| Resume Test | Continues the paused run using its previous map snapshot | Keep your collected sword and current position |
+| Export map.txt | Downloads your authoring document, independently of test progress | Save map-3.txt after changing a door rule |
+
+First save any block form and apply map settings. Read Map checks and fix errors. Click Test from Start. Your gnome is called Map tester and begins at this map’s StartingLocation, even if main-config.txt normally starts somewhere else. Use arrows or numpad 8/2/4/6, open inventory, wear boots, wield weapons, and try choices exactly as in the regular game. Click the game grid if arrow keys do not have focus.
+
+Every Test from Start discards the previous test run. Inventory, equipment, player states, player variables, map variables, replacements, and changes on other visited maps all start fresh. The map is copied from the latest applied editor document; the editable design itself is never changed by collecting a key, defeating a monster, or traveling during the test.
+
+Back to Edit pauses the current run without copying its variables back into the editor. The frame simply stays in memory. Even an open interaction or result popup stays there. If a choice is still resolving or another map is loading, the button waits until that work finishes so you cannot pause halfway through an outcome. Return to your graph paper and make changes normally. Undo history is preserved.
+
+Resume Test continues that old run, including its original map design. Editing a door while paused does not change the door in the paused game. The message “Your map has changed. Resume continues the previous test. Test from Start uses your changes.” reminds you of this rule. To try the new door, use Test from Start. This version has no way to change inventory or variables inside a running test by typing designer commands.
+
+**Try it:** Test from Start, collect a key, and choose Back to Edit. Rename the map in Map settings. Resume Test: the old name and collected key remain. Back to Edit, then Test from Start: the new name appears and the key is back on the ground. Export still contains the placed key because testing did not collect it from your design.
+
+### Files and artwork used during a test
+
+The edited map may have a new number that is not yet listed in main-config.txt. It can still start in Test from Start. Other maps reached by transport and foreign-map item definitions must be listed in the master file; the game loads their published files. An unsaved Map 2 open in another editor tab is not shared with this run. On a fresh test, all visited maps begin fresh again.
+
+Master styles, player avatar, princess picture, and starting player variables still come from main-config.txt. If the edited map already has a Map.N directory entry, its URL is the base for relative block image paths. Otherwise the base is maps/map-N.txt beside the game, even though no such file is fetched for the edited map. Thus ../assets/tree.png points to the normal shared artwork folder. Absolute HTTP(S) image URLs use their own addresses. New custom artwork must be on the server to appear in the game. Choosing a local image preview or changing the editor’s preview base does not send that artwork to the game.
+
+### Offline use, publishing, and restarting the browser
+
+Double-clicked editor.html still supports drawing, forms, import, and export. Test from Start explains that playtesting needs HTTP(S); it cannot run the module-based game from a file:/// address. The editor-only download does not include the game. Use the full project download for integrated testing, and deploy editor.html, index.html, styles.css, and the complete js/ folder together, including playtest-protocol.js. Keep maps, main-config.txt, and assets in their normal places.
+
+The map snapshot is a browser message to the same-origin game frame. It is not an HTTP POST, upload, server save, or replacement of the live map file. The server only serves ordinary game files and artwork. Export the final map and SFTP it to publish, as usual. Exporting does not destroy a paused test. Reloading or closing the editor loses that test and any unexported edits; paused progress is not a save file.
+
+If the game cannot become ready, the editor returns to the design and shows a loading error. Check the complete deployment and main-config.txt URL; refresh after replacing old scripts. A test failure never erases the editable map.
+
 ## Test one new idea at a time
 
-First confirm the route with simple grass, walls, key and door. Add one equipment puzzle next. Then add a secret route or another map. Export and play between changes. This makes it much easier to find which new idea introduced a problem.
+First confirm the route with simple grass, walls, key and door. Add one equipment puzzle next. Then add a secret route or another map. Use Test from Start between changes, and export backups regularly. This makes it much easier to find which new idea introduced a problem.
 
 For each choice, write an expected PASS and FAIL case. Test with no eligible item, a wrong item, the right item, and repeated attempts. For a weapon, test weaker, equal, and stronger power. For clothing, test owned-but-not-worn, worn-and-Working, and a displaced item.
 
-Check inventory before and after success/failure. A failed bomb match preserves it. A successful selected regular item removes one. A reusable weapon should remain. Check the replacement Type, not only the picture, before expecting ordinary entry.
+Check inventory before and after success/failure. A failed bomb match preserves it by default; an explicit Fail.TakeItems list is the exception. A successful selected regular item removes one. A reusable weapon should remain. Check the replacement Type, not only the picture, before expecting ordinary entry.
 
 Walk away and return. Does a repeating chest grant another reward? Does a one-time chest stay gone? Change maps and return: cells and session memory should persist. Start a fresh adventure when testing initial conditions.
 
@@ -1138,7 +1190,7 @@ Blank PASS replacement means default floor. Enter the same Interaction NID if it
 
 ### A toll or door removes too many keys
 
-UseInventory already consumes the selected regular key on PASS. Take additional items is extra. Remove a duplicated cost or provide the intended quantity rule. Never put Fail.TakeItems into text; failures must not remove inventory.
+UseInventory already consumes the selected regular key on PASS. Take additional items is extra. Remove a duplicated cost or provide the intended quantity rule. Check both PASS and FAIL Take additional items. FAIL removes only explicitly listed regular Items; leave that field blank when a wrong match should preserve everything.
 
 ### A variable produces an error or never changes as expected
 

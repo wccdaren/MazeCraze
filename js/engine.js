@@ -28,6 +28,7 @@ export class Game {
     this.pending = null;
     this.ended = false;
     this.busy = false;
+    this.paused = false;
   }
   async ensureMap(id) {
     if (!this.maps.has(id)) {
@@ -55,7 +56,7 @@ export class Game {
     return this.block(x < 1 || y < 1 || x > this.map.width || y > this.map.height ? this.map.borderNID : this.map.cells[y - 1][x - 1]);
   }
   move(dx, dy) {
-    if (this.pending || this.busy || this.ended) return { kind: 'ignored' };
+    if (this.pending || this.busy || this.ended || this.paused) return { kind: 'ignored' };
     if (![[0, 1], [1, 0], [0, -1], [-1, 0]].some(([x, y]) => x === dx && y === dy)) throw new Error('Movement must be one orthogonal cell.');
     const x = this.player.x + dx, y = this.player.y + dy;
     if (x < 1 || y < 1 || x > this.map.width || y > this.map.height) return { kind: 'wall', message: 'The edge of the map is beyond your reach.' };
@@ -71,7 +72,9 @@ export class Game {
     if (block.type === 'Inventory') return [{ text: `Pick up ${block.name}`, action: 'PickUp', tests: [], mode: 'All', fields: { 'Pass.GiveItems': block.nid, 'Pass.Message': 'You tuck {Target.Name} into your pack. A useful find!' } }];
     return block.choices;
   }
-  cancel() { if (!this.busy) this.pending = null; }
+  cancel() { if (!this.busy && !this.paused) this.pending = null; }
+  pause() { if (this.busy) return false; this.paused = true; return true; }
+  resume() { this.paused = false; }
   definition(item) { return this.block(item.nid); }
   quantity(nid) { return this.player.inventory.filter(item => item.nid === nid).length; }
   equipment(kind) {
@@ -84,7 +87,7 @@ export class Game {
     return [];
   }
   equip(uid, hand = 'Right') {
-    if (this.pending || this.busy || this.ended) return;
+    if (this.pending || this.busy || this.ended || this.paused) return;
     const item = this.player.inventory.find(candidate => candidate.uid === uid);
     if (!item) throw new SpecError('That item is no longer in your inventory.');
     const def = this.definition(item);
@@ -100,7 +103,7 @@ export class Game {
     for (const slot of slots) target.set(slot, item.uid);
   }
   unequip(uid) {
-    if (this.pending || this.busy || this.ended) return;
+    if (this.pending || this.busy || this.ended || this.paused) return;
     for (const target of [this.player.clothing, this.player.weapons]) for (const [slot, value] of target) if (value === uid) target.delete(slot);
   }
   test(rule, selected, target) {
@@ -147,7 +150,7 @@ export class Game {
     return String(template || '').replace(/\{(Player\.Name|SelectedItem\.Name|Target\.Name)\}/g, (_, key) => values[key]);
   }
   async resolve(choiceIndex, selectedUID) {
-    if (!this.pending || this.busy || this.ended) throw new SpecError('No interaction is ready.');
+    if (!this.pending || this.busy || this.ended || this.paused) throw new SpecError('No interaction is ready.');
     const pending = this.pending, choice = this.choices()[choiceIndex];
     if (!choice) throw new SpecError('Unknown choice.');
     const needsItem = ['Attack', 'UseInventory'].includes(choice.action);
@@ -163,12 +166,11 @@ export class Game {
       if (replacement !== '@princess') await this.requireDefinition(replacement);
       const give = splitList(f[`${prefix}GiveItems`]);
       const take = splitList(f[`${prefix}TakeItems`]);
-      // A failed match NEVER removes an item, even if an author writes Fail.TakeItems.
-      if (!passed && take.length) throw new SpecError('Fail.TakeItems is forbidden: failed attempts preserve inventory.');
       for (const nid of give) await this.requireDefinition(nid, true);
       const remove = [];
       if (passed && selected && this.definition(selected).itemKind === 'Item') remove.push(selected.uid);
-      // Authored TakeItems are additional to the one selected consumable.
+      // Only PASS consumes a selected Item automatically. Either outcome can
+      // explicitly take additional regular Items; validate every copy before commit.
       for (const nid of take) {
         const owned = this.player.inventory.find(item => item.nid === nid && !remove.includes(item.uid));
         if (!owned || this.definition(owned).itemKind !== 'Item') throw new SpecError(`Cannot consume ${nid}; it is absent or is clothing/a weapon.`);

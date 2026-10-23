@@ -545,8 +545,6 @@ export function validateDocument(document) {
               label,
               key.endsWith("TakeItems") ? "Item" : "Inventory",
             );
-        if (key === "Fail.TakeItems")
-          errors.push(`${label}: FAIL cannot consume items.`);
         if (
           /^(Pass|Fail)\.SetMapVariable\./.test(key) &&
           !Object.hasOwn(

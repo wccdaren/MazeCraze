@@ -149,7 +149,7 @@ flag: the outcome and resulting block type determine entry.
 | `Message` | Plain-text result message | `The key fits!` |
 | `ReplaceBlock` | Full replacement NID; same NID permits repetition | `1/1.2`, `1/3.3` |
 | `GiveItems` | Full inventory NIDs; repeating a NID gives multiple copies | `1/4.1 | 1/4.3 | 1/4.3` |
-| `TakeItems` | PASS only: additional regular Items to consume | `1/4.1` |
+| `TakeItems` | PASS or FAIL: explicitly consume regular Items; repeat NIDs for multiple copies | `1/4.1` |
 | `AddState` | Conditions to add | `Blessed | Muddy` |
 | `RemoveState` | Conditions to remove | `Muddy` |
 | `SetPlayerVariable.Name` | Set a declared player variable | `Pass.SetPlayerVariable.PuzzlesSolved: 1` |
@@ -165,8 +165,20 @@ cell to Move. Replacement alone never triggers a second interaction.
 
 On PASS, a selected regular Item is automatically consumed once. **Do not list it
 again in Pass.TakeItems** unless another copy is intentionally required. Clothing
-and weapons cannot be consumed through TakeItems. Failed matches consume nothing;
-Fail.TakeItems is forbidden. Merely checking inventory/equipment does not consume.
+and weapons cannot be consumed through TakeItems. FAIL never automatically consumes
+its selected item. An explicit `Fail.TakeItems` list removes the listed regular
+Items, one owned copy per entry; blank means no removal. Its NID may match the
+selected item, but there is no automatic extra charge on FAIL. Merely checking
+inventory/equipment does not consume anything. All required copies must already
+be owned before this outcome; GiveItems in the same outcome cannot pay its costs.
+Missing copies or an attempt to take equipment abort the entire outcome without
+applying any effects. Cancel never applies either outcome.
+
+Example: if Gold Coin is a regular Item defined as `1/4.7`, an enemy's failed
+Attack can use `Fail.TakeItems: 1/4.7` and
+`Fail.Message: The pig pockets one gold coin. Your sword stays in your hand.`
+The weapon remains owned. Ensure the player can afford this authored cost,
+or provide another choice without that cost for players with no coins.
 
 Explicit transports override ordinary movement for either outcome. `(2)` uses
 map 2's start; `(2)(3,3)` uses that map's given coordinate. Arrival does not test

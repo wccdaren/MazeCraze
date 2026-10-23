@@ -34,6 +34,18 @@
           ><button id="export-map" class="primary">Export map.txt ↓</button>
         </div>
       </section>
+      <section class="test-toolbar panel" aria-label="Test your map">
+        <div class="test-buttons">
+          <button id="test-start" class="primary">▶ Test from Start</button>
+          <button id="test-resume" hidden>Resume Test</button>
+          <button id="test-edit" hidden>Back to Edit</button>
+        </div>
+        <p id="test-status" role="status" aria-live="polite">Test a fresh copy of your map without exporting. Your design stays on this desk.</p>
+      </section>
+      <section id="test-panel" hidden aria-label="Playtest">
+        <div id="test-frame-host"></div>
+      </section>
+      <div id="editor-pane">
       <div class="document-bar">
         <div>
           <strong id="document-name">A New Adventure</strong
@@ -202,6 +214,7 @@
           hosts you trust.
         </p>
       </details>
+      </div>
       <footer class="studio-footer">
         <span>LOCAL FILES. YOUR IDEAS. NO ACCOUNT NEEDED.</span
         ><span>Maze Craze · Map Studio</span>
@@ -474,6 +487,12 @@
         This editor runs offline by double-clicking editor.html. The game itself
         still needs HTTP(S). Player-variable definitions and the map file
         directory live in main-config.txt, outside this map editor.
+      </p>
+      <p>
+        On your game website, Test from Start runs a fresh copy of this map.
+        Back to Edit pauses the test. Resume Test keeps that run, including its
+        old map design. After editing, choose Test from Start to try your changes.
+        Local image previews must be uploaded separately to appear in the game.
       </p>
       <button type="button" data-close="help-dialog" class="primary">
         Back to the graph paper

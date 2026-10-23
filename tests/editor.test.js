@@ -163,14 +163,17 @@ test("painting line interpolation leaves no gaps, fill respects barriers, and un
     { x: 3, y: 3 },
   ]);
 });
-test("validation rejects invalid local references, failure consumption, and undeclared map variables but permits foreign references with notes", () => {
+test("validation permits failure item costs and rejects invalid references or undeclared map variables", () => {
   const doc = importMap(samples[0]),
     choice = doc.blocks.find((b) => b.index === 10).choices[0];
   choice.fields["Fail.TakeItems"] = "1/4.1";
+  assert.deepEqual(validateDocument(doc).errors, []);
+  assert.equal(importMap(exportMap(doc)).blocks.find(b => b.index === 10).choices[0].fields["Fail.TakeItems"], "1/4.1");
+  choice.fields["Fail.TakeItems"] = "1/4.2";
+  assert.ok(validateDocument(doc).errors.some(s => s.includes("regular items")));
   choice.fields["Pass.ReplaceBlock"] = "1/1.99";
   choice.fields["Pass.SetMapVariable.Missing"] = "1";
   const result = validateDocument(doc);
-  assert.ok(result.errors.some((s) => s.includes("FAIL cannot consume")));
   assert.ok(result.errors.some((s) => s.includes("not defined")));
   assert.ok(result.errors.some((s) => s.includes("undeclared")));
   assert.deepEqual(validateDocument(importMap(samples[1])).errors, []);

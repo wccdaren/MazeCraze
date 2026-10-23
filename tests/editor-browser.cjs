@@ -42,6 +42,9 @@ const assert = require("node:assert/strict");
     assert.equal(await page.evaluate(() => location.origin), "null");
     await page.locator(".palette-block").first().waitFor();
     assert.equal(await page.locator(".palette-block").count(), 5);
+    await page.locator("#test-start").click();
+    assert.match(await page.locator("#test-status").textContent(), /same HTTP\(S\) website/);
+    assert.equal(await page.locator("iframe").count(), 0);
     const settings = page.locator("#settings-form");
     await page.locator("#settings-open").click();
     for (const [key, value] of Object.entries({
@@ -221,6 +224,7 @@ const assert = require("node:assert/strict");
     await pass.locator('[data-effect="Message"]').fill("The key fits!");
     await pass.locator('[data-effect="ReplaceBlock"]').fill("3/1.2");
     await fail.locator('[data-effect="Message"]').fill("The key does not fit.");
+    await fail.locator('[data-effect="TakeItems"]').fill(key.fields.NID);
     await pass
       .getByRole("button", { name: "＋ Set a variable", exact: true })
       .click();
@@ -238,6 +242,7 @@ const assert = require("node:assert/strict");
       (b) => b.fields.Description === "Workshop Door",
     );
     assert.equal(door.choices.length, 2);
+    assert.equal(door.choices[0].fields["Fail.TakeItems"], key.fields.NID);
     assert.equal(door.choices[0].fields["Pass.SetMapVariable.GateOpen"], "1");
     assert.equal(
       door.choices[0].fields["Test.2"],
@@ -263,6 +268,7 @@ const assert = require("node:assert/strict");
     assert.equal(longhand.format, "Longhand");
     assert.deepEqual(longhand.cells, doc.cells);
     await page.locator("#map-file").setInputFiles("maps/map-1.txt");
+    await page.locator("#document-name").filter({ hasText: "The Bramblewood Maze" }).waitFor();
     assert.equal(
       await page.locator("#document-name").textContent(),
       "The Bramblewood Maze",
@@ -321,6 +327,7 @@ const assert = require("node:assert/strict");
       mimeType: "text/plain",
       buffer: Buffer.from(unsafe),
     });
+    await page.locator("#document-name").filter({ hasText: "<img src=x onerror=alert(1)>" }).waitFor();
     assert.equal(
       await page.locator("#document-name").textContent(),
       "<img src=x onerror=alert(1)>",
@@ -350,6 +357,7 @@ const assert = require("node:assert/strict");
       mimeType: "text/plain",
       buffer: Buffer.from("[Map]\nID: 1\n"),
     });
+    await page.locator("#status").filter({ hasText: "Dimensions" }).waitFor();
     assert.equal(await page.locator("#document-name").textContent(), prior);
     assert.match(await page.locator("#status").textContent(), /Dimensions/);
     await page.locator("#example-select").selectOption("1");

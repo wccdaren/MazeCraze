@@ -8,7 +8,8 @@ the short reference.
 Double-click **editor.html**. You can keep just that one file on your computer:
 its scripts, styles, standard tile previews, and both sample maps are inside it.
 It can also be served as an ordinary HTML page on your game host. The game still
-needs HTTP(S); the editor does not.
+needs HTTP(S); editing and export do not. Integrated playtesting needs the full
+game on the same HTTP(S) origin as editor.html.
 
 ![Map Studio](docs/editor-preview.png)
 
@@ -67,16 +68,22 @@ also has a field for the NID to count. Variable tests expose a variable-name fie
 All or Any combines the tests; no tests means automatic success.
 
 Each choice has PASS and FAIL forms for messages, replacement, rewards, states,
-transports, end-game status, and variable updates. Only PASS has additional
-TakeItems. A successfully selected regular item is already consumed automatically:
-do not repeat it in TakeItems unless an extra copy is required. Failed matches
-never consume items. Replacing with the same Interaction permits another attempt
+transports, end-game status, and variable updates. Both outcomes have **Take
+additional items · NIDs separated by |**. A successfully selected regular Item is
+already consumed automatically on PASS: do not repeat it in Pass.TakeItems unless
+an extra copy is required. FAIL has no automatic removal; Fail.TakeItems is an
+explicit penalty, such as a lost gold coin. Blank preserves inventory. Each entry
+requires one owned regular Item; repeat NIDs for multiple copies. Clothing and
+weapons cannot be taken. Missing required copies abort the whole outcome with an
+authoring error and no applied effects. New rewards cannot pay costs in that same
+outcome. Replacing with the same Interaction permits another attempt
 but does not grant entry; ordinary entry requires PASS plus a Move replacement.
 
 | Form entry | Meaning | Allowed examples |
 | --- | --- | --- |
 | Full NID | Origin map / category.unique label | `1/3.3`, `2/4.10` |
 | Give items | One item per entry; repeat an entry for multiples | `1/4.1 | 1/4.3 | 1/4.3` |
+| Take additional items | Explicit regular Item costs on PASS or FAIL | `1/4.1`, `1/4.3 | 1/4.3` |
 | Replacement | Full NID; blank PASS means default, blank FAIL means unchanged | `1/1.2`, `1/3.3` |
 | Transport | Current-map coordinate, another map/coordinate, or map start | `(12,8)`, `(2)(3,3)`, `(2)` |
 | Outcome message | Plain text with approved optional placeholders | `The {SelectedItem.Name} fits!` |
@@ -137,14 +144,43 @@ nondefault blocks; longhand writes every row from highest Y to lowest Y. Both
 represent the same map, though original shorthand ordering is normalized.
 
 There is no script execution from specifications, HTML rendering of messages,
-file upload, server storage, or external runtime library. The editor is a map
-authoring tool, not a full game playtester: use the game to check solvability and
-cross-map behavior after export. See SPECIFICATION.md for the format reference.
+file upload, server storage, or external runtime library. See SPECIFICATION.md for
+the format reference.
+
+## Test, pause, and resume
+
+Open editor.html on the same HTTP(S) website as the full game. Apply form changes,
+then choose **Test from Start**. The editor passes an in-memory text snapshot to
+an iframe running the existing index.html and game modules. It does not upload
+that text, change your design, or mark your map as exported. The edited map starts
+at its own StartingLocation, even if the master StartMap is different. Every new
+test resets inventory, equipment, states, variables, and all visited map changes.
+
+**Back to Edit** pauses that iframe, including any open interaction dialog.
+**Resume Test** keeps the old run and old map snapshot. When the map has changed,
+the editor explains that Resume continues the previous test; use **Test from
+Start** to include your edits. Pause waits until asynchronous interactions/map
+loading finish. Undo and the authoring document remain separate from test progress.
+Reloading/closing the editor loses both unexported work and the paused test.
+
+Master images, style and player-variable defaults still come from main-config.txt.
+Other maps and foreign item definitions come from its map directory. A new edited
+map can be tested without a directory entry: its artwork then resolves relative
+to `maps/map-N.txt` beside the game. If a directory entry exists, its URL is the
+artwork base. The image-preview base URL and local preview artwork are editor-only;
+upload custom pictures separately for the game to load them. Cross-map tests use
+the other maps' server files, not unsaved documents in other editor tabs.
+
+The editor-only ZIP still supports offline editing/export. For integrated tests,
+install the full project ZIP, including js/playtest-protocol.js. Messages require
+an exact origin, expected parent/iframe window, protocol version and session ID;
+the map remains data. All requests load ordinary static files. Publishing remains
+your separate download-and-SFTP workflow.
 
 ## Editing the editor
 
 Work in `editor-shell.html`, `editor.css`, `js/editor-model.js`, and
-`js/editor-app.js`, then run `npm run build:editor`. That small Node script embeds
+`js/editor-app.js`, plus the shared `js/playtest-protocol.js`, then run `npm run build:editor`. That small Node script embeds
 the shared parser, source, style, standard tile previews and sample maps into the
 distributed `editor.html`. The built file is committed, so no build or dependency
 installation is needed to use the editor.

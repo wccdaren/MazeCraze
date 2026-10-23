@@ -48,7 +48,7 @@ preserves its changes. There is no save-to-disk feature in this draft.
 ## Create and edit maps
 
 For the complete illustrated handbook, download the
-[53-page Word user guide](docs/Maze-Craze-Map-Editor-User-Guide.docx) or its
+[Word user guide](docs/Maze-Craze-Map-Editor-User-Guide.docx) or its
 [printable PDF](docs/Maze-Craze-Map-Editor-User-Guide.pdf). Written for seventh-grade
 mapmakers, it covers every field, valid settings, examples, creative puzzle ideas,
 file relationships, importing/exporting, and a guided first-map project.
@@ -110,13 +110,28 @@ or upload credentials were supplied, so deployment to your actual site is untest
   presents pickup/leave choices. Wall and Interaction trees can use identical art.
 - PASS applies its outcome and replaces the cell with the specified block or the
   current map's default Move block. Only a resulting Move block grants entry.
-- FAIL never grants entry. It preserves the selected item and normally preserves
-  the interaction; an explicit failure replacement can change the cell.
-- Keys/bombs are consumed one at a time, only on a successful selected-item use.
-  Clothing and weapons remain owned. Possession/equipment checks consume nothing.
+- FAIL never grants entry. It preserves the selected item by default and normally
+  preserves the interaction. Explicit Fail.TakeItems can take listed regular Items;
+  an explicit failure replacement can change the cell.
+- Successful selected-item use consumes one key/bomb. Both outcomes support
+  additional regular Item costs through TakeItems. Clothing and weapons remain
+  owned. Possession/equipment checks consume nothing.
 - Explicit transports override ordinary entry. Arrival never triggers a cell,
   including a wall or another portal. Invalid coordinates use that map's start.
 - Block index 777 is reserved: it immediately saves the princess and ends play.
+
+## Test while editing
+
+On the game website, **Test from Start** runs your current map from its starting
+cell with fresh progress. **Back to Edit** pauses the game; **Resume Test** keeps
+the previous run and map snapshot. After editing, Test from Start uses your new
+design. Test progress never rewrites your map document. Editing/export still work
+offline, while integrated testing needs the full game on the same HTTP(S) origin.
+See [EDITOR.md](EDITOR.md#test-pause-and-resume) for map-directory and artwork bases.
+
+Deploy the updated editor.html, index.html, styles.css, and complete js/ folder
+together. The full project ZIP includes all images, maps, configurations and guides.
+Export edited map files as usual; testing does not publish them to the server.
 
 ## Tests and development tools
 
@@ -131,15 +146,20 @@ Keep the local server running in another terminal, then run:
 
 ```sh
 npm run test:browser
+npm run test:playtest-browser
 ```
 
 The browser test uses `/usr/bin/chromium` when available. Otherwise install a
 Playwright browser with `npx playwright install chromium`, or set `CHROMIUM_PATH`
 to an existing Chromium executable. `MAZE_TEST_URL` selects a different test server.
-The browser test completes the maze through real controls and exercises failed
+The game browser test completes the maze through real controls and exercises failed
 matches, equipment, map travel, the secret tree, the ending, mobile controls,
 asymmetric views, nickname injection safety, and missing requests. Screenshots
 are written to the ignored `test-results/` directory.
+
+The playtest browser suite checks live snapshots, pause/resume, stale-design
+messages, fresh resets, cross-map loading, explicit FAIL costs, and mobile layout.
+It also checks that a test never changes the exported document.
 
 The editor has separate offline browser checks:
 
@@ -160,7 +180,8 @@ npm run build:editor
 ```
 
 Editor sources are `editor-shell.html`, `editor.css`, `js/editor-model.js`, and
-`js/editor-app.js`; the build also includes `js/spec.js`. Edit those sources, then
+`js/editor-app.js`; the build also includes `js/spec.js` and the shared
+`js/playtest-protocol.js`. Edit those sources, then
 rebuild `editor.html`. No bundler package is required; the build uses Node's
 standard library. Editing the generated file directly is not necessary.
 
@@ -175,10 +196,14 @@ No npm dependencies need to be uploaded to the game host.
 The handbook's editable source is `docs/Map-Editor-User-Guide.md`. To regenerate
 the Word file, install `scripts/requirements-docs.txt` in your documentation Python
 environment and run `python3 scripts/build-user-guide.py --pages docs/guide-pages.json`.
-The build embeds the seven current-editor screenshots from `docs/manual-images/`.
+The build embeds the current-editor screenshots from `docs/manual-images/`.
 Word's contents page uses chapter page-reference fields, so page numbers can update
-if your Word installation paginates differently. The PDF is a checked 53-page print
-edition. Documentation tools are separate from game/editor runtime requirements.
+if your Word installation paginates differently. The PDF is a checked print edition. Documentation tools are separate from game/editor runtime requirements.
+
+Refresh both current downloads after rebuilding the editor and handbook with
+`python3 scripts/package-downloads.py`. The full-project ZIP supports hosted
+playtests; the smaller editor ZIP is for standalone editing/export. The original
+first-draft ZIP remains a historical download.
 
 ## First-maze guide (spoilers)
 
