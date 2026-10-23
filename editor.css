@@ -806,6 +806,9 @@ dialog::backdrop {
 }
 
 .test-toolbar { padding: 18px 22px; margin-bottom: 20px; }
+.directory-status { margin: 10px 0; overflow-wrap: anywhere; }
+.directory-status.error { color: #ffc2a6; }
+.document-actions select { max-width: min(280px, 100%); }
 .test-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
 #test-status { margin: 10px 0 0; color: var(--muted, #57665d); }
 #test-status.error { color: #ffc2a6; }

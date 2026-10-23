@@ -10,7 +10,8 @@
     "assets:png": "node scripts/export-tiles.cjs",
     "build:editor": "node scripts/build-editor.mjs",
     "test:editor-browser": "npm run build:editor && node tests/editor-browser.cjs",
-    "test:playtest-browser": "npm run build:editor && node tests/playtest-browser.cjs"
+    "test:playtest-browser": "npm run build:editor && node tests/playtest-browser.cjs",
+    "test:directory-browser": "npm run build:editor && node tests/directory-browser.cjs"
   },
   "engines": {
     "node": ">=20"

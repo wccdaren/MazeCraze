@@ -92,7 +92,25 @@ The NID is text, not a decimal calculation. `1/4.10` and `1/4.1` are different i
 
 **Open map file** opens a local file picker. Select an existing `.txt` or `.ini` map file. The editor reads it in your browser; it does not upload it. The file must be a map specification, not `main-config.txt`, a ZIP, or a picture.
 
-**Open an example…** loads one of the two built-in samples: Bramblewood, Map 1, or Little Clearing, Map 2. They are useful starting points and references. Editing the example in memory does not overwrite the repository’s sample file.
+**Open a map…** has two groups. On your game website, Website maps lists every map defined in main-config.txt. Select one to open its current server file. Bundled examples contains the two offline samples, Bramblewood, Map 1, and Little Clearing, Map 2. The samples are separate copies and may differ from your published maps. Opening either kind changes only the editor document; it does not save anything back to the website.
+
+![The website map picker and refresh control](manual-images/map-directory.png)
+
+**Refresh map list** rereads main-config.txt without replacing your editing document. Use it after SFTP adds Map.3 or Map.4 to the master directory. The initial labels show the map number and filename; after opening a website map, its label uses the map name. The editor fetches map text when you choose a map, rather than downloading every map just to fill the list. Reopening a map requests the current server copy again.
+
+| Dropdown group or control | Where its data comes from | Allowed examples |
+| --- | --- | --- |
+| Website maps | Map.N entries in the master file beside the hosted editor | Map.3: maps/map-3.txt |
+| Bundled examples | Samples saved inside editor.html | Bramblewood, Map 1 |
+| Refresh map list | Reads the website master directory again | Discover Map.4 after SFTP upload |
+
+**Try the website workflow:** Put Map.3: maps/map-3.txt and Map.4: maps/map-4.txt under [Maps] in main-config.txt, and upload those map files. Open the hosted editor or click Refresh map list. Select Map 4 under Website maps. Change a block, export map-4.txt, and SFTP that download to the Map.4 URL to publish the new design. You do not need to alter StartMap just to open Map 4 in the editor.
+
+The directory number must match the file’s Map.ID. An entry for Map.4 cannot point to a file that defines Map 3. Map URLs are relative to main-config.txt, as in the game. A custom URL such as maps/fourth-maze.txt is allowed, but Export still downloads map-4.txt: rename it or choose the correct destination when uploading so you replace the file the directory actually references.
+
+The editor asks before replacing unexported changes. A missing, invalid, or mismatched map leaves your current document intact. If you edit, start a test, or open a form while a download is still loading, the late response does not replace your work; choose that website map again when ready. A failed directory refresh keeps the previous list, and bundled examples and local files remain available. Offline editing makes no directory request.
+
+Website text reads require the same HTTP(S) origin as editor.html. They do not send cookies or login credentials, follow redirects, or accept files larger than 2 MB. Use the actual static file URLs. Image previews keep their existing separate controls; loading a map does not automatically enable image requests. If the master file is moved, update EDITOR_MAIN_CONFIG_PATH in js/editor-app.js and rebuild editor.html, and keep the game’s MAIN_CONFIG_URL pointing to that same master file. With the normal folder layout, no code setting needs changing.
 
 **Export map.txt** checks the map and downloads `map-N.txt`, using the current map number. The button does not publish to WordPress, move the file into the game folder, or save the master configuration. Your browser chooses the download folder and may add `(1)` to a repeated filename.
 

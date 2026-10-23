@@ -58,8 +58,13 @@ JavaScript, styles, standard tile previews, and sample maps. It works locally
 without Python, npm, a web server, or an Internet connection. It can also be
 uploaded as one HTML page to your game host. There is a Map studio link in the game.
 
-Open a local `.txt` map or choose a bundled example. Map settings controls the
-dimensions (up to 100×100), starting point, viewing windows, default/border blocks,
+Open a local `.txt` map or use **Open a map…**. On the website, its Website maps
+group lists every map in `main-config.txt`, including maps added later. Select a
+map to read its current server file; **Refresh map list** rereads the directory
+after SFTP changes. Bundled examples remain separate offline copies. Export and
+SFTP publish your edits; opening a server map never saves back automatically.
+
+Map settings controls the dimensions (up to 100×100), starting point, viewing windows, default/border blocks,
 map variables, and output format. Create or edit Move, Wall, Interaction and
 Inventory blocks. Edit choices, item/equipment tests, messages, replacements,
 rewards, variable updates, and pass/fail transports through forms.
@@ -147,6 +152,7 @@ Keep the local server running in another terminal, then run:
 ```sh
 npm run test:browser
 npm run test:playtest-browser
+npm run test:directory-browser
 ```
 
 The browser test uses `/usr/bin/chromium` when available. Otherwise install a
@@ -160,6 +166,10 @@ are written to the ignored `test-results/` directory.
 The playtest browser suite checks live snapshots, pause/resume, stale-design
 messages, fresh resets, cross-map loading, explicit FAIL costs, and mobile layout.
 It also checks that a test never changes the exported document.
+
+The directory suite checks configured maps 3/4, current server reads, refreshing,
+export, failed downloads, mismatched IDs, and preservation of edits during slow
+loads. It also checks same-origin restrictions and fallback to bundled examples.
 
 The editor has separate offline browser checks:
 
@@ -179,9 +189,9 @@ To regenerate the standalone editor after changing its sources or bundled assets
 npm run build:editor
 ```
 
-Editor sources are `editor-shell.html`, `editor.css`, `js/editor-model.js`, and
-`js/editor-app.js`; the build also includes `js/spec.js` and the shared
-`js/playtest-protocol.js`. Edit those sources, then
+Editor sources are `editor-shell.html`, `editor.css`, `js/editor-model.js`,
+`js/editor-app.js`, and `js/editor-directory.js`; the build also includes
+`js/spec.js` and the shared `js/playtest-protocol.js`. Edit those sources, then
 rebuild `editor.html`. No bundler package is required; the build uses Node's
 standard library. Editing the generated file directly is not necessary.
 

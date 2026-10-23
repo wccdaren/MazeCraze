@@ -1,5 +1,6 @@
 import { parseMap, coordinates, splitList } from "./spec.js";
 import { playtestMessage, isPlaytestMessage } from "./playtest-protocol.js";
+import { readEditorDirectory, readEditorWebsiteText } from "./editor-directory.js";
 import {
   EDITOR_TYPES,
   EDITOR_SUBJECTS,
@@ -21,6 +22,8 @@ import {
 } from "./editor-model.js";
 
 // This source is bundled into editor.html; the distributed editor needs no server.
+// WEBSITE SETUP: Change this path if main-config.txt is not beside editor.html.
+const EDITOR_MAIN_CONFIG_PATH = "./main-config.txt";
 const studio = (id) => document.getElementById(id);
 const formControl = (form, name) => form.elements.namedItem(name);
 const singleLine = (value) =>
@@ -40,6 +43,7 @@ let editingIndex = null,
   drawQueued = false;
 const localImages = new Map(),
   decodedImages = new Map();
+let websiteDirectory = null, websiteDirectoryLoading = false, websiteMapLoading = false;
 
 function node(tag, text = "", className = "") {
   const element = document.createElement(tag);
@@ -1114,13 +1118,67 @@ studio("map-file").addEventListener("change", async (event) => {
     report(error);
   }
 });
-studio("example-select").addEventListener("change", (event) => {
-  const id = event.target.value;
-  event.target.value = "";
-  if (!id || !canReplace()) return;
+function directoryNotice(message, error = false) {
+  studio("map-directory-status").textContent = message;
+  studio("map-directory-status").classList.toggle("error", error);
+}
+function directoryControls() {
+  studio("example-select").disabled = websiteMapLoading;
+  studio("refresh-map-list").disabled = websiteDirectoryLoading || websiteMapLoading;
+}
+async function refreshWebsiteDirectory() {
+  if (websiteDirectoryLoading || websiteMapLoading) return;
+  websiteDirectoryLoading = true; directoryControls();
+  directoryNotice("Reading website maps from main-config.txt…");
   try {
-    const text = EDITOR_BUNDLED.samples[id];
-    replaceDocument(importMap(text, `map-${id}.txt`), text);
+    const directory = await readEditorDirectory(EDITOR_MAIN_CONFIG_PATH, location.href);
+    const group = document.createElement("optgroup");
+    group.id = "website-map-options"; group.label = "Website maps · current server files";
+    for (const [id, url] of directory.files) {
+      const option = node("option", `Map ${id} · ${basename(new URL(url).pathname)}`);
+      option.value = `website:${id}`; group.append(option);
+    }
+    studio("website-map-options")?.remove();
+    studio("example-select").insertBefore(group, studio("bundled-map-options"));
+    websiteDirectory = directory;
+    directoryNotice(`${directory.files.size} website maps available. Refresh map list after adding maps to main-config.txt.`);
+  } catch (error) {
+    directoryNotice(`Could not refresh website maps: ${error.message} ${websiteDirectory ? "The previous list is still available." : "Bundled examples and local files are still available."}`, true);
+  } finally { websiteDirectoryLoading = false; directoryControls(); }
+}
+studio("refresh-map-list").addEventListener("click", refreshWebsiteDirectory);
+studio("example-select").addEventListener("change", async (event) => {
+  const value = event.target.value;
+  event.target.value = "";
+  if (!value || websiteMapLoading || !canReplace()) return;
+  if (value.startsWith("website:")) {
+    const id = Number(value.slice(8)), url = websiteDirectory?.files.get(id);
+    if (!url) { tell("Refresh the map list, then choose a website map.", true); return; }
+    const previousDocument = draft, previousText = JSON.stringify(draft);
+    websiteMapLoading = true; directoryControls();
+    directoryNotice(`Loading Map ${id} from the website…`);
+    try {
+      const text = await readEditorWebsiteText(url, websiteDirectory.timeout);
+      const imported = importMap(text, basename(new URL(url).pathname));
+      if (Number(imported.map.ID) !== id) throw new Error(`The directory lists Map ${id}, but that file defines Map ${imported.map.ID}.`);
+      // A slow response must never overwrite work performed while it was loading.
+      if (draft !== previousDocument || JSON.stringify(draft) !== previousText || stroke
+          || document.querySelector("dialog[open]") || studio("editor-pane").hidden) {
+        directoryNotice("The editor changed while the map was loading. Your work was kept. Choose the website map again when ready.");
+        return;
+      }
+      replaceDocument(imported, text);
+      const option = [...studio("example-select").options].find(option => option.value === value);
+      if (option) option.textContent = `Map ${id} · ${imported.map.Name || basename(new URL(url).pathname)}`;
+      directoryNotice(`Opened the current website copy of Map ${id}. Export downloads your edits; upload the file by SFTP to publish them.`);
+    } catch (error) {
+      directoryNotice(`Map ${id} could not open: ${error.message} Your current document was kept.`, true);
+    } finally { websiteMapLoading = false; directoryControls(); }
+    return;
+  }
+  try {
+    const text = EDITOR_BUNDLED.samples[value];
+    replaceDocument(importMap(text, `map-${value}.txt`), text);
   } catch (error) {
     report(error);
   }
@@ -1504,3 +1562,8 @@ window.addEventListener('message', event => {
   refreshTestControls();
 });
 renderStudio();
+if (["http:", "https:"].includes(location.protocol)) refreshWebsiteDirectory();
+else {
+  studio("refresh-map-list").hidden = true;
+  directoryNotice("Offline editing: bundled examples and local files are available. Open this editor on your game website to list its published maps.");
+}

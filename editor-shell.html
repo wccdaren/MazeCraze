@@ -53,15 +53,18 @@
         </div>
         <div class="document-actions">
           <label for="example-select" class="sr-only"
-            >Open a bundled example</label
+            >Open a website map or bundled example</label
           ><select id="example-select">
-            <option value="">Open an example…</option>
+            <option value="">Open a map…</option>
+            <optgroup id="bundled-map-options" label="Bundled examples · offline copies">
             <option value="1">Bramblewood · Map 1</option>
-            <option value="2">Little Clearing · Map 2</option></select
+            <option value="2">Little Clearing · Map 2</option></optgroup></select
+          ><button id="refresh-map-list">Refresh map list</button
           ><button id="source-open">Text / INI</button
           ><button id="settings-open">Map settings</button>
         </div>
       </div>
+      <p id="map-directory-status" class="hint directory-status" role="status" aria-live="polite"></p>
       <p id="status" class="status" role="status" aria-live="polite">
         Choose a block, then click or drag across the map.
       </p>
@@ -482,6 +485,12 @@
         comments move together to the top; unknown settings are retained.
         Skipped map rows are reported, and the original imported text can be
         downloaded before making corrections.
+      </p>
+      <p>
+        Open a map lists current website files from main-config.txt when this
+        editor is hosted with the game. Refresh map list finds newly added maps.
+        Bundled examples are separate offline copies. Export and SFTP your edits
+        to publish; opening a website map never writes to the server.
       </p>
       <p>
         This editor runs offline by double-clicking editor.html. The game itself

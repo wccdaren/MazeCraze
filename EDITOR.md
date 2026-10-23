@@ -15,8 +15,9 @@ game on the same HTTP(S) origin as editor.html.
 
 ## Your first map
 
-1. Choose **New map**, **Open map file**, or one of the examples. Open accepts a
-   local UTF-8 `.txt` or `.ini` specification. Your file never leaves your browser.
+1. Choose **New map**, **Open map file**, or **Open a map…**. The dropdown lists
+   current website maps from `main-config.txt` plus separate bundled examples.
+   Open map file accepts a local UTF-8 `.txt` or `.ini` specification.
 2. Open **Map settings**. Set the map number, name, dimensions, start coordinate,
    default Move block, border, view windows, variables and output layout. The
    maximum is 100 columns by 100 rows. `(1,1)` is always bottom-left.
@@ -34,6 +35,37 @@ Changing dimensions preserves bottom-left coordinates. Shrinking prompts before
 cropping cells; choose a valid starting coordinate within the new size. Undo can
 restore a resize. Changing the default block replaces existing cells using the old
 default, and fills new cells with the selected default.
+
+## Open maps from your website
+
+On HTTP(S), **Open a map…** automatically lists every `Map.N` entry in the
+master file beside editor.html. Choose a map under **Website maps · current
+server files** to fetch its current text. Entries initially show the map number
+and filename; after opening, that entry shows the map name. The files are loaded
+only when selected, and reopening requests the current server contents.
+
+After SFTP adds or changes entries in main-config.txt, click **Refresh map list**.
+This updates the choices without replacing your document or discarding edits.
+Map URLs resolve relative to the master file. The selected directory number must
+match the file's Map.ID. Failed/invalid downloads preserve your current document;
+so does making another edit while a slow download is in progress.
+
+Example: add `Map.3: maps/map-3.txt` and `Map.4: maps/map-4.txt` under `[Maps]`,
+upload those files, then refresh. Open Map 4, edit, and Export downloads
+`map-4.txt`. Upload that download to the URL listed for Map 4. A custom server
+filename such as `fourth-maze.txt` must still be replaced at that listed URL;
+export uses the map number, so rename the download during SFTP if necessary.
+
+**Bundled examples · offline copies** remain separate from your published maps.
+They work even when the master file is unavailable or the editor is opened from
+disk. Website reads require the same HTTP(S) origin, use no cookies/credentials,
+do not follow redirects, and limit each text file to 2 MB. Image URL previews
+remain opt-in. Opening/editing never uploads data; export and SFTP publish it.
+
+If your master file moves, change `EDITOR_MAIN_CONFIG_PATH` near the top of
+js/editor-app.js and rebuild editor.html. Keep the game's MAIN_CONFIG_URL pointing
+to that same master file. The default requires no changes when all files stay in
+their standard locations.
 
 ## Drawing tools
 
@@ -179,8 +211,9 @@ your separate download-and-SFTP workflow.
 
 ## Editing the editor
 
-Work in `editor-shell.html`, `editor.css`, `js/editor-model.js`, and
-`js/editor-app.js`, plus the shared `js/playtest-protocol.js`, then run `npm run build:editor`. That small Node script embeds
+Work in `editor-shell.html`, `editor.css`, `js/editor-model.js`,
+`js/editor-app.js`, and `js/editor-directory.js`, plus the shared
+`js/playtest-protocol.js`, then run `npm run build:editor`. That small Node script embeds
 the shared parser, source, style, standard tile previews and sample maps into the
 distributed `editor.html`. The built file is committed, so no build or dependency
 installation is needed to use the editor.
