@@ -7,6 +7,25 @@ to play. The standalone map editor is already built and included.
 
 ![The first Maze Craze adventure](docs/first-look.png)
 
+## This update
+
+The game now has one wide map panel with Inventory, compact movement controls,
+and only the latest story message. Hold a direction to walk continuously, or tap
+one of the four neighboring cells. Movement stops at walls, dialogs, pause, blur,
+and key release; normal puzzle tests still apply. The bag collapses source-map
+and NID groups, counts duplicate copies, and offers confirmed discard of one
+unequipped copy. Equipment and per-copy conditions remain accurate.
+
+The editor manages read-only block IDs, offers configurable image catalogs and
+per-choice selection filters, selects independent games, and links directly to
+the illustrated PDF handbook. The main adventure is retained. Two additional
+small, connected-map examples live in maps/esther/ and maps/sebastian/.
+
+For an existing site, follow [DEPLOYMENT.md](DEPLOYMENT.md). Upload both HTML pages,
+styles.css and the complete js/ folder together, plus docs/ for the PDF link.
+Preserve your custom main-config.txt and maps; merge new game/catalog entries.
+Old [Maps]-only masters and existing map files continue to work.
+
 ## Play locally
 
 From the MazeCraze directory, run:
@@ -21,8 +40,8 @@ as a `file:` URL will not work: browsers restrict fetching the text specificatio
 use ordinary HTTPS static hosting for the published game.
 
 Enter a nickname. Move with arrow keys, numpad 8/2/4/6 (Num Lock on or off),
-or tap the on-screen arrows. Each fresh key press moves one cell. Movement pauses
-during dialogs. Use the pack to WEAR boots and WIELD weapons before interacting.
+or tap the on-screen arrows. A fresh press moves one cell; holding repeats after 300ms at 200ms intervals.
+Adjacent-cell clicks/taps also move one step. Movement stops during dialogs. Use the pack to WEAR boots and WIELD weapons before interacting.
 Change field of view with the dropdown; large windows scroll within the map panel.
 
 Progress stays in memory until a reload or a new adventure. Returning to a map
@@ -40,6 +59,10 @@ preserves its changes. There is no save-to-disk feature in this draft.
 | `js/spec.js` | Text reader and validation | Approved specification vocabulary |
 | `js/engine.js` | Movement, equipment, tests, outcome rules | Game mechanics without display code |
 | `js/app.js` | Browser controls, dialogs, loading | Main config URL near the top |
+| `js/catalog.js` | Game registry, inheritance, image aliases | Resolve @Tree in the selected game |
+| `js/inventory.js` | Display grouping without changing item copies | Stack matching NIDs and states |
+| `js/movement.js` | Controlled keyboard repeat | Initial 300ms, then 200ms steps |
+| `DEPLOYMENT.md` | Updating an existing website | Preserve authored maps and merge configuration |
 | `styles.css` | Page and popup appearance | Layout, spacing, colors |
 | `SPECIFICATION.md` | Author's format reference | Rules, outcomes, coordinates |
 | `editor.html` | Standalone offline map editor | Open, paint, edit blocks, export `.txt` |
@@ -59,7 +82,7 @@ without Python, npm, a web server, or an Internet connection. It can also be
 uploaded as one HTML page to your game host. There is a Map studio link in the game.
 
 Open a local `.txt` map or use **Open a map…**. On the website, its Website maps
-group lists every map in `main-config.txt`, including maps added later. Select a
+group lists the selected game’s maps, including maps added later. Select a
 map to read its current server file; **Refresh map list** rereads the directory
 after SFTP changes. Bundled examples remain separate offline copies. Export and
 SFTP publish your edits; opening a server map never saves back automatically.
@@ -125,6 +148,20 @@ or upload credentials were supplied, so deployment to your actual site is untest
   including a wall or another portal. Invalid coordinates use that map's start.
 - Block index 777 is reserved: it immediately saves the princess and ends play.
 
+## Independent games and artwork
+
+The master [Games] registry maps stable IDs to child game-config.txt URLs.
+[Game] StartGame chooses the default; optional master StartMap overrides only the
+initial launch. Each child has its own StartMap and [Maps]. Master Images,
+ImageCatalog, Style and PlayerVariables supply per-entry defaults. Selecting a
+game resets all progress and retains the nickname. Transports stay within that
+game; identical map numbers/NIDs in different games do not share state.
+
+[ImageCatalog] entries resolve relative to their defining configuration, and map
+images may use @Name aliases. Child entries override master names. The editor
+suggests aliases, catalog URLs, existing paths and bundled art. The detailed
+field vocabulary and examples are in SPECIFICATION.md and the Word/PDF handbook.
+
 ## Test while editing
 
 On the game website, **Test from Start** runs your current map from its starting
@@ -153,6 +190,7 @@ Keep the local server running in another terminal, then run:
 npm run test:browser
 npm run test:playtest-browser
 npm run test:directory-browser
+npm run test:collections-browser
 ```
 
 The browser test uses `/usr/bin/chromium` when available. Otherwise install a
@@ -190,7 +228,7 @@ npm run build:editor
 ```
 
 Editor sources are `editor-shell.html`, `editor.css`, `js/editor-model.js`,
-`js/editor-app.js`, and `js/editor-directory.js`; the build also includes
+`js/editor-app.js`, `js/editor-directory.js`, and `js/catalog.js`; the build also includes
 `js/spec.js` and the shared `js/playtest-protocol.js`. Edit those sources, then
 rebuild `editor.html`. No bundler package is required; the build uses Node's
 standard library. Editing the generated file directly is not necessary.
@@ -200,6 +238,10 @@ To refresh PNGs after editing the original SVG tiles, use:
 ```sh
 npm run assets:png
 ```
+
+The collections browser suite covers game isolation, two-map custom endings,
+stacked bag/choice lists, discard confirmation, held/click movement, the PDF link,
+and game-aware editor tests.
 
 No npm dependencies need to be uploaded to the game host.
 

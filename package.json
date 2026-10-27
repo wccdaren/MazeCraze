@@ -11,7 +11,8 @@
     "build:editor": "node scripts/build-editor.mjs",
     "test:editor-browser": "npm run build:editor && node tests/editor-browser.cjs",
     "test:playtest-browser": "npm run build:editor && node tests/playtest-browser.cjs",
-    "test:directory-browser": "npm run build:editor && node tests/directory-browser.cjs"
+    "test:directory-browser": "npm run build:editor && node tests/directory-browser.cjs",
+    "test:collections-browser": "npm run build:editor && node tests/collections-browser.cjs"
   },
   "engines": {
     "node": ">=20"

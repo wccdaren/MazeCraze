@@ -73,6 +73,7 @@ const assert = require('node:assert/strict');
       sim.equip(item.uid, action.includes('left') ? 'Left' : 'Right');
       await page.locator('#pack-button').click();
       const row = page.locator('.pack-item').filter({ has: page.locator('h3', { hasText: sim.definition(item).name }) });
+      await row.locator('summary').click();
       await row.getByRole('button', { name: action, exact: true }).click();
       await page.locator('#pack-close').click();
     };

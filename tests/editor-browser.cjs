@@ -249,7 +249,8 @@ const assert = require("node:assert/strict");
       `Equipment.Worn | Contains | ${boots.fields.NID}`,
     );
     await page.locator(`.palette-block[data-index="${key.index}"]`).dblclick();
-    await page.locator('#block-form [name="NID"]').fill("3/4.30");
+    assert.equal(await page.locator('#block-form [name="NID"]').evaluate(el => el.readOnly), true);
+    assert.equal(await page.locator('#block-form [name="index"]').evaluate(el => el.readOnly), true);
     await page
       .locator("#block-form")
       .getByRole("button", { name: "Save block", exact: true })
@@ -259,7 +260,7 @@ const assert = require("node:assert/strict");
       doc.blocks.find((b) => b.index === door.index).choices[0].fields[
         "Test.1"
       ],
-      "SelectedItem.ID | Equal | 3/4.30",
+      `SelectedItem.ID | Equal | ${key.fields.NID}`,
     );
     await page.locator("#settings-open").click();
     await settings.locator('[name="format"]').selectOption("Longhand");

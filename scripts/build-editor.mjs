@@ -13,7 +13,7 @@ const data = {
   samples: { 1: await read("maps/map-1.txt"), 2: await read("maps/map-2.txt") },
 };
 const modules = await Promise.all(
-  ["js/spec.js", "js/editor-model.js", "js/playtest-protocol.js", "js/editor-directory.js", "js/editor-app.js"].map(read),
+  ["js/spec.js", "js/editor-model.js", "js/playtest-protocol.js", "js/catalog.js", "js/editor-directory.js", "js/editor-app.js"].map(read),
 );
 const code = modules
   .map((source) =>

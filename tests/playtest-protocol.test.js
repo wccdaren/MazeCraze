@@ -5,7 +5,7 @@ import { playtestMessage, isPlaytestMessage, validTestSnapshot } from '../js/pla
 test('playtest envelopes reject other sessions, versions, channels, and malformed data', () => {
   const message = playtestMessage('session-one', 'start', { mapId: 3, text: '[Map]' });
   assert.equal(isPlaytestMessage(message, 'session-one'), true);
-  for (const bad of [null, [], 'start', {}, { ...message, version: 2 }, { ...message, channel: 'other' }, { ...message, type: 1 }]) {
+  for (const bad of [null, [], 'start', {}, { ...message, version: 999 }, { ...message, channel: 'other' }, { ...message, type: 1 }]) {
     assert.equal(isPlaytestMessage(bad, 'session-one'), false);
   }
   assert.equal(isPlaytestMessage(message, 'session-two'), false);

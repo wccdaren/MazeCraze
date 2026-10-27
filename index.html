@@ -5,32 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <title>Maze Craze · A gnome-sized adventure</title>
-  <link rel="icon" href="assets/boots.png" type="image/svg+xml">
+  <link rel="icon" href="assets/boots.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
   <div class="shell">
     <header class="masthead">
-      <a class="wordmark" href="./" aria-label="Maze Craze home"><span class="brand-mark" aria-hidden="true">✳</span><span>MAZE <b>CRAZE</b><small>A SEBASTIAN ADVENTURE</small></span></a>
+      <a class="wordmark" href="./" aria-label="Maze Craze home"><span class="brand-mark" aria-hidden="true">✳</span><span>MAZE <b>CRAZE</b><small id="game-credit">A FAMILY ADVENTURE</small></span></a>
       <nav aria-label="Game tools"><a href="editor.html" class="quiet">Map studio</a><button id="help-button" class="quiet">How to play</button><button id="restart-button" class="quiet" disabled>New adventure</button></nav>
     </header>
     <main>
-      <section class="intro"><div><p class="eyebrow">SMALL GNOME. BIG ADVENTURE.</p><h1>A little lost.<br><em>A lot to discover.</em></h1><p>Follow the winding paths. Fill your pack.<br>Every locked door is a puzzle waiting to be solved.</p></div><div class="hero-art"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><img id="hero-gnome" src="assets/gnome.png" alt="A happy gnome in a red hat"><span class="hero-caption">YOUR NEXT GREAT ADVENTURE<br>BEGINS ONE SQUARE AT A TIME.</span></div></section>
+      <section class="intro"><div><p class="eyebrow">SMALL GNOME. BIG ADVENTURE.</p><h1>A little lost.<br><em>A lot to discover.</em></h1><p>Follow the winding paths. Fill your pack.<br>Every locked door is a puzzle waiting to be solved.</p></div><div class="hero-art"><span class="orbit orbit-one"></span><span class="orbit orbit-two"></span><img id="hero-gnome" src="assets/gnome.png" alt="Your adventure character"><span class="hero-caption">YOUR NEXT GREAT ADVENTURE<br>BEGINS ONE SQUARE AT A TIME.</span></div></section>
       <div id="boot-message" role="status">Unfolding the map…</div>
       <section class="adventure" id="adventure" hidden aria-label="Maze game">
         <div class="map-panel">
           <div class="panel-heading"><div><p class="eyebrow">THE EXPLORER’S MAP</p><h2 id="map-name">Bramblewood</h2></div><span class="coordinate-badge" id="position">X 3 · Y 3</span></div>
-          <div class="map-toolbar"><label for="view-select">Field of view</label><select id="view-select"></select><span id="map-size"></span></div>
+          <div class="game-toolbar"><label for="game-select">Game</label><select id="game-select"></select><span id="game-description"></span></div>
+          <div class="map-toolbar"><label for="view-select">Field of view</label><select id="view-select"></select><span id="map-size"></span><button id="pack-button" class="primary">Inventory</button></div>
           <div class="map-scroll"><div id="board" role="group" aria-label="Map view" tabindex="0"></div></div>
           <div class="map-footer"><span><i class="legend-dot"></i> You are here <b id="player-label">Gnome</b></span><span>32 × 32 pixel tiles</span></div>
-          <p class="map-note">North is up. X increases → &nbsp; Y increases ↑</p>
+          <div class="map-controls" aria-label="Movement controls"><button data-move="-1,0" aria-label="Move left">←</button><button data-move="0,1" aria-label="Move up">↑</button><button data-move="0,-1" aria-label="Move down">↓</button><button data-move="1,0" aria-label="Move right">→</button><span>Hold arrow keys or tap a neighboring square. X → · Y ↑</span></div>
+          <div class="latest-story"><ol id="journal" aria-live="polite" aria-relevant="additions"></ol></div>
         </div>
-        <aside class="trail-panel">
-          <section class="pack-summary"><p class="eyebrow">A WELL-PREPARED GNOME</p><h2>Your trusty pack</h2><p id="pack-summary">A little room for something useful.</p><div class="equipment-preview" id="equipment-preview"></div><button id="pack-button" class="primary">Open inventory <span aria-hidden="true">↗</span></button></section>
-          <section class="controls"><p class="eyebrow">ONE SQUARE AT A TIME</p><div class="controls-row"><div class="dpad" aria-label="Movement controls"><button data-move="0,1" class="up" aria-label="Move up">↑</button><button data-move="-1,0" class="left" aria-label="Move left">←</button><span class="dpad-center" aria-hidden="true">✳</span><button data-move="1,0" class="right" aria-label="Move right">→</button><button data-move="0,-1" class="down" aria-label="Move down">↓</button></div><p>Arrow keys<br>or numpad <b>8 4 6 2</b><small>You can tap the arrows, too.</small></p></div></section>
-          <section class="journal"><p class="eyebrow">NOTES FROM THE TRAIL</p><h2>The story so far</h2><ol id="journal" aria-live="polite" aria-relevant="additions"></ol></section>
-        </aside>
       </section>
       <details id="diagnostics" hidden><summary>Map author warnings</summary><ul id="warning-list"></ul></details>
       <footer class="site-footer"><span>MADE FOR CURIOUS MINDS & WINDING PATHS</span><span>Maze Craze · First expedition</span></footer>
@@ -38,7 +35,7 @@
   </div>
   <dialog id="welcome-dialog" aria-labelledby="welcome-title"><form id="welcome-form"><p class="eyebrow">WELCOME, WAYFARER</p><h2 id="welcome-title">Every adventure<br>needs a gnome.</h2><p>What should we call yours? A nickname is perfect.</p><label for="player-name">Your gnome’s name</label><input id="player-name" name="gnome" maxlength="32" value="Pip" autocomplete="off" required><p class="hint">Your name and progress stay in this tab. Nothing is submitted or saved.</p><p id="welcome-error" class="error" role="alert"></p><button type="submit" class="primary">Let’s get a little lost →</button></form></dialog>
   <dialog id="interaction-dialog" aria-labelledby="interaction-title"><p class="eyebrow" id="interaction-eyebrow">A DISCOVERY ON THE TRAIL</p><h2 id="interaction-title"></h2><p id="interaction-message"></p><div class="interaction-art"><img id="interaction-picture" alt=""></div><div id="interaction-choices" class="choices"></div><p id="interaction-error" class="error" role="alert"></p><button id="interaction-cancel" class="quiet full">Leave</button></dialog>
-  <dialog id="pack-dialog" class="wide-dialog" aria-labelledby="pack-title"><div class="dialog-heading"><div><p class="eyebrow">GOOD THINGS COME PREPARED</p><h2 id="pack-title">Your trusty pack</h2></div><button id="pack-close" class="quiet" aria-label="Close inventory">✕</button></div><p class="hint">Wear clothing and wield weapons here. Keys and bombs are selected during an interaction.</p><div id="pack-items"></div></dialog>
-  <dialog id="help-dialog" class="wide-dialog" aria-labelledby="help-title"><p class="eyebrow">THE GNOME’S FIELD GUIDE</p><h2 id="help-title">Let curiosity lead.</h2><p>Move one square with the arrow keys, numpad 8 / 2 / 4 / 6, or the on-screen arrows. Hold no keys: each fresh press takes one step.</p><p>Try walking toward an object to discover its choices. A successful puzzle uses one matching key or bomb. Failed attempts keep your items unless the puzzle explicitly takes an item as a failure cost. Clothing and weapons are reusable.</p><p>Open your pack to <strong>wear</strong> boots or <strong>wield</strong> a sword. Carrying them is only half the story. Walls stay walls—but a tree that looks just like its neighbors might hide a surprise.</p><p>The map starts at (1,1) in the bottom-left. Up increases Y; right increases X. Your field of view can change, but each tile stays 32 pixels square.</p><p>Progress lasts until you reload or start a new adventure. No accounts, tracking, or downloads are needed to play.</p><button id="help-close" class="primary">Back to the trail</button></dialog>
+  <dialog id="pack-dialog" class="wide-dialog" aria-labelledby="pack-title"><div class="dialog-heading"><div><p class="eyebrow">GOOD THINGS COME PREPARED</p><h2 id="pack-title">Your trusty pack</h2></div><button id="pack-close" class="quiet" aria-label="Close inventory">✕</button></div><p class="hint">Expand a map and item to wear clothing, wield weapons, or discard one unequipped copy. Counts include equipped copies. Keys and bombs are selected during an interaction.</p><p id="pack-summary"></p><p id="pack-equipped" class="hint"></p><p id="pack-error" class="error" role="alert"></p><div id="pack-items"></div></dialog>
+  <dialog id="help-dialog" class="wide-dialog" aria-labelledby="help-title"><p class="eyebrow">THE GNOME’S FIELD GUIDE</p><h2 id="help-title">Let curiosity lead.</h2><p>Move one square with the arrow keys, numpad 8 / 2 / 4 / 6, or the on-screen arrows. Hold a keyboard direction to keep walking, or tap a square directly beside your character. Releasing the key, reaching a wall, or opening a popup stops continuous movement.</p><p>Try walking toward an object to discover its choices. A successful puzzle uses one matching key or bomb. Failed attempts keep your items unless the puzzle explicitly takes an item as a failure cost. Clothing and weapons are reusable.</p><p>Open your pack to <strong>wear</strong> boots or <strong>wield</strong> a sword. Carrying them is only half the story. Walls stay walls—but a tree that looks just like its neighbors might hide a surprise.</p><p>The map starts at (1,1) in the bottom-left. Up increases Y; right increases X. Your field of view can change, but each tile stays 32 pixels square.</p><p>Progress lasts until you reload or start a new adventure. No accounts, tracking, or downloads are needed to play.</p><button id="help-close" class="primary">Back to the trail</button></dialog>
 </body>
 </html>

@@ -13,6 +13,10 @@ game on the same HTTP(S) origin as editor.html.
 
 ![Map Studio](docs/editor-preview.png)
 
+The header's **PDF user guide** link opens the full handbook. Deploy docs/ with
+editor.html so it also works on the hosted editor. For updating an existing site,
+see [DEPLOYMENT.md](DEPLOYMENT.md); preserve authored maps and merge configuration.
+
 ## Your first map
 
 1. Choose **New map**, **Open map file**, or **Open a map…**. The dropdown lists
@@ -39,14 +43,14 @@ default, and fills new cells with the selected default.
 ## Open maps from your website
 
 On HTTP(S), **Open a map…** automatically lists every `Map.N` entry in the
-master file beside editor.html. Choose a map under **Website maps · current
+selected game configuration, discovered through the master beside editor.html. Choose a map under **Website maps · current
 server files** to fetch its current text. Entries initially show the map number
 and filename; after opening, that entry shows the map name. The files are loaded
 only when selected, and reopening requests the current server contents.
 
 After SFTP adds or changes entries in main-config.txt, click **Refresh map list**.
 This updates the choices without replacing your document or discarding edits.
-Map URLs resolve relative to the master file. The selected directory number must
+Map URLs resolve relative to the configuration that owns their Map.N entry. The selected directory number must
 match the file's Map.ID. Failed/invalid downloads preserve your current document;
 so does making another edit while a slow download is in progress.
 
@@ -114,18 +118,19 @@ but does not grant entry; ordinary entry requires PASS plus a Move replacement.
 | Form entry | Meaning | Allowed examples |
 | --- | --- | --- |
 | Full NID | Origin map / category.unique label | `1/3.3`, `2/4.10` |
-| Give items | One item per entry; repeat an entry for multiples | `1/4.1 | 1/4.3 | 1/4.3` |
-| Take additional items | Explicit regular Item costs on PASS or FAIL | `1/4.1`, `1/4.3 | 1/4.3` |
+| Give items | One item per entry; repeat an entry for multiples | `1/4.1 \| 1/4.3 \| 1/4.3` |
+| Take additional items | Explicit regular Item costs on PASS or FAIL | `1/4.1`, `1/4.3 \| 1/4.3` |
 | Replacement | Full NID; blank PASS means default, blank FAIL means unchanged | `1/1.2`, `1/3.3` |
 | Transport | Current-map coordinate, another map/coordinate, or map start | `(12,8)`, `(2)(3,3)`, `(2)` |
 | Outcome message | Plain text with approved optional placeholders | `The {SelectedItem.Name} fits!` |
-| View windows | Up/right/down/left distances separated by vertical bars | `3333 | 3303 | 9999` |
+| View windows | Up/right/down/left distances separated by vertical bars | `3333 \| 3303 \| 9999` |
 
-New blocks get a free index and matching map-qualified NID. Renaming a NID or
-renumbering an existing block updates its placements and structured references
-within this map. Changing the map number similarly updates its local NIDs. It
-does not rewrite text, image URLs, explicit transport map numbers, other map files,
-or the master configuration. Update those separately when necessary.
+The app assigns the block index and NID; both form fields are read-only and
+copyable. Imports preserve IDs. Deletion and undo keep numbers reserved using
+[EditorIDs] counters, so gaps are intentional. Changing Type or map number remaps
+recognized local references, including SelectionItems. Other files, message text,
+image paths and explicit transport map numbers require separate review. Advanced
+Text / INI editing still validates conflicts.
 
 Duplicate makes a new definition and updates self-replacement references in the
 copy. Delete replaces placements with the default. Required default/border blocks
@@ -133,7 +138,33 @@ and blocks referenced by other choices cannot be deleted until references are
 changed. Block **777** is a built-in palette entry for the princess ending and
 cannot be redefined.
 
+## Games and choice filters
+
+Choose Game to edit before opening or creating a map. The map directory, image
+catalog and Test from Start follow that game. Changing games confirms replacement
+of unexported work and starts a blank editor document. Resume keeps the previous
+test's game/snapshot; a changed game or map produces the usual restart notice.
+
+Use SelectionItems on a choice to offer only listed owned NIDs, SelectionGroup to
+filter by ItemGroup, or both to require both conditions. Blank filters preserve
+normal action eligibility: regular Items for UseInventory, wielded Weapons for
+Attack. NoSelectionMessage is optional guidance when no copy matches; no outcome
+runs in that case. The rules still decide PASS/FAIL. Identical NID/state copies
+appear once with a count, and selection uses one real copy.
+
+Example: standard and master keys can both have ItemGroup: Key. A door's
+SelectionGroup: Key offers both, while its SelectedItem.ID test accepts only the
+correct key. A blank filter retains the old behavior for existing maps.
+
 ## Images
+
+Image suggestions include paths in the open map, bundled previews and the selected
+game's [ImageCatalog]. Add `Tree: assets/tree.png` to the master catalog, or a
+correct relative path in a child config. A block may use @Tree or its full URL.
+Refresh map list after SFTP changes; folder contents alone are not enumerated.
+A child can override a named master image. Registered same-origin images preview
+directly; local previews can override them by filename. Offline editing still has
+bundled/local previews, but catalog resolution needs its configuration available.
 
 The standard image filenames have embedded previews, so they work offline. The
 map still exports image paths, such as `../assets/tree.png`, not embedded images.
@@ -147,7 +178,7 @@ replaces that preview. Large pictures are downscaled for the editor preview only
 Local previews accept up to 64 pictures, at most 2 MB per file and 15 MB per batch;
 images must not exceed 4096 pixels in either direction.
 
-URL previews are off by default. Enabling them permits image requests to hosts
+Arbitrary URL previews are off by default; registered same-origin catalog previews may load directly. Enabling them permits image requests to hosts
 named by the map. Use that only for trusted maps/hosts. A base URL can be supplied
 for relative paths, for example `https://your-site.example/maps/`. The game
 requires HTTP(S) URLs; script, data, and local-file URL schemes are not exportable
@@ -195,10 +226,10 @@ Start** to include your edits. Pause waits until asynchronous interactions/map
 loading finish. Undo and the authoring document remain separate from test progress.
 Reloading/closing the editor loses both unexported work and the paused test.
 
-Master images, style and player-variable defaults still come from main-config.txt.
+Images, styles, variables and the catalog come from the selected game with inherited master defaults.
 Other maps and foreign item definitions come from its map directory. A new edited
 map can be tested without a directory entry: its artwork then resolves relative
-to `maps/map-N.txt` beside the game. If a directory entry exists, its URL is the
+to `map-N.txt` beside that game configuration (`maps/map-N.txt` for the legacy main collection). If a directory entry exists, its URL is the
 artwork base. The image-preview base URL and local preview artwork are editor-only;
 upload custom pictures separately for the game to load them. Cross-map tests use
 the other maps' server files, not unsaved documents in other editor tabs.
@@ -212,7 +243,7 @@ your separate download-and-SFTP workflow.
 ## Editing the editor
 
 Work in `editor-shell.html`, `editor.css`, `js/editor-model.js`,
-`js/editor-app.js`, and `js/editor-directory.js`, plus the shared
+`js/editor-app.js`, `js/editor-directory.js`, and `js/catalog.js`, plus the shared
 `js/playtest-protocol.js`, then run `npm run build:editor`. That small Node script embeds
 the shared parser, source, style, standard tile previews and sample maps into the
 distributed `editor.html`. The built file is committed, so no build or dependency

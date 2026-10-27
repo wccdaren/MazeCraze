@@ -256,22 +256,22 @@ def build(pages):
     document.core_properties.subject = 'Illustrated user manual for seventh-grade mapmakers'
     document.core_properties.author = 'Maze Craze'
     document.core_properties.keywords = 'Maze Craze, map editor, Sebastian, coordinates, puzzles, user guide'
-    document.core_properties.comments = 'Documents website map loading, integrated playtesting and explicit PASS/FAIL item costs. Documentation only.'
+    document.core_properties.comments = 'Documents game collections, catalogs, managed identifiers, compact inventory, filters, movement, playtesting, and outcomes. Documentation only.'
     update_fields = OxmlElement('w:updateFields')
     update_fields.set(qn('w:val'), 'true')
     document.settings.element.append(update_fields)
 
-    document.add_paragraph('A SEBASTIAN ADVENTURE', 'Subtitle')
+    document.add_paragraph('A FAMILY ADVENTURE', 'Subtitle')
     document.add_paragraph('Maze Craze\nMap Studio', 'Title')
     document.add_paragraph('The Mapmaker’s Handbook', 'Subtitle')
     document.add_paragraph('Build worlds. Write clues. Make every square count.')
     cover = document.add_paragraph()
     cover.paragraph_format.space_before = Pt(10)
     cover.add_run().add_picture(str(ROOT / 'assets/gnome.png'), height=Inches(1.65))
-    document.add_paragraph('A complete, illustrated guide for Sebastian and fellow seventh-grade mapmakers.')
+    document.add_paragraph('A complete, illustrated guide for Sebastian, Esther, and fellow mapmakers.')
     for text in ['A guided first map you can build and play', 'Every editor field, valid settings, examples, and creative uses', 'Recipes for keys, doors, chests, equipment, secrets, and travel', 'The file relationships that make the whole adventure work']:
         document.add_paragraph(text, 'List Bullet')
-    document.add_paragraph('Website maps edition • October 2026', 'Guide Small')
+    document.add_paragraph('Game collections edition • October 2026', 'Guide Small')
     document.add_paragraph('Offline editing and export • Integrated playtests use the same HTTP(S) game website.', 'Guide Small')
     document.add_page_break()
     title = document.add_paragraph('Contents', 'Title')

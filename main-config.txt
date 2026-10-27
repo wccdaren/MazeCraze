@@ -2,6 +2,8 @@
 ; URLs below are relative to THIS file. Replace them with WordPress upload URLs if needed.
 [Game]
 Title: Maze Craze
+Author: Sebastian
+StartGame: main
 StartMap: 1
 RequestTimeoutMs: 10000
 
@@ -22,3 +24,29 @@ Text: #f1f5e6
 
 [PlayerVariables]
 PuzzlesSolved: 0
+
+; The legacy [Maps] collection above remains the main game.
+[Games]
+Game.sebastian: maps/sebastian/game-config.txt
+Game.esther: maps/esther/game-config.txt
+
+; Catalog keys can be used in map image fields as @Grass, @Tree, etc.
+[ImageCatalog]
+Bomb: assets/bomb.png
+Boots: assets/boots.png
+Brick: assets/brick.png
+Chest: assets/chest.png
+Dagger: assets/dagger.png
+Door: assets/door.png
+Grass: assets/grass.png
+Gravel: assets/gravel.png
+Key: assets/key.png
+MasterDoor: assets/master-door.png
+MasterKey: assets/master-key.png
+Mud: assets/mud.png
+Pig: assets/pig.png
+Portal: assets/portal.png
+Princess: assets/princess.png
+Sign: assets/sign.png
+Sword: assets/sword.png
+Tree: assets/tree.png

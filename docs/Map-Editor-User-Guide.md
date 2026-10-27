@@ -2,7 +2,7 @@
 
 Maze Craze Map Studio turns your graph-paper ideas into playable puzzle maps. You design the world: where the gnome starts, which paths are open, what a chest contains, and what a player must discover to get through a door. The editor helps you write the map specification correctly. A specification is a list of instructions and descriptions that the game understands.
 
-This handbook is written for Sebastian and other seventh-grade mapmakers. You do not need to write JavaScript to use the editor. You will learn a little about coordinates, careful naming, logic, and testing. Those skills let you build increasingly clever adventures without changing the game program.
+This handbook is written for Sebastian, Esther, and other mapmakers, with explanations for a seventh-grade reader. You do not need to write JavaScript to use the editor. You will learn a little about coordinates, careful naming, logic, and testing. Those skills let you build increasingly clever adventures without changing the game program.
 
 Read Chapters 1–4 first and make the small practice map. After that, use the field reference in Chapters 5–11 whenever a setting is unfamiliar. Chapter 12 is a recipe book of puzzle ideas. The remaining chapters explain artwork, files, publishing, testing, and troubleshooting.
 
@@ -21,6 +21,18 @@ Think of three different kinds of saving. **Save block** puts the block form’s
 There is no automatic disk save or automatic browser backup. A browser may warn before you leave with unexported changes, but do not depend on that warning. Export after each useful milestone. Opening another map starts a different editing document and resets its undo history.
 
 > MAPMAKER’S HABIT: Keep a working copy, an exported backup, and a tested game copy. Name backups clearly, such as map-3-before-secret-tree.txt. The name you actually publish must match the URL in the main configuration.
+
+## Playing in the compact map screen
+
+![The wide map panel with game selector, Inventory and latest story](manual-images/game-layout.png)
+
+The game uses one wide map panel. Its toolbar contains the game selector, view window, coordinates, and Inventory button. Four compact direction buttons stay beneath the grid. The latest story message appears underneath; each new message replaces the last, while ordinary walking leaves it visible. The old right-hand sidebar is gone.
+
+A fresh keyboard direction moves immediately. Keep holding it: after 300 milliseconds the game moves again, then every 200 milliseconds. Releasing the key, meeting a wall, opening an interaction or bag, pausing, or leaving the browser stops the timer. Press again to continue after a popup; the game will not resume a forgotten held direction.
+
+Click or touch a square directly above, below, left, or right of the character to attempt one step. Walls and interactions behave exactly as with keyboard movement. Clicking the player, a diagonal, or a distant square does nothing. Adjacent squares have the same subtle outline regardless of their block behavior, so secret interaction trees are not revealed. Hidden directions in an asymmetric view window remain available through the keyboard or buttons.
+
+Tiles remain 32×32 pixels and ViewWindow still controls the visible square count. A wider panel provides space; it does not grant extra vision automatically. Large windows scroll within the panel on smaller screens.
 
 ## A few words you will see often
 
@@ -120,13 +132,21 @@ Website text reads require the same HTTP(S) origin as editor.html. They do not s
 
 ![New, open, and export buttons](manual-images/file-buttons.png)
 
+## Choosing the game you are editing
+
+**Game to edit** selects a map collection. Choose Esther’s Enchanted Garden to see Esther’s map directory, or Sebastian’s Workshop Trail to see Sebastian’s directory. The main game retains the existing maps under [Maps] in the master configuration. Changing games asks before replacing unexported work, then opens a fresh editing document. It does not automatically load a numbered map; select one from Open a map afterward, or create a new one.
+
+Map 1 in Esther’s game and Map 1 in Sebastian’s game are independent. Both can define 1/4.1, but those NIDs belong to different game sessions. The map list, image catalog, and Test from Start all follow the selected game. Resume Test keeps its previous game and snapshot, even if you change the editor’s game while paused. Test from Start uses the newly selected game.
+
+Refreshing reads the master catalog and the small game configuration files again. It does not download all map files. Website maps are loaded only when chosen. Configuration/map requests remain on the same origin, bounded by file size and timeout; all configuration values remain data.
+
 ## The block library
 
 **Find a block…** searches the block name, NID, and numeric index. Try `key`, `1/4.1`, or `10`. **All four types** filters the palette to one Type. These filters do not remove anything from the map.
 
 Click a palette tile to put that block on your brush. The **On your brush** area shows its name, index, Type, and NID. Double-click a normal palette tile, or click **Edit selected block**, to open its form. **Create a block** starts a new definition. Creating a definition does not automatically place it in the world.
 
-The built-in **777 · Save the princess!** tile can be painted like a block, but it cannot be edited or redefined. It is an immediate ending when approached in the game. You do not need a custom `[Block.777]` section.
+The built-in **777 · Save the princess!** tile can be painted like a block, but it cannot be edited or redefined. It is an immediate ending when approached. A game configuration may give that ending its own title, message, and picture; the palette keeps its familiar princess label. You do not need a custom `[Block.777]` section.
 
 ## Drawing and navigation tools
 
@@ -169,7 +189,7 @@ Save block and Apply settings accept a form. Cancel, the close button, or Escape
 
 **Image previews & local artwork** holds the local image picker, URL-preview permission checkbox, and optional preview base URL. These are preview controls, not exported map fields. Chapter 13 explains all of them.
 
-**Field guide** opens a short help window. This handbook provides the longer examples and technical connections behind that quick guide.
+**PDF user guide** opens the complete illustrated PDF in another tab. Keep the docs folder beside editor.html so the link works, including offline when using the downloaded ZIP. **Field guide** opens a short help window. This handbook provides the longer examples and technical connections behind that quick guide.
 
 # 4. Make your first playable map
 
@@ -177,7 +197,7 @@ This practice project is a separate Map 3 called The Key Garden. It uses the sta
 
 ## Step 1 — Choose a small world
 
-Choose New map, then Map settings. Set Map number to `3`, Map name to `The Key Garden`, Width to `11`, Height to `9`, Start X to `2`, and Start Y to `2`. Leave the starter grass as the default and brick as the border. Enter `3333 | 3303 | 9999` for viewing windows. Choose Shorthand and Apply settings.
+On the hosted editor, select the main game first. Choose New map, then Map settings. Set Map number to `3`, Map name to `The Key Garden`, Width to `11`, Height to `9`, Start X to `2`, and Start Y to `2`. Leave the starter grass as the default and brick as the border. Enter `3333 | 3303 | 9999` for viewing windows. Choose Shorthand and Apply settings.
 
 Changing the map number updates the starter NIDs to `3/1.1`, `3/1.2`, `3/2.1`, and `3/2.2`. The starter block indices remain 1, 2, 3, and 4. Notice how map number and block index have different jobs.
 
@@ -189,13 +209,13 @@ There is no way around this wall inside the map. That makes the future door impo
 
 ## Step 3 — Define a key
 
-Choose Create a block. Set Type to Inventory, Name / description to Garden Key, Inventory kind to Item, State to Working or leave its default, and Map image path to `../assets/key.png`. In this clean tutorial, the suggested index should be 5 and NID `3/4.1`. If you created other blocks first, suggestions may differ; deliberately use an unused index and the NID shown in your own key form.
+Choose Create a block. Set Type to Inventory, Name / description to Garden Key, Inventory kind to Item, State to Working or leave its default, and Map image path to `../assets/key.png`. In this clean tutorial, the suggested index should be 5 and NID `3/4.1`. If you created other blocks first, assigned numbers may differ; use the NID displayed in your own key form. Do not try to edit its read-only identifiers.
 
 Save block. Select its tile and paint it at `(3,2)`. The player starts at `(2,2)`, so one step right discovers the key. Pickup choices are automatic; do not add a separate Interaction definition just to pick up an ordinary key.
 
 ## Step 4 — Define a door that matches that key
 
-Create another block. Set Type to Interaction, name to Garden Door, NID to `3/3.1`, and Map image path to `../assets/door.png`. The expected clean-tutorial block index is 6. Set Popup message to “A brass lock blocks the garden path. Which item might fit?”
+Create another block. Set Type to Interaction and name to Garden Door. Confirm the assigned NID is `3/3.1` in this clean tutorial, and Map image path to `../assets/door.png`. The expected clean-tutorial block index is 6. Set Popup message to “A brass lock blocks the garden path. Which item might fit?”
 
 The new Interaction already has a starter choice. Change Choice text to Unlock the garden door. Set Action to UseInventory and Item selection prompt to Which item will you try? Keep Rules must match at All.
 
@@ -331,17 +351,17 @@ If you need a wrong-item test, add a regular bomb item with a different NID and 
 
 # 6. Every shared block field
 
-Create or select a block, then open its form. Some fields appear only for the relevant Type. The editor suggests a free numeric index and a matching NID; those suggestions save typing but do not know your story. Always read them before writing a rule that references the block.
+Create or select a block, then open its form. Some fields appear only for the relevant Type. The editor manages the index and NID automatically. Both fields are read-only, visible, selectable, and copyable. Read them when writing a rule that refers to the block.
 
 ## Block index
 
-**What it does:** Gives the definition a local number for the map layout. **Valid setting:** A positive whole number that is unused in this map. Index 777 is reserved and cannot be defined. The form’s number is not a count or coordinate.
+**What it does:** Gives a definition its local number in the map layout. **Valid setting:** A positive whole number assigned by the editor; 777 is reserved. You cannot type into this field. Imported numbers are preserved.
 
-**Example:** A definition at index 10 becomes `[Block.10]`; layout `(8,5)10` places it at `(8,5)`. Another map can have its own block 10 with a different meaning.
+**Example:** [Block.10] is placed by (8,5)10. Another map may have a different Block 10. Creating or duplicating a block receives a fresh number; deleting Block 5 does not renumber Block 6.
 
-**Creative use:** You can keep common floors and walls at low indices and group interesting objects later, but the game does not require a special numbering order.
+**Creative use:** Give objects meaningful descriptions and let the app handle their filing numbers. Copy the index when comparing an exported row with graph paper.
 
-**Connections:** Renumbering an existing block in the editor updates its placed cells and choice-section headings in this document. NIDs do not have to equal block indices. If you change indices by hand in raw text, also update every layout reference yourself.
+**Connections:** [EditorIDs] stores the next unused numbers. Keep it in exported files. Numbers stay reserved after deletion and undo, and exports retain those reservations across reopening. Gaps are intentional. Text / INI remains an advanced editor: manually changing an index there requires correcting its placements, and validation still checks conflicts.
 
 ## Type
 
@@ -351,7 +371,7 @@ Create or select a block, then open its form. Some fields appear only for the re
 
 **Creative use:** Reusing a picture with a different Type creates secrets. A “door” picture can be Move for a permanently open doorway, or Interaction for a puzzle that blocks passage.
 
-**Connections:** Changing Type changes which form fields are relevant, suggests a matching-category NID, and may remove interaction choices after confirmation. A default block cannot become a Wall or Interaction while it is still the map default. Read the NID again after changing Type so references are intentional.
+**Connections:** Changing Type changes which form fields are relevant, assigns a matching-category NID, and may remove interaction choices after confirmation. A default block cannot become a Wall or Interaction while it is still the map default. Read the NID again after changing Type so references are intentional.
 
 ## Full NID
 
@@ -361,7 +381,7 @@ Create or select a block, then open its form. Some fields appear only for the re
 
 **Creative use:** Different key NIDs let you invent brass, silver, and master locks. Two sword NIDs can have different power or state, even if they share a picture.
 
-**Connections:** Renaming through the editor updates recognized NID references inside this map. It does not edit another map that accepts the old item, or rewrite a name tag mentioned in ordinary message text. Always check the other files when changing a shared item identity. Never shorten a reference to just `4.1`.
+**Connections:** This field is read-only. Changing Type or the map number updates recognized NID references inside this map, including SelectionItems. Returning to the original Type before saving restores the original NID. It does not edit another map that accepts the old item, or rewrite a name tag mentioned in ordinary message text. Always check the other files when changing a shared item identity. Never shorten a reference to just `4.1`.
 
 ## Name / description — Description
 
@@ -375,7 +395,7 @@ Create or select a block, then open its form. Some fields appear only for the re
 
 ## Map image path — MapImage
 
-**What it does:** Chooses the picture displayed for the block’s cell. **Valid setting:** A relative picture path or HTTP(S) URL; use HTTPS for public hosting. This field is required. Script, data, and local `file:` URLs are not exportable picture paths.
+**What it does:** Chooses the picture displayed for the block’s cell. **Valid setting:** A relative picture path, @Name image catalog alias, or HTTP(S) URL; use HTTPS for public hosting. This field is required. Script, data, and local `file:` URLs are not exportable picture paths.
 
 **Examples:** `../assets/tree.png` from a map in the maps folder, or `https://your-site.example/uploads/tree.png` after uploading a picture.
 
@@ -500,6 +520,28 @@ An item can be both in inventory and worn/wielded. The pack marks the equipment 
 
 If you place two bomb cells, collecting both gives two instances. Using one successfully consumes one. If you want two differently behaving bombs, make two definitions with different NIDs. Sharing a definition does not link the collection state of their separate map placements.
 
+## Item group — ItemGroup
+
+**What it does:** Gives an Inventory definition a simple classification that interaction choices can use to shorten their lists. **Valid setting:** Optional single label starting with a letter, followed by letters, digits, underscores, or hyphens; at most 64 characters. Labels are case-sensitive.
+
+**Examples:** Key, Coin, Potion, Garden_Key. Give both the standard key and master key ItemGroup: Key. A door choice can then use SelectionGroup: Key.
+
+**Creative use:** A merchant can offer to trade only Coins; a fountain can offer to use only Potions. This controls which items appear, while tests still decide whether the selected object works.
+
+**Connections:** An item has one group. A group is not its ItemKind, power, state, or NID. UseInventory still offers only regular Items, and Attack only currently wielded Weapons. Group labels do not bypass those action restrictions.
+
+## The compact bag: groups, counts, equipment, and discarding
+
+![A compact inventory stack with a discard action](manual-images/inventory-bag.png)
+
+Inventory opens from the map toolbar. The bag shows an Equipped summary and collapsible source-map groups. Inside them, one expandable row represents each full NID. Inventory: 8 means eight owned copies, including equipped ones. A single copy has no quantity suffix. Equipped copies receive an equipped indicator.
+
+Expand a row for state-specific details and Wear, Wield, Put away, or Discard one. Copies remain separate in memory. A Working and Cursed version may share a row, but their expanded actions and interaction selection distinguish those conditions. A two-handed weapon remains one owned copy, not two.
+
+Discard one asks for confirmation naming the object. Canceling keeps everything. Confirming removes one unequipped copy permanently for that run; it does not paint a new object on the map or restore the pickup cell. Put an equipped item away before discarding it. Discarding a needed last key can make a puzzle impossible, so designers should test that consequence or provide a spare-item chest. Restarting a game starts fresh; reentering a map keeps the current run’s changes.
+
+The bag scrolls within a bounded window, with its Close button kept at the top. Collapsing a map group hides its rows without removing anything. Counts still match Inventory.Quantity tests; display stacking never combines equipment slots or changes puzzle results.
+
 # 8. Every choice field and control
 
 An Interaction needs at least one choice. Each choice gets its own action, tests, and two possible outcomes. The game displays the block’s title, description and picture, then offers these choices and the separate cancel button.
@@ -553,6 +595,30 @@ Add choice creates another independent choice card. The up and down arrows chang
 Removing every choice from an Interaction makes it invalid. A Move or Wall does not need choices. Changing an existing Interaction into another Type can remove its saved choices after confirmation. Save carefully, then Export; Undo can restore a saved change while it remains in history.
 
 Each choice card has its own tests and outcomes. A second button does not borrow the first button’s key rule. For example, an “Inspect the door” Attempt with no tests will PASS; give it a same-door replacement if the inspection should leave the door in place and keep the player beside it.
+
+## Offer these inventory NIDs — SelectionItems
+
+**What it does:** Optionally limits the second-step selection for one choice to listed, owned full NIDs. **Valid setting:** A pipe-separated list of full NIDs; blank uses the action’s normal eligible items. Each referenced definition must exist in this game, even when it originates on another map.
+
+**Example:** SelectionItems: 1/4.1 | 1/4.4 offers standard and master keys. A separate SelectedItem.ID Equal 1/4.1 test accepts only the standard key. The master key can still be a wrong guess. Identical copies with the same condition display once with a quantity; choosing the stack selects one actual copy.
+
+**Creative use:** Remove bombs, coins, and potions from a door’s selection list while retaining the puzzle of which key fits. Listing only the correct key gives a more guided puzzle.
+
+**Connections:** This is a choice field, not a whole-block field. Another choice on the same object may offer a different list. The engine enforces the filter as well as the interface. Filtering does not grant PASS, spend an item, change a cell, or replace the choice’s tests. UseInventory cannot offer Weapons/Wearables; Attack cannot offer an unwielded weapon.
+
+## Offer item group — SelectionGroup
+
+**Valid setting:** Optional ItemGroup label, using the same spelling and case as the Inventory definitions. **Example:** Key offers every owned, action-eligible Key item. Blank applies no group filter.
+
+**Creative use:** Add another kind of key later without updating every door’s candidate list. If SelectionItems and SelectionGroup are both filled, an item must satisfy both filters. They are an intersection, not alternatives.
+
+**Connections:** Merely finding the right group does not prove success. Keep the relevant tests for the exact key, working state, weapon power, worn boots, or puzzle variables.
+
+## Message when no matching items are owned — NoSelectionMessage
+
+**Valid setting:** Optional plain text. **Example:** You have no keys to try here. Blank uses the game’s standard item/weapon guidance.
+
+**Creative use:** Hint where a player should explore next. An empty selection keeps the interaction open with its Leave choice. It runs neither PASS nor FAIL, so it never applies a failure penalty merely because the bag has no suitable object.
 
 # 9. Every rule field and test subject
 
@@ -900,7 +966,7 @@ The sample gate `1/3.6` uses Attempt, no tests, PASS replacement `1/3.6`, and PA
 
 The map 2 return gate can use `(1)(14,6)`. It lands on the original gate’s cell without retriggering it. The player must move away and deliberately approach again to interact again.
 
-Both maps need entries in main-config.txt. Keep their start coordinates valid. You can also use a same-map `(x,y)` gate for a shortcut or a FAIL transport for a trickster riddle. A transport target number is not automatically updated when you renumber a different file.
+Both maps need entries in the same selected game configuration (main-config.txt for the legacy main collection). Keep their start coordinates valid. You can also use a same-map `(x,y)` gate for a shortcut or a FAIL transport for a trickster riddle. A transport target number is not automatically updated when you renumber a different file.
 
 ## Recipe L — A readable sign that does not vanish
 
@@ -922,7 +988,7 @@ This is a useful model for “do A before B” stories. It is also a reminder th
 
 ## Recipe O — The princess and a custom ending
 
-For the built-in ending, paint palette block 777 at the goal. It immediately passes its supplied interaction and shows the princess message/graphic, ending movement. It has no editable ordinary NID and needs no block definition.
+For the built-in ending, paint palette block 777 at the goal. It immediately passes its supplied interaction and shows the selected game’s ending title/message/picture, ending movement. Without customization it retains the princess ending. It has no editable ordinary NID and needs no block definition.
 
 For a different ending, create a normal Interaction with a final choice, your own picture, an outcome message, and End game Yes. You can require an item, equipment, state, or progress variable before that ending passes. End game does not save progress to disk, so test after a fresh adventure too.
 
@@ -946,7 +1012,7 @@ The standard filenames include grass.png, gravel.png, tree.png, brick.png, pig.p
 
 ## Allow image requests to URLs in this map
 
-This checkbox is off by default. With it off, opening an unfamiliar map does not automatically request its arbitrary remote image hosts. Built-in and chosen local previews still work.
+This checkbox is off by default. With it off, opening an unfamiliar map does not automatically request its arbitrary remote image hosts. Built-in and chosen local previews still work, and registered same-origin catalog images may preview directly.
 
 Enable it only when you trust the map and its picture hosts. It permits supported URL previews, not program scripts or map uploads. A relative custom image may also need the base URL field. Turning it on does not rewrite your map paths or solve a hosting permission error.
 
@@ -954,7 +1020,7 @@ Enable it only when you trust the map and its picture hosts. It permits supporte
 
 This optional field tells the editor where to resolve relative custom preview URLs when URL previews are enabled. Use a valid base such as `https://your-site.example/maps/`, including the trailing slash for a directory.
 
-For a map image `../assets/crystal.png`, that base resolves to `https://your-site.example/assets/crystal.png`. A full HTTPS image URL does not need a base. When hosted without a custom base, the editor normally assumes a maps directory beside itself; offline custom files are better previewed through the local picker.
+For a map image `../assets/crystal.png`, that base resolves to `https://your-site.example/assets/crystal.png`. A full HTTPS image URL does not need a base. When hosted without a custom base, a website map uses its actual URL, a new/local map uses the selected game folder, and the legacy main game uses the maps directory; offline custom files are better previewed through the local picker.
 
 This is only an editor preview setting. It is not exported and does not change where the game looks. The game resolves its image paths from the actual map file URL. If WordPress puts a map and picture in different upload folders, copied full URLs are often simpler.
 
@@ -1000,7 +1066,7 @@ Duplicate creates a new block definition with a free index and NID. A copied sel
 
 Delete replaces placements with the default block. The editor prevents deletion of a current default/border block or a block referenced by another choice until you fix those relationships. Removing a definition’s own choices is different from deleting an individual placed cell; use Erase for a cell.
 
-Renaming a saved NID or index through the form updates recognized references in this document. It cannot update other maps, main-config.txt, or URLs you already published. Keep a short reference notebook for cross-map objects, such as “Map 2’s gate accepts map 1 master key 1/4.4.”
+The index and NID are read-only in forms. Changing Type or map number updates recognized local references, including SelectionItems, but cannot update other map files, configuration files, or URLs already published. Advanced Text / INI edits require you to correct those relationships yourself. Keep a short reference notebook for cross-map objects, such as “Map 2’s gate accepts map 1 master key 1/4.4.”
 
 ## A dependable backup routine
 
@@ -1065,7 +1131,7 @@ The map file limit is 2 MB, including UTF-8 bytes. Very large messages or many p
 
 ## The files work as a chain
 
-The game page loads its JavaScript. The JavaScript loads the main configuration. That file lists map numbers and map URLs. A map lists block definitions and image paths. Choices refer to full NIDs, variables, and transport destinations. Each part needs the next part to be available.
+The game page loads its JavaScript and master configuration. The master registers games and can also retain the legacy main map directory. Each selected game configuration lists its map numbers and map URLs. A map lists block definitions and image paths. Choices refer to full NIDs, variables, and transport destinations. Each part needs the next part to be available.
 
 | Connection | What must agree | Allowed examples |
 | --- | --- | --- |
@@ -1078,9 +1144,78 @@ The game page loads its JavaScript. The JavaScript loads the main configuration.
 | Transport to destination | Map number exists; coordinates are usable | (2)(3,3) |
 | Image path to picture | The uploaded file is at the resolved URL | ../assets/tree.png |
 
+## Independent games and their configuration files
+
+A game is a collection of maps with its own title, starting map, variables, artwork, and ending. The master main-config.txt registers games; each child game-config.txt lists its own maps. The included collections are the main Bramblewood adventure, Sebastian’s Workshop Trail, and Esther’s Enchanted Garden. The two new examples each have two connected maps. Their keys deliberately use the same map/NID numbers to demonstrate independent worlds.
+
+Existing master files that contain only [Maps] keep working as the main game. Adding [Games] does not require moving those maps. A Game.main registration explicitly replaces that legacy collection with the referenced configuration, so use it only when deliberately migrating the main game.
+
+```text
+[Game]
+StartGame: esther
+StartMap: 1
+
+[Games]
+Game.esther: maps/esther/game-config.txt
+Game.sebastian: maps/sebastian/game-config.txt
+```
+
+StartGame is a stable label beginning with a letter and containing letters, digits, underscores, or hyphens. Main is case-sensitive: the implicit legacy ID is main in lowercase. StartMap in the master is an optional override for the initial default launch. Omit it to use the default game’s own start. Selecting another game or restarting it uses that game’s own StartMap. Changing the selected game confirms a fresh run, keeps the nickname, and resets inventory, clothing, weapons, states, player variables, map variables, and changed cells across all visited maps.
+
+A child configuration might contain:
+
+```text
+[Game]
+Title: Esther's Enchanted Garden
+Author: Esther
+StartMap: 1
+WelcomeMessage: Find the garden key and restore the colors.
+VictoryTitle: You restored the garden!
+VictoryMessage: Well done, {Player.Name}! The flowers bloom again.
+
+[Maps]
+Map.1: map-1.txt
+Map.2: map-2.txt
+```
+
+Child Map.N paths resolve relative to that game-config.txt. A child must list maps, not another [Games] catalog. Both games can have Map 1 and NID 1/4.1. Transports such as (2) refer to Map 2 in the current game. There are no cross-game transports or shared inventory in this edition. Returning to another map within one run retains changes; switching collections creates a fresh run.
+
+Master Images, ImageCatalog, Style, and PlayerVariables provide defaults. A child may override individual entries in those sections. Child maps are their own directory rather than an inherited list. Child Title, Author, WelcomeMessage, VictoryTitle, VictoryMessage, StartMap, and RequestTimeoutMs are its own game settings. If omitted, the title is Maze Craze, author/introduction/custom ending are blank, StartMap is required and must name one of its maps, and timeout is 10000 milliseconds. Missing custom ending text uses the original princess ending.
+
+| Section / field | Valid setting and relationship | Allowed examples |
+| --- | --- | --- |
+| Game / StartGame | Master’s initial registered game ID | esther |
+| Games / Game.ID | Same-origin child configuration URL | Game.esther: maps/esther/game-config.txt |
+| Game / Author | Optional plain attribution | Esther |
+| Game / WelcomeMessage | Optional plain opening story | Find the garden key. |
+| Game / VictoryTitle | Optional title for ending block 777 | You restored the garden! |
+| Game / VictoryMessage | Optional ending text with outcome placeholders | Well done, {Player.Name}! |
+| Images / Princess | Ending picture, including custom game endings | ../../assets/chest.png |
+| ImageCatalog / Name | Catalog image URL relative to its owning config | Tree: ../../assets/tree.png |
+
+Block 777 remains reserved and automatic. Its title/message can now come from the selected game; its picture still uses Images / Princess for compatibility. Choose that picture appropriately for a garden, treasure, or workshop ending. Ordinary authored outcomes with EndGame: Yes use the custom victory title as well, but retain their authored result message.
+
+## Image catalog and the editor’s image suggestions
+
+Add named images under [ImageCatalog] in the master or a child game configuration. Names follow the configuration field spelling rules: start with a letter, then letters, digits, underscores, or periods. Treat capitalization as significant. Paths resolve against the configuration that defines them. Child entries with the same key override the master.
+
+```text
+[ImageCatalog]
+Tree: assets/tree.png
+GoldCoin: assets/gold-coin.png
+```
+
+A block may use MapImage: @Tree or InteractionImage: @GoldCoin. The @ means look up that exact catalog name in the current game. An unknown name is an authoring error; it is not a JavaScript expression. Relative and absolute HTTP(S) image paths remain supported, so older maps do not need conversion.
+
+The editor suggestions combine bundled filenames, paths already used in the open map, and the selected game’s catalog. Catalog entries offer both @Name and their resolved URL. Refresh map list rereads configuration/catalog changes after SFTP. Adding a picture to a server folder alone does not enumerate it: add its catalog entry too. Export stores the chosen path or alias; it does not embed picture data.
+
+Same-origin catalog previews may load directly because the author explicitly registered them. Local preview pictures still override matching filenames. Other URL previews stay opt-in through Allow image requests; enabling that uses the actual URL even when a bundled filename matches. Website-map relative previews use that map’s real URL. A local/new map uses the selected game’s folder, or maps/ for the legacy main game, unless the preview base is explicitly provided.
+
+For maps under maps/esther/, ../../assets/tree.png reaches the shared root art. Using @Tree avoids rewriting a map when the catalog is updated. The catalog file itself still needs the correct relative or absolute URL. New map Test from Start uses map-N.txt in that game configuration’s folder as its fallback image base; published map entries use their actual registered URLs.
+
 ## Every main-config field you may need to coordinate
 
-The editor does not edit main-config.txt. These settings are documented here so you know which other file must change. Use a plain-text editor, retain the section headings, and preserve unrelated entries.
+The editor does not edit main-config.txt or game-config.txt. These settings are documented here so you know which other file must change. Use a plain-text editor, retain the section headings, and preserve unrelated entries.
 
 | Section / field | Valid setting and purpose | Allowed examples |
 | --- | --- | --- |
@@ -1101,11 +1236,11 @@ Title changes the browser title; it does not renumber maps. RequestTimeoutMs lim
 
 Player and Princess are outside normal map block definitions because they serve the avatar and reserved ending. Style fields offer a small approved vocabulary, not arbitrary CSS or external font imports. Keep text/background colors readable; a pale accent on a dark panel works better than nearly identical colors.
 
-PlayerVariables declarations create values every map can read or set through the Player scope. A map setting with the same name in [Variables] is a different value. Choose Map or Player intentionally when writing a test or setter.
+PlayerVariables declarations create values every map in the selected game can read or set through the Player scope. A map setting with the same name in [Variables] is a different value. Choose Map or Player intentionally when writing a test or setter.
 
 ## Relative URLs depend on which file owns them
 
-A relative Map.N URL is resolved from main-config.txt. A relative MapImage/InteractionImage URL is resolved from the map file. A local image preview base in the editor does not change either one.
+A relative Map.N URL is resolved from the configuration containing it: main-config.txt for the legacy main collection, or the selected game-config.txt for a child collection. A relative MapImage/InteractionImage URL is resolved from the map file. A local image preview base in the editor does not change either one.
 
 For example, with main-config.txt in the game root and map-3.txt in its maps folder, `Map.3: maps/map-3.txt` reaches the map, and `../assets/key.png` reaches the root assets folder. If WordPress places the map under a dated uploads folder, inspect the real uploaded URL. Use a full HTTPS picture URL when its relative location is unclear.
 
@@ -1150,9 +1285,9 @@ Resume Test continues that old run, including its original map design. Editing a
 
 ### Files and artwork used during a test
 
-The edited map may have a new number that is not yet listed in main-config.txt. It can still start in Test from Start. Other maps reached by transport and foreign-map item definitions must be listed in the master file; the game loads their published files. An unsaved Map 2 open in another editor tab is not shared with this run. On a fresh test, all visited maps begin fresh again.
+The edited map may have a new number that is not yet listed in its selected game configuration. It can still start in Test from Start. Other maps reached by transport and foreign-map item definitions must be listed in the selected game’s directory; the game loads their published files. An unsaved Map 2 open in another editor tab is not shared with this run. On a fresh test, all visited maps begin fresh again.
 
-Master styles, player avatar, princess picture, and starting player variables still come from main-config.txt. If the edited map already has a Map.N directory entry, its URL is the base for relative block image paths. Otherwise the base is maps/map-N.txt beside the game, even though no such file is fetched for the edited map. Thus ../assets/tree.png points to the normal shared artwork folder. Absolute HTTP(S) image URLs use their own addresses. New custom artwork must be on the server to appear in the game. Choosing a local image preview or changing the editor’s preview base does not send that artwork to the game.
+Styles, player artwork, ending artwork, the image catalog, and player-variable defaults come from the selected game and its inherited master defaults. If the edited map already has a Map.N directory entry, its URL is the base for relative block image paths. Otherwise the base is map-N.txt in the selected game configuration’s folder (maps/map-N.txt for the legacy main game), even though that nonexistent map file is not fetched. Thus ../assets/tree.png points to the normal shared artwork folder. Absolute HTTP(S) image URLs use their own addresses. New custom artwork must be on the server to appear in the game. Choosing a local image preview or changing the editor’s preview base does not send that artwork to the game.
 
 ### Offline use, publishing, and restarting the browser
 

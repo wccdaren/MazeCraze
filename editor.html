@@ -822,6 +822,8 @@ dialog::backdrop {
 #test-status.error { color: #ffc2a6; }
 #test-frame-host iframe { display: block; width: 100%; height: 78vh; min-height: 520px; border: 1px solid #acb9a0; border-radius: 18px; background: #172b28; }
 [hidden] { display: none !important; }
+.guide-link { color: var(--accent); font-size: 12px; padding: 8px; text-decoration: underline; }
+input[readonly] { background: #253b30; color: #cdddba; cursor: text; }
 
     </style>
   </head>
@@ -832,12 +834,12 @@ dialog::backdrop {
         <div>MAZE CRAZE<small>MAP STUDIO</small></div></a
       >
       <div class="header-note">A little imagination. A whole new world.</div>
-      <button id="help-open" class="quiet">Field guide</button>
+      <a class="quiet guide-link" href="docs/Maze-Craze-Map-Editor-User-Guide.pdf" target="_blank" rel="noopener">PDF user guide ↗</a><button id="help-open" class="quiet">Field guide</button>
     </header>
     <main>
       <section class="studio-intro">
         <div>
-          <p class="eyebrow">SEBASTIAN’S WORLD-BUILDING DESK</p>
+          <p class="eyebrow">YOUR WORLD-BUILDING DESK</p>
           <h1>Draw the next adventure.</h1>
           <p>
             Create your blocks, lay a winding path, and give every door a
@@ -867,7 +869,7 @@ dialog::backdrop {
           <strong id="document-name">A New Adventure</strong
           ><span id="document-state">Ready to draw</span>
         </div>
-        <div class="document-actions">
+        <div class="document-actions"><label class="sr-only" for="editor-game-select">Game to edit</label><select id="editor-game-select" aria-label="Game to edit"><option value="main">Main game</option></select>
           <label for="example-select" class="sr-only"
             >Open a website map or bundled example</label
           ><select id="example-select">
@@ -1146,10 +1148,11 @@ dialog::backdrop {
           <label
             >Block index<input
               name="index"
+              readonly
               type="number"
               min="1"
               required
-            /><small>Used in the map layout. 777 is reserved.</small></label
+            /><small>Assigned automatically. Existing numbers stay stable. 777 is reserved.</small></label
           ><label
             >Type<select name="Type">
               <option>Move</option>
@@ -1158,7 +1161,7 @@ dialog::backdrop {
               <option>Inventory</option>
             </select></label
           ><label
-            >Full NID<input name="NID" placeholder="1/3.1" required /><small
+            >Full NID<input name="NID" readonly placeholder="1/3.1" required /><small
               >Map / category.unique number.</small
             ></label
           ><label
@@ -1194,7 +1197,7 @@ dialog::backdrop {
               min="0"
               placeholder="0" /></label
           ><label data-block-group="inventory"
-            >Inventory kind<select name="ItemKind">
+            >Item group (optional)<input name="ItemGroup" placeholder="Key, Coin, or Potion" pattern="[A-Za-z][A-Za-z0-9_-]{0,63}" /></label><label data-block-group="inventory">Inventory kind<select name="ItemKind">
               <option>Item</option>
               <option>Weapon</option>
               <option>Wearable</option>
@@ -1370,20 +1373,29 @@ const sectionFields = (sections, name) => sections.get(name)?.fields ?? Object.c
 function parseMain(text) {
   const sections = readINI(text, 'Main configuration');
   for (const [name, section] of sections) {
-    if (!['Game', 'Maps', 'Images', 'Style', 'PlayerVariables'].includes(name) || section.rows.length) throw new SpecError(`Invalid main configuration section or entry: ${name}.`);
+    if (!['Game', 'Maps', 'Images', 'Style', 'PlayerVariables', 'Games', 'ImageCatalog'].includes(name) || section.rows.length) throw new SpecError(`Invalid main configuration section or entry: ${name}.`);
   }
   const game = sectionFields(sections, 'Game');
   const maps = sectionFields(sections, 'Maps');
-  const startMap = integer(game.StartMap, 'StartMap');
+  const startMap = game.StartMap ? integer(game.StartMap, 'StartMap') : (sections.has('Games') ? undefined : integer(game.StartMap, 'StartMap'));
   const files = new Map();
   for (const [key, url] of Object.entries(maps)) {
     const match = /^Map\.([1-9]\d*)$/.exec(key);
     if (!match || !url) throw new SpecError(`Invalid map directory field: ${key}.`);
     files.set(Number(match[1]), url);
   }
-  if (!files.has(startMap)) throw new SpecError('StartMap has no file in [Maps].');
+  if (files.size && startMap !== undefined && !files.has(startMap) && !sections.has('Games')) throw new SpecError('StartMap has no file in [Maps].');
   const timeout = integer(game.RequestTimeoutMs ?? '10000', 'RequestTimeoutMs', 1000, 30000);
-  return { title: game.Title || 'Maze Craze', startMap, files, timeout, images: sectionFields(sections, 'Images'), style: sectionFields(sections, 'Style'), variables: Object.fromEntries(Object.entries(sectionFields(sections, 'PlayerVariables')).map(([key, value]) => [key, scalar(value)])) };
+  const games = new Map();
+  for (const [key, path] of Object.entries(sectionFields(sections, 'Games'))) {
+    const match = /^Game\.([A-Za-z][A-Za-z0-9_-]*)$/.exec(key);
+    if (!match || !path) throw new SpecError(`Invalid game directory field: ${key}.`);
+    games.set(match[1], path);
+  }
+  if (!files.size && !games.size) throw new SpecError('Configuration needs [Maps] or [Games].');
+  const startGame = game.StartGame || (files.size ? 'main' : games.keys().next().value);
+  if (!games.has(startGame) && !(startGame === 'main' && files.size)) throw new SpecError('StartGame has no entry in [Games].');
+  return { games, startGame, author: game.Author || '', welcome: game.WelcomeMessage || '', victoryTitle: game.VictoryTitle || '', victoryMessage: game.VictoryMessage || '', imageCatalog: sectionFields(sections, 'ImageCatalog'), title: game.Title || 'Maze Craze', startMap, files, timeout, images: sectionFields(sections, 'Images'), style: sectionFields(sections, 'Style'), variables: Object.fromEntries(Object.entries(sectionFields(sections, 'PlayerVariables')).map(([key, value]) => [key, scalar(value)])) };
 }
 function parseMap(text, expectedId) {
   const sections = readINI(text, `Map ${expectedId}`);
@@ -1401,7 +1413,7 @@ function parseMap(text, expectedId) {
   if (!views.length || views.some(view => !/^\d{4}$/.test(view))) throw new SpecError('ViewWindow entries must contain four digits: up, right, down, left.');
   const blocks = new Map(), byNID = new Map();
   const variables = Object.fromEntries(Object.entries(sectionFields(sections, 'Variables')).map(([key, value]) => [key, scalar(value)]));
-  const blockFields = new Set(['NID', 'Type', 'Description', 'MapImage', 'InteractionImage', 'Message', 'CancelActionText', 'RequiredPower', 'ItemKind', 'Power', 'State', 'WearLocation', 'Hands']);
+  const blockFields = new Set(['NID', 'Type', 'Description', 'MapImage', 'InteractionImage', 'Message', 'CancelActionText', 'RequiredPower', 'ItemKind', 'Power', 'State', 'WearLocation', 'Hands', 'ItemGroup']);
   for (const [name, section] of sections) {
     const match = /^Block\.([1-9]\d*)$/.exec(name);
     if (!match) continue;
@@ -1416,7 +1428,8 @@ function parseMap(text, expectedId) {
     if (!f.Description || !f.MapImage) throw new SpecError(`${name}: Description and MapImage are required.`);
     if (f.Type === 'Inventory' && !['Item', 'Weapon', 'Wearable'].includes(f.ItemKind)) throw new SpecError(`${name}: inventory requires ItemKind: Item, Weapon, or Wearable.`);
     if (f.ItemKind === 'Wearable' && !['Head', 'Torso', 'Arms', 'LeftArm', 'RightArm', 'Legs', 'LeftLeg', 'RightLeg', 'Feet', 'LeftFoot', 'RightFoot', 'Hands', 'LeftHand', 'RightHand'].includes(f.WearLocation)) throw new SpecError(`${name}: invalid WearLocation.`);
-    const block = { index, nid: f.NID, type: f.Type, name: f.Description, image: f.MapImage, picture: f.InteractionImage || f.MapImage, message: f.Message || '', cancel: f.CancelActionText || 'Leave', requiredPower: integer(f.RequiredPower || '0', 'RequiredPower', 0), itemKind: f.ItemKind, power: integer(f.Power || '0', 'Power', 0), state: f.State || 'Working', wearLocation: f.WearLocation, hands: integer(f.Hands || '1', 'Hands', 1, 2), choices: [], mapId: id };
+    if (f.ItemGroup && !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(f.ItemGroup)) throw new SpecError(`${name}: invalid ItemGroup.`);
+    const block = { index, nid: f.NID, type: f.Type, name: f.Description, image: f.MapImage, picture: f.InteractionImage || f.MapImage, message: f.Message || '', cancel: f.CancelActionText || 'Leave', requiredPower: integer(f.RequiredPower || '0', 'RequiredPower', 0), itemKind: f.ItemKind, itemGroup: f.ItemGroup || '', power: integer(f.Power || '0', 'Power', 0), state: f.State || 'Working', wearLocation: f.WearLocation, hands: integer(f.Hands || '1', 'Hands', 1, 2), choices: [], mapId: id };
     for (const key of Object.keys(f)) if (!blockFields.has(key)) warn(`${name}: unknown field ${key}.`);
     if (section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
     blocks.set(index, block); byNID.set(block.nid, block);
@@ -1444,8 +1457,10 @@ function parseMap(text, expectedId) {
         if (effect === 'ReplaceBlock' && !isNID(value)) throw new SpecError(`${name}: ReplaceBlock requires a full NID.`);
         if (['GiveItems', 'TakeItems'].includes(effect) && splitList(value).some(nid => !isNID(nid))) throw new SpecError(`${name}: ${key} requires full NIDs.`);
         if (effect === 'EndGame' && !['Yes', 'No'].includes(value)) throw new SpecError(`${name}: EndGame must be Yes or No.`);
-      } else if (!['Text', 'Action', 'SelectionPrompt', 'TestsMatch'].includes(key)) warn(`${name}: unknown field ${key}.`);
+      } else if (!['Text', 'Action', 'SelectionPrompt', 'SelectionItems', 'SelectionGroup', 'NoSelectionMessage', 'TestsMatch'].includes(key)) warn(`${name}: unknown field ${key}.`);
     }
+    if (f.SelectionGroup && !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(f.SelectionGroup)) throw new SpecError(`${name}: invalid SelectionGroup.`);
+    if (splitList(f.SelectionItems).some(nid => !isNID(nid))) throw new SpecError(`${name}: SelectionItems requires full NIDs.`);
     if (section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
     block.choices.push({ order: Number(match[2]), text: f.Text, action: f.Action, prompt: f.SelectionPrompt || 'Choose an item.', mode, tests: tests.sort((a, b) => a.order - b.order), fields: f });
   }
@@ -1485,7 +1500,7 @@ function parseMap(text, expectedId) {
   }
   if (format === 'Longhand' && mapData.rows.length < height) warn(`only ${mapData.rows.length} of ${height} map rows supplied; remaining cells retain defaults.`);
   for (const [name, section] of sections) {
-    if (!['Map', 'MapData', 'Variables'].includes(name) && !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name)) warn(`unknown section [${name}].`);
+    if (!['Map', 'MapData', 'Variables', 'EditorIDs'].includes(name) && !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name)) warn(`unknown section [${name}].`);
     if (['Map', 'Variables'].includes(name) && section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
   }
   for (const key of Object.keys(data)) if (!['ID', 'Name', 'Dimensions', 'DefaultBlock', 'BorderBlock', 'StartingLocation', 'ViewWindow'].includes(key)) warn(`Map: unknown field ${key}.`);
@@ -1569,7 +1584,7 @@ function importMap(text, filename = "map.txt") {
   const extras = [...sections]
     .filter(
       ([name]) =>
-        !["Map", "Variables", "MapData"].includes(name) &&
+        !["Map", "Variables", "MapData", "EditorIDs"].includes(name) &&
         !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name),
     )
     .map(([name, section]) => ({
@@ -1579,6 +1594,7 @@ function importMap(text, filename = "map.txt") {
     }));
   return {
     filename,
+    ids: Object.fromEntries(Object.entries(sections.get("EditorIDs")?.fields || {}).map(([key, value]) => [key, integer(value, `EditorIDs.${key}`)])),
     map: { ...sections.get("Map").fields, ID: String(parsed.id) },
     variables: { ...sections.get("Variables")?.fields },
     blocks: blocks.sort((a, b) => a.index - b.index),
@@ -1692,21 +1708,32 @@ function exportMap(document) {
     }
     if (runs.length) lines.push(runs.join(" | "));
   }
+  const allocated = allocationCounters(document);
+  lines.push("", "[EditorIDs]", ...writeFields(allocated));
   const text = `${lines.join("\n")}\n`;
   if (new TextEncoder().encode(text).byteLength > 2_000_000)
     throw new Error("Map exceeds the 2 MB game limit.");
   return text;
 }
 
+function allocationCounters(document) {
+  const names = ["NextMove", "NextWall", "NextInteraction", "NextInventory"];
+  const values = { NextBlock: 1, NextMove: 1, NextWall: 1, NextInteraction: 1, NextInventory: 1, ...document.ids };
+  for (const block of document.blocks) {
+    values.NextBlock = Math.max(values.NextBlock, block.index + 1);
+    const [category, suffix] = block.fields.NID.split('/')[1].split('.').map(Number);
+    values[names[category - 1]] = Math.max(values[names[category - 1]], suffix + 1);
+  }
+  for (const [key, value] of Object.entries(values)) integer(value, `EditorIDs.${key}`);
+  return values;
+}
+
 function nextBlock(document, type = "Interaction") {
   const category = EDITOR_TYPES.indexOf(type) + 1;
   if (!category) throw new Error("Unknown block type.");
-  let index = 1,
-    suffix = 1;
-  const indices = new Set(document.blocks.map((block) => block.index));
-  while (indices.has(index) || index === 777) index++;
-  const nids = new Set(document.blocks.map((block) => block.fields.NID));
-  while (nids.has(`${document.map.ID}/${category}.${suffix}`)) suffix++;
+  const counters = allocationCounters(document);
+  let index = counters.NextBlock, suffix = counters[["", "NextMove", "NextWall", "NextInteraction", "NextInventory"][category]];
+  if (index === 777) index++;
   const fields = {
     NID: `${document.map.ID}/${category}.${suffix}`,
     Type: type,
@@ -1744,7 +1771,7 @@ function allFieldSets(document) {
 }
 function referenceField(key) {
   return (
-    ["NID", "DefaultBlock", "BorderBlock"].includes(key) ||
+    ["NID", "DefaultBlock", "BorderBlock", "SelectionItems"].includes(key) ||
     /^Test\.[1-9]\d*$/.test(key) ||
     /^(Pass|Fail)\.(ReplaceBlock|GiveItems|TakeItems)$/.test(key)
   );
@@ -1790,6 +1817,7 @@ function saveBlock(document, previousIndex, replacement) {
       for (let x = 0; x < row.length; x++)
         if (row[x] === previousIndex) row[x] = replacement.index;
   } else document.blocks.push(cloneDocument(replacement));
+  document.ids = allocationCounters(document);
 }
 function duplicateBlock(document, index) {
   const source = document.blocks.find((block) => block.index === index);
@@ -1809,6 +1837,7 @@ function duplicateBlock(document, index) {
           )
           .join(" | ");
   document.blocks.push(copy);
+  document.ids = allocationCounters(document);
   return copy.index;
 }
 function deleteBlock(document, index) {
@@ -1833,6 +1862,7 @@ function deleteBlock(document, index) {
   const defaultIndex = document.blocks.find(
     (candidate) => candidate.fields.NID === document.map.DefaultBlock,
   ).index;
+  document.ids = allocationCounters(document);
   document.blocks = document.blocks.filter((candidate) => candidate !== block);
   for (const row of document.cells)
     for (let x = 0; x < row.length; x++)
@@ -2025,6 +2055,7 @@ function validateDocument(document) {
               `${label}: numeric comparison needs a number or Target.RequiredPower.`,
             );
         }
+        if (key === "SelectionItems") for (const nid of splitList(value)) checkNID(nid, label, "Inventory");
         if (/^(Pass|Fail)\.ReplaceBlock$/.test(key)) checkNID(value, label);
         if (/^(Pass|Fail)\.(GiveItems|TakeItems)$/.test(key))
           for (const nid of splitList(value))
@@ -2096,13 +2127,17 @@ class EditorHistory {
     const entry = this.undoStack.pop();
     if (!entry) return document;
     this.redoStack.push({ text: JSON.stringify(document), label: entry.label });
-    return JSON.parse(entry.text);
+    const restored = JSON.parse(entry.text), currentIDs = allocationCounters(document), restoredIDs = allocationCounters(restored);
+    for (const [key, value] of Object.entries(currentIDs)) if (value > restoredIDs[key]) { restored.ids ||= {}; restored.ids[key] = value; }
+    return restored;
   }
   redo(document) {
     const entry = this.redoStack.pop();
     if (!entry) return document;
     this.undoStack.push({ text: JSON.stringify(document), label: entry.label });
-    return JSON.parse(entry.text);
+    const restored = JSON.parse(entry.text), currentIDs = allocationCounters(document), restoredIDs = allocationCounters(restored);
+    for (const [key, value] of Object.entries(currentIDs)) if (value > restoredIDs[key]) { restored.ids ||= {}; restored.ids[key] = value; }
+    return restored;
   }
   dirty(document) {
     return JSON.stringify(document) !== this.saved;
@@ -2115,7 +2150,7 @@ class EditorHistory {
 
 // Data-only messages shared by the standalone editor bundle and game page.
 const PLAYTEST_CHANNEL = 'maze-craze-playtest';
-const PLAYTEST_VERSION = 1;
+const PLAYTEST_VERSION = 2;
 function playtestMessage(session, type, details = {}) {
   return { ...details, channel: PLAYTEST_CHANNEL, version: PLAYTEST_VERSION, session, type };
 }
@@ -2125,9 +2160,57 @@ function isPlaytestMessage(data, session) {
     && data.session === session && typeof data.type === 'string';
 }
 function validTestSnapshot(data) {
-  return Number.isSafeInteger(data.mapId) && data.mapId > 0
+  return (data.gameId === undefined || (typeof data.gameId === 'string' && /^[A-Za-z][A-Za-z0-9_-]*$/.test(data.gameId)))
+    && Number.isSafeInteger(data.mapId) && data.mapId > 0
     && typeof data.text === 'string' && data.text.length > 0
     && data.text.length <= 2_000_000 && new TextEncoder().encode(data.text).length <= 2_000_000;
+}
+
+
+
+// Only fixed configuration vocabulary is interpreted. All paths remain data.
+function configURL(value, base, sameOrigin = false) {
+  const url = new URL(value, base), origin = new URL(base).origin;
+  if (url.username || url.password || !['http:', 'https:'].includes(url.protocol)
+      || (url.protocol === 'http:' && url.origin !== origin) || (sameOrigin && url.origin !== origin)) {
+    throw new SpecError('Configuration files must use the same HTTP(S) origin; artwork must use HTTPS or the same development origin.');
+  }
+  return url.href;
+}
+function absoluteConfig(raw, url) {
+  return { ...raw, configURL: url,
+    files: new Map([...raw.files].map(([id, path]) => [id, configURL(path, url, true)])),
+    images: Object.fromEntries(Object.entries(raw.images).map(([key, path]) => [key, configURL(path, url)])),
+    imageCatalog: Object.fromEntries(Object.entries(raw.imageCatalog).map(([key, path]) => [key, configURL(path, url)])),
+  };
+}
+async function loadGameCatalog(mainURL, readText) {
+  const master = absoluteConfig(parseMain(await readText(mainURL)), mainURL);
+  const games = new Map(), failures = [];
+  if (master.files.size) games.set('main', { ...master, id: 'main', startMap: master.startMap || master.files.keys().next().value,
+    fallbackBase: new URL('./maps/', mainURL).href });
+  const entries = await Promise.all([...master.games].map(async ([id, path]) => {
+    try {
+      const url = configURL(path, mainURL, true), child = absoluteConfig(parseMain(await readText(url)), url);
+      if (child.games.size || !child.files.size) throw new SpecError('A game configuration must list maps, not another game directory.');
+      const startMap = child.startMap ?? child.files.keys().next().value;
+      if (!child.files.has(startMap)) throw new SpecError('StartMap has no file in [Maps].');
+      return [id, { ...master, ...child, id, startMap, fallbackBase: new URL('./', url).href,
+        images: { ...master.images, ...child.images }, imageCatalog: { ...master.imageCatalog, ...child.imageCatalog },
+        style: { ...master.style, ...child.style }, variables: { ...master.variables, ...child.variables } }];
+    } catch (error) { failures.push(`Game ${id}: ${error.message}`); return null; }
+  }));
+  for (const entry of entries) if (entry) games.set(...entry);
+  return { master, games, failures, defaultId: master.startGame };
+}
+function resolveArtwork(path, config, mapURL) {
+  if (String(path).startsWith('@')) {
+    const key = String(path).slice(1);
+    const value = Object.hasOwn(config.imageCatalog, key) ? config.imageCatalog[key] : null;
+    if (!value) throw new SpecError(`Unknown image catalog entry ${path}.`);
+    return value;
+  }
+  return configURL(path, mapURL);
 }
 
 
@@ -2166,14 +2249,13 @@ async function readEditorWebsiteText(url, timeout = 10000) {
   } finally { await reader.cancel(); }
 }
 
-async function readEditorDirectory(mainPath, pageURL) {
+async function readEditorDirectory(mainPath, pageURL, gameId) {
   const origin = new URL(pageURL).origin;
   const mainURL = editorWebsiteURL(mainPath, pageURL, origin);
-  const config = parseMain(await readEditorWebsiteText(mainURL));
-  const files = new Map([...config.files]
-    .sort(([a], [b]) => a - b)
-    .map(([id, path]) => [id, editorWebsiteURL(path, mainURL, origin)]));
-  return { files, timeout: config.timeout };
+  const catalog = await loadGameCatalog(mainURL, readEditorWebsiteText);
+  const selected = catalog.games.get(gameId || catalog.defaultId);
+  if (!selected) throw new Error(`Selected game ${gameId || catalog.defaultId} is unavailable. ${catalog.failures.join(' ')}`);
+  return { ...selected, files: new Map([...selected.files].sort(([a], [b]) => a - b)), catalog };
 }
 
 
@@ -2203,7 +2285,7 @@ let editingIndex = null,
   drawQueued = false;
 const localImages = new Map(),
   decodedImages = new Map();
-let websiteDirectory = null, websiteDirectoryLoading = false, websiteMapLoading = false;
+let websiteDirectory = null, websiteDirectoryLoading = false, websiteMapLoading = false, editorGameId = null, mapSourceURL = null, testGameId = null;
 
 function node(tag, text = "", className = "") {
   const element = document.createElement(tag);
@@ -2261,6 +2343,18 @@ function canReplace() {
     )
   );
 }
+// New maps/blocks must resolve shared art correctly inside nested game folders.
+function starterImage(path) {
+  if (!websiteDirectory) return path;
+  const name = basename(path).replace(/\.png$/i, '').split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('');
+  if (Object.hasOwn(websiteDirectory.imageCatalog, name)) return `@${name}`;
+  return new URL(`assets/${basename(path)}`, location.href).href;
+}
+function newEditorDocument() {
+  const document = createMap();
+  for (const block of document.blocks) block.fields.MapImage = starterImage(block.fields.MapImage);
+  return document;
+}
 function parsedDraft(candidate) {
   return parseMap(exportMap(candidate), Number(candidate.map.ID));
 }
@@ -2277,7 +2371,8 @@ function change(label, edit) {
   commit(candidate, label);
   return result;
 }
-function replaceDocument(candidate, text = "") {
+function replaceDocument(candidate, text = "", sourceURL = null) {
+  mapSourceURL = sourceURL;
   draft = candidate;
   history.reset(draft);
   originalText = text;
@@ -2313,26 +2408,18 @@ function basename(value) {
 }
 function previewSource(value) {
   if (!value) return null;
+  if (String(value).startsWith('@')) value = websiteDirectory?.imageCatalog[String(value).slice(1)] || `../assets/${String(value).slice(1).toLowerCase()}.png`;
   const name = basename(value);
   if (localImages.has(name)) return localImages.get(name);
-  if (EDITOR_BUNDLED.images[name]) return EDITOR_BUNDLED.images[name];
-  if (!studio("allow-image-urls").checked) return null;
   try {
-    const base =
-      studio("image-base").value.trim() ||
-      new URL("./maps/", location.href).href;
+    const base = studio("image-base").value.trim() || mapSourceURL || websiteDirectory?.fallbackBase || new URL("./maps/", location.href).href;
     const url = new URL(value, base);
-    if (
-      url.username ||
-      url.password ||
-      (url.protocol !== "https:" &&
-        !(url.protocol === "http:" && url.origin === location.origin))
-    )
-      return null;
-    return url.href;
-  } catch {
-    return null;
-  }
+    const isCatalog = websiteDirectory && Object.values(websiteDirectory.imageCatalog).includes(url.href);
+    if ((isCatalog && url.origin === location.origin) || studio("allow-image-urls").checked) {
+      if (!url.username && !url.password && (url.protocol === 'https:' || (url.protocol === 'http:' && url.origin === location.origin))) return url.href;
+    }
+  } catch { /* An offline relative path may still have a bundled preview. */ }
+  return EDITOR_BUNDLED.images[name] || null;
 }
 function previewImage(value) {
   const source = previewSource(value);
@@ -2609,6 +2696,7 @@ function renderStudio() {
   renderSelected();
   drawCanvas();
   renderValidation();
+  refreshImageSuggestions();
   refreshTestControls();
 }
 function setTool(tool) {
@@ -3050,6 +3138,9 @@ function addChoice(
     ["Text", "Choice text", { required: true }],
     ["Action", "Action", { options: ["Attempt", "UseInventory", "Attack"] }],
     ["SelectionPrompt", "Item selection prompt", {}],
+    ["SelectionItems", "Offer these inventory NIDs · separated by |", { placeholder: "Blank = normal list", list: "nid-suggestions" }],
+    ["SelectionGroup", "Offer item group", { placeholder: "Key (optional; combines with NID filter)" }],
+    ["NoSelectionMessage", "Message when no matching items are owned", {}],
     ["TestsMatch", "Rules must match", { options: ["All", "Any"] }],
   ]) {
     const entry = field(
@@ -3112,6 +3203,7 @@ function openBlock(index = null) {
   blockOriginal = cloneDocument(
     index === null ? nextBlock(draft) : blockFor(index),
   );
+  if (index === null) blockOriginal.fields.MapImage = starterImage(blockOriginal.fields.MapImage);
   const form = studio("block-form");
   form.reset();
   formControl(form, "index").value = blockOriginal.index;
@@ -3124,6 +3216,7 @@ function openBlock(index = null) {
     "Message",
     "CancelActionText",
     "RequiredPower",
+    "ItemGroup",
     "ItemKind",
     "State",
     "Power",
@@ -3154,7 +3247,7 @@ function readChoices() {
       if (
         /^Test\./.test(key) ||
         /^(Pass|Fail)\./.test(key) ||
-        ["Text", "Action", "SelectionPrompt", "TestsMatch"].includes(key)
+        ["Text", "Action", "SelectionPrompt", "SelectionItems", "SelectionGroup", "NoSelectionMessage", "TestsMatch"].includes(key)
       )
         delete fields[key];
     for (const input of card.querySelectorAll("[data-choice]")) {
@@ -3218,6 +3311,7 @@ studio("block-form").addEventListener("submit", (event) => {
       "Message",
       "CancelActionText",
       "RequiredPower",
+      "ItemGroup",
       "ItemKind",
       "State",
       "Power",
@@ -3229,8 +3323,9 @@ studio("block-form").addEventListener("submit", (event) => {
       if (!input.disabled && singleLine(input.value))
         fields[key] = singleLine(input.value);
     }
+    fields.NID = type === blockOriginal.fields.Type ? blockOriginal.fields.NID : nextBlock(draft, type).fields.NID;
     const replacement = {
-      index: Number(formControl(form, "index").value),
+      index: blockOriginal.index,
       fields,
       choices: type === "Interaction" ? readChoices() : [],
     };
@@ -3246,7 +3341,7 @@ formControl(studio("block-form"), "Type").addEventListener("change", () => {
   const form = studio("block-form"),
     type = formControl(form, "Type").value;
   const suggestion = nextBlock(draft, type);
-  formControl(form, "NID").value = suggestion.fields.NID;
+  formControl(form, "NID").value = type === blockOriginal.fields.Type ? blockOriginal.fields.NID : suggestion.fields.NID;
   if (type === "Interaction" && !studio("choices-editor").children.length)
     addChoice();
   toggleBlockFields();
@@ -3258,7 +3353,7 @@ formControl(studio("block-form"), "ItemKind").addEventListener(
 
 studio("new-map").addEventListener("click", () => {
   if (canReplace()) {
-    replaceDocument(createMap());
+    replaceDocument(newEditorDocument());
     tell("New map ready. Use Map settings to choose dimensions.");
   }
 });
@@ -3284,14 +3379,20 @@ function directoryNotice(message, error = false) {
 }
 function directoryControls() {
   studio("example-select").disabled = websiteMapLoading;
+  studio("editor-game-select").disabled = websiteMapLoading || websiteDirectoryLoading;
   studio("refresh-map-list").disabled = websiteDirectoryLoading || websiteMapLoading;
+  refreshTestControls();
 }
 async function refreshWebsiteDirectory() {
   if (websiteDirectoryLoading || websiteMapLoading) return;
+  const initialDocument = draft, initializeStarter = editorGameId === null;
   websiteDirectoryLoading = true; directoryControls();
   directoryNotice("Reading website maps from main-config.txt…");
   try {
-    const directory = await readEditorDirectory(EDITOR_MAIN_CONFIG_PATH, location.href);
+    const directory = await readEditorDirectory(EDITOR_MAIN_CONFIG_PATH, location.href, editorGameId || undefined);
+    const gameSelect = studio("editor-game-select"); gameSelect.replaceChildren();
+    for (const [id, settings] of directory.catalog.games) { const option = node("option", settings.title); option.value = id; gameSelect.append(option); }
+    editorGameId = directory.id; gameSelect.value = editorGameId;
     const group = document.createElement("optgroup");
     group.id = "website-map-options"; group.label = "Website maps · current server files";
     for (const [id, url] of directory.files) {
@@ -3301,6 +3402,8 @@ async function refreshWebsiteDirectory() {
     studio("website-map-options")?.remove();
     studio("example-select").insertBefore(group, studio("bundled-map-options"));
     websiteDirectory = directory;
+    if (initializeStarter && draft === initialDocument && !history.dirty(draft) && !document.querySelector("dialog[open]") && !stroke && !studio("editor-pane").hidden) { draft = newEditorDocument(); history.reset(draft); }
+    refreshImageSuggestions(); decodedImages.clear(); renderStudio();
     directoryNotice(`${directory.files.size} website maps available. Refresh map list after adding maps to main-config.txt.`);
   } catch (error) {
     directoryNotice(`Could not refresh website maps: ${error.message} ${websiteDirectory ? "The previous list is still available." : "Bundled examples and local files are still available."}`, true);
@@ -3327,7 +3430,7 @@ studio("example-select").addEventListener("change", async (event) => {
         directoryNotice("The editor changed while the map was loading. Your work was kept. Choose the website map again when ready.");
         return;
       }
-      replaceDocument(imported, text);
+      replaceDocument(imported, text, url);
       const option = [...studio("example-select").options].find(option => option.value === value);
       if (option) option.textContent = `Map ${id} · ${imported.map.Name || basename(new URL(url).pathname)}`;
       directoryNotice(`Opened the current website copy of Map ${id}. Export downloads your edits; upload the file by SFTP to publish them.`);
@@ -3619,21 +3722,37 @@ for (const location of EDITOR_LOCATIONS) {
   option.value = location;
   formControl(studio("block-form"), "WearLocation").append(option);
 }
-for (const name of Object.keys(EDITOR_BUNDLED.images)) {
-  const option = node("option");
-  option.value = `../assets/${name}`;
-  studio("image-suggestions").append(option);
+function refreshImageSuggestions() {
+  const list = studio("image-suggestions"); list.replaceChildren();
+  const values = new Map();
+  for (const name of Object.keys(EDITOR_BUNDLED.images)) values.set(`../assets/${name}`, `Bundled · ${name}`);
+  for (const block of draft.blocks) for (const key of ['MapImage', 'InteractionImage']) if (block.fields[key]) values.set(block.fields[key], `This map · ${block.fields.Description}`);
+  for (const [name, url] of Object.entries(websiteDirectory?.imageCatalog || {})) { values.set(`@${name}`, `Catalog · ${name}`); values.set(url, `Catalog URL · ${name}`); }
+  for (const [value, label] of values) { const option = node("option"); option.value = value; option.label = label; list.append(option); }
 }
+studio("editor-game-select").addEventListener("change", event => {
+  const id = event.target.value;
+  if (!websiteDirectory || !canReplace()) { event.target.value = editorGameId || 'main'; return; }
+  const catalog = websiteDirectory.catalog, settings = catalog.games.get(id);
+  if (!settings) return;
+  editorGameId = id; websiteDirectory = { ...settings, catalog };
+  studio("website-map-options")?.remove();
+  const group = document.createElement("optgroup"); group.id = 'website-map-options'; group.label = 'Website maps · current server files';
+  for (const [mapId, url] of [...settings.files].sort(([a], [b]) => a - b)) { const option = node('option', `Map ${mapId} · ${basename(new URL(url).pathname)}`); option.value = `website:${mapId}`; group.append(option); }
+  studio('example-select').insertBefore(group, studio('bundled-map-options'));
+  replaceDocument(newEditorDocument()); decodedImages.clear(); refreshImageSuggestions();
+  directoryNotice(`Editing ${settings.title}. Open one of its website maps or create a new map.`);
+});
 // A paused iframe retains its own Game instance. No runtime state is copied
 // back into the editable document, and no map data is uploaded to the server.
 let testFrame = null, testSession = '', testPhase = 'idle', testBusy = false;
 let testSnapshot = '', testTimer, testNotice = '';
 function refreshTestControls() {
-  studio('test-start').disabled = ['starting', 'pausing', 'resuming'].includes(testPhase) || testBusy;
+  studio('test-start').disabled = websiteDirectoryLoading || websiteMapLoading || ['starting', 'pausing', 'resuming'].includes(testPhase) || testBusy;
   studio('test-edit').hidden = !['starting', 'running', 'pausing', 'resuming'].includes(testPhase);
   studio('test-edit').disabled = testPhase !== 'running' || testBusy;
   studio('test-resume').hidden = testPhase !== 'paused';
-  const changed = testPhase === 'paused' && exportMap(draft) !== testSnapshot;
+  const changed = testPhase === 'paused' && (exportMap(draft) !== testSnapshot || editorGameId !== testGameId);
   studio('test-status').textContent = changed
     ? 'Your map has changed. Resume continues the previous test. Test from Start uses your changes.'
     : testNotice || 'Test a fresh copy of your map without exporting. Your design stays on this desk.';
@@ -3675,7 +3794,7 @@ function startTest() {
   try { text = exportMap(draft); } catch (error) { report(error); return; }
   clearTimeout(testTimer); testFrame?.remove();
   testSession = [...crypto.getRandomValues(new Uint32Array(4))].map(n => n.toString(16).padStart(8, '0')).join('');
-  testSnapshot = text; testPhase = 'starting'; testBusy = false;
+  testSnapshot = text; testGameId = editorGameId; testPhase = 'starting'; testBusy = false;
   testNotice = 'Opening a fresh test…';
   studio('test-status').classList.remove('error');
   testFrame = document.createElement('iframe');
@@ -3702,7 +3821,7 @@ window.addEventListener('message', event => {
       || !isPlaytestMessage(event.data, testSession)) return;
   const data = event.data;
   if (data.type === 'ready' && testPhase === 'starting') {
-    sendTestCommand('start', { mapId: Number(draft.map.ID), text: testSnapshot });
+    sendTestCommand('start', { mapId: Number(draft.map.ID), text: testSnapshot, gameId: testGameId || undefined });
   } else if (data.type === 'running' && ['starting', 'resuming'].includes(testPhase)) {
     clearTimeout(testTimer); testPhase = 'running'; testBusy = false;
     testNotice = 'Test copy running. Back to Edit pauses it. Test from Start resets all test progress.';
@@ -3724,7 +3843,7 @@ window.addEventListener('message', event => {
 renderStudio();
 if (["http:", "https:"].includes(location.protocol)) refreshWebsiteDirectory();
 else {
-  studio("refresh-map-list").hidden = true;
+  studio("refresh-map-list").hidden = true; studio("editor-game-select").disabled = true;
   directoryNotice("Offline editing: bundled examples and local files are available. Open this editor on your game website to list its published maps.");
 }
 

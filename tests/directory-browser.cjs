@@ -22,7 +22,7 @@ const assert = require('node:assert/strict');
     let failFour = false, releaseSlow, slow = false;
     page.on('pageerror', error => errors.push(error.message));
     page.on('dialog', async dialog => { dialogs.push(dialog.message()); await dialog.accept(); });
-    page.on('request', request => { if (request.resourceType() === 'fetch' && !request.url().endsWith('main-config.txt')) mapRequests.push(request.url()); });
+    page.on('request', request => { if (request.resourceType() === 'fetch' && !new URL(request.url()).pathname.endsWith('/main-config.txt') && !new URL(request.url()).pathname.endsWith('/game-config.txt')) mapRequests.push(request.url()); });
     await page.route('**/main-config.txt', route => route.fulfill({ contentType: 'text/plain', body: main }));
     await page.route('**/published/map-three.txt', async route => {
       if (slow) await new Promise(resolve => { releaseSlow = resolve; });

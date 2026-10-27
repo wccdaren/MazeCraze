@@ -1,0 +1,40 @@
+[Map]
+ID: 2
+Name: Esther's Secret Place
+Dimensions: 11x9
+DefaultBlock: 2/1.1
+BorderBlock: 2/2.1
+StartingLocation: (2,2)
+ViewWindow: 3333 | 5555 | 9999
+
+[Block.1]
+NID: 2/1.1
+Type: Move
+Description: Garden path
+MapImage: @Gravel
+
+[Block.2]
+NID: 2/2.1
+Type: Wall
+Description: Tree wall
+MapImage: @Tree
+
+[Block.3]
+NID: 2/3.1
+Type: Interaction
+Description: Return gate
+MapImage: @Portal
+Message: Return to the first trail. Its changes will be remembered.
+
+[Block.3.Choice.1]
+Text: Return
+Action: Attempt
+Pass.ReplaceBlock: 2/3.1
+Pass.Transport: (1)(8,6)
+Pass.Message: You return to the first trail.
+
+[MapData]
+Format: Shorthand
+(1,1)2(11) | (1,9)2(11)
+(1,2)2 | (11,2)2 | (1,3)2 | (11,3)2 | (1,4)2 | (11,4)2 | (1,5)2 | (11,5)2 | (1,6)2 | (11,6)2 | (1,7)2 | (11,7)2 | (1,8)2 | (11,8)2
+(2,2)3 | (5,2)2 | (5,3)2 | (5,4)2 | (5,5)2 | (9,6)777

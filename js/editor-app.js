@@ -43,7 +43,7 @@ let editingIndex = null,
   drawQueued = false;
 const localImages = new Map(),
   decodedImages = new Map();
-let websiteDirectory = null, websiteDirectoryLoading = false, websiteMapLoading = false;
+let websiteDirectory = null, websiteDirectoryLoading = false, websiteMapLoading = false, editorGameId = null, mapSourceURL = null, testGameId = null;
 
 function node(tag, text = "", className = "") {
   const element = document.createElement(tag);
@@ -101,6 +101,18 @@ function canReplace() {
     )
   );
 }
+// New maps/blocks must resolve shared art correctly inside nested game folders.
+function starterImage(path) {
+  if (!websiteDirectory) return path;
+  const name = basename(path).replace(/\.png$/i, '').split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('');
+  if (Object.hasOwn(websiteDirectory.imageCatalog, name)) return `@${name}`;
+  return new URL(`assets/${basename(path)}`, location.href).href;
+}
+function newEditorDocument() {
+  const document = createMap();
+  for (const block of document.blocks) block.fields.MapImage = starterImage(block.fields.MapImage);
+  return document;
+}
 function parsedDraft(candidate) {
   return parseMap(exportMap(candidate), Number(candidate.map.ID));
 }
@@ -117,7 +129,8 @@ function change(label, edit) {
   commit(candidate, label);
   return result;
 }
-function replaceDocument(candidate, text = "") {
+function replaceDocument(candidate, text = "", sourceURL = null) {
+  mapSourceURL = sourceURL;
   draft = candidate;
   history.reset(draft);
   originalText = text;
@@ -153,26 +166,18 @@ function basename(value) {
 }
 function previewSource(value) {
   if (!value) return null;
+  if (String(value).startsWith('@')) value = websiteDirectory?.imageCatalog[String(value).slice(1)] || `../assets/${String(value).slice(1).toLowerCase()}.png`;
   const name = basename(value);
   if (localImages.has(name)) return localImages.get(name);
-  if (EDITOR_BUNDLED.images[name]) return EDITOR_BUNDLED.images[name];
-  if (!studio("allow-image-urls").checked) return null;
   try {
-    const base =
-      studio("image-base").value.trim() ||
-      new URL("./maps/", location.href).href;
+    const base = studio("image-base").value.trim() || mapSourceURL || websiteDirectory?.fallbackBase || new URL("./maps/", location.href).href;
     const url = new URL(value, base);
-    if (
-      url.username ||
-      url.password ||
-      (url.protocol !== "https:" &&
-        !(url.protocol === "http:" && url.origin === location.origin))
-    )
-      return null;
-    return url.href;
-  } catch {
-    return null;
-  }
+    const isCatalog = websiteDirectory && Object.values(websiteDirectory.imageCatalog).includes(url.href);
+    if ((isCatalog && url.origin === location.origin) || studio("allow-image-urls").checked) {
+      if (!url.username && !url.password && (url.protocol === 'https:' || (url.protocol === 'http:' && url.origin === location.origin))) return url.href;
+    }
+  } catch { /* An offline relative path may still have a bundled preview. */ }
+  return EDITOR_BUNDLED.images[name] || null;
 }
 function previewImage(value) {
   const source = previewSource(value);
@@ -449,6 +454,7 @@ function renderStudio() {
   renderSelected();
   drawCanvas();
   renderValidation();
+  refreshImageSuggestions();
   refreshTestControls();
 }
 function setTool(tool) {
@@ -890,6 +896,9 @@ function addChoice(
     ["Text", "Choice text", { required: true }],
     ["Action", "Action", { options: ["Attempt", "UseInventory", "Attack"] }],
     ["SelectionPrompt", "Item selection prompt", {}],
+    ["SelectionItems", "Offer these inventory NIDs · separated by |", { placeholder: "Blank = normal list", list: "nid-suggestions" }],
+    ["SelectionGroup", "Offer item group", { placeholder: "Key (optional; combines with NID filter)" }],
+    ["NoSelectionMessage", "Message when no matching items are owned", {}],
     ["TestsMatch", "Rules must match", { options: ["All", "Any"] }],
   ]) {
     const entry = field(
@@ -952,6 +961,7 @@ function openBlock(index = null) {
   blockOriginal = cloneDocument(
     index === null ? nextBlock(draft) : blockFor(index),
   );
+  if (index === null) blockOriginal.fields.MapImage = starterImage(blockOriginal.fields.MapImage);
   const form = studio("block-form");
   form.reset();
   formControl(form, "index").value = blockOriginal.index;
@@ -964,6 +974,7 @@ function openBlock(index = null) {
     "Message",
     "CancelActionText",
     "RequiredPower",
+    "ItemGroup",
     "ItemKind",
     "State",
     "Power",
@@ -994,7 +1005,7 @@ function readChoices() {
       if (
         /^Test\./.test(key) ||
         /^(Pass|Fail)\./.test(key) ||
-        ["Text", "Action", "SelectionPrompt", "TestsMatch"].includes(key)
+        ["Text", "Action", "SelectionPrompt", "SelectionItems", "SelectionGroup", "NoSelectionMessage", "TestsMatch"].includes(key)
       )
         delete fields[key];
     for (const input of card.querySelectorAll("[data-choice]")) {
@@ -1058,6 +1069,7 @@ studio("block-form").addEventListener("submit", (event) => {
       "Message",
       "CancelActionText",
       "RequiredPower",
+      "ItemGroup",
       "ItemKind",
       "State",
       "Power",
@@ -1069,8 +1081,9 @@ studio("block-form").addEventListener("submit", (event) => {
       if (!input.disabled && singleLine(input.value))
         fields[key] = singleLine(input.value);
     }
+    fields.NID = type === blockOriginal.fields.Type ? blockOriginal.fields.NID : nextBlock(draft, type).fields.NID;
     const replacement = {
-      index: Number(formControl(form, "index").value),
+      index: blockOriginal.index,
       fields,
       choices: type === "Interaction" ? readChoices() : [],
     };
@@ -1086,7 +1099,7 @@ formControl(studio("block-form"), "Type").addEventListener("change", () => {
   const form = studio("block-form"),
     type = formControl(form, "Type").value;
   const suggestion = nextBlock(draft, type);
-  formControl(form, "NID").value = suggestion.fields.NID;
+  formControl(form, "NID").value = type === blockOriginal.fields.Type ? blockOriginal.fields.NID : suggestion.fields.NID;
   if (type === "Interaction" && !studio("choices-editor").children.length)
     addChoice();
   toggleBlockFields();
@@ -1098,7 +1111,7 @@ formControl(studio("block-form"), "ItemKind").addEventListener(
 
 studio("new-map").addEventListener("click", () => {
   if (canReplace()) {
-    replaceDocument(createMap());
+    replaceDocument(newEditorDocument());
     tell("New map ready. Use Map settings to choose dimensions.");
   }
 });
@@ -1124,14 +1137,20 @@ function directoryNotice(message, error = false) {
 }
 function directoryControls() {
   studio("example-select").disabled = websiteMapLoading;
+  studio("editor-game-select").disabled = websiteMapLoading || websiteDirectoryLoading;
   studio("refresh-map-list").disabled = websiteDirectoryLoading || websiteMapLoading;
+  refreshTestControls();
 }
 async function refreshWebsiteDirectory() {
   if (websiteDirectoryLoading || websiteMapLoading) return;
+  const initialDocument = draft, initializeStarter = editorGameId === null;
   websiteDirectoryLoading = true; directoryControls();
   directoryNotice("Reading website maps from main-config.txt…");
   try {
-    const directory = await readEditorDirectory(EDITOR_MAIN_CONFIG_PATH, location.href);
+    const directory = await readEditorDirectory(EDITOR_MAIN_CONFIG_PATH, location.href, editorGameId || undefined);
+    const gameSelect = studio("editor-game-select"); gameSelect.replaceChildren();
+    for (const [id, settings] of directory.catalog.games) { const option = node("option", settings.title); option.value = id; gameSelect.append(option); }
+    editorGameId = directory.id; gameSelect.value = editorGameId;
     const group = document.createElement("optgroup");
     group.id = "website-map-options"; group.label = "Website maps · current server files";
     for (const [id, url] of directory.files) {
@@ -1141,6 +1160,8 @@ async function refreshWebsiteDirectory() {
     studio("website-map-options")?.remove();
     studio("example-select").insertBefore(group, studio("bundled-map-options"));
     websiteDirectory = directory;
+    if (initializeStarter && draft === initialDocument && !history.dirty(draft) && !document.querySelector("dialog[open]") && !stroke && !studio("editor-pane").hidden) { draft = newEditorDocument(); history.reset(draft); }
+    refreshImageSuggestions(); decodedImages.clear(); renderStudio();
     directoryNotice(`${directory.files.size} website maps available. Refresh map list after adding maps to main-config.txt.`);
   } catch (error) {
     directoryNotice(`Could not refresh website maps: ${error.message} ${websiteDirectory ? "The previous list is still available." : "Bundled examples and local files are still available."}`, true);
@@ -1167,7 +1188,7 @@ studio("example-select").addEventListener("change", async (event) => {
         directoryNotice("The editor changed while the map was loading. Your work was kept. Choose the website map again when ready.");
         return;
       }
-      replaceDocument(imported, text);
+      replaceDocument(imported, text, url);
       const option = [...studio("example-select").options].find(option => option.value === value);
       if (option) option.textContent = `Map ${id} · ${imported.map.Name || basename(new URL(url).pathname)}`;
       directoryNotice(`Opened the current website copy of Map ${id}. Export downloads your edits; upload the file by SFTP to publish them.`);
@@ -1459,21 +1480,37 @@ for (const location of EDITOR_LOCATIONS) {
   option.value = location;
   formControl(studio("block-form"), "WearLocation").append(option);
 }
-for (const name of Object.keys(EDITOR_BUNDLED.images)) {
-  const option = node("option");
-  option.value = `../assets/${name}`;
-  studio("image-suggestions").append(option);
+function refreshImageSuggestions() {
+  const list = studio("image-suggestions"); list.replaceChildren();
+  const values = new Map();
+  for (const name of Object.keys(EDITOR_BUNDLED.images)) values.set(`../assets/${name}`, `Bundled · ${name}`);
+  for (const block of draft.blocks) for (const key of ['MapImage', 'InteractionImage']) if (block.fields[key]) values.set(block.fields[key], `This map · ${block.fields.Description}`);
+  for (const [name, url] of Object.entries(websiteDirectory?.imageCatalog || {})) { values.set(`@${name}`, `Catalog · ${name}`); values.set(url, `Catalog URL · ${name}`); }
+  for (const [value, label] of values) { const option = node("option"); option.value = value; option.label = label; list.append(option); }
 }
+studio("editor-game-select").addEventListener("change", event => {
+  const id = event.target.value;
+  if (!websiteDirectory || !canReplace()) { event.target.value = editorGameId || 'main'; return; }
+  const catalog = websiteDirectory.catalog, settings = catalog.games.get(id);
+  if (!settings) return;
+  editorGameId = id; websiteDirectory = { ...settings, catalog };
+  studio("website-map-options")?.remove();
+  const group = document.createElement("optgroup"); group.id = 'website-map-options'; group.label = 'Website maps · current server files';
+  for (const [mapId, url] of [...settings.files].sort(([a], [b]) => a - b)) { const option = node('option', `Map ${mapId} · ${basename(new URL(url).pathname)}`); option.value = `website:${mapId}`; group.append(option); }
+  studio('example-select').insertBefore(group, studio('bundled-map-options'));
+  replaceDocument(newEditorDocument()); decodedImages.clear(); refreshImageSuggestions();
+  directoryNotice(`Editing ${settings.title}. Open one of its website maps or create a new map.`);
+});
 // A paused iframe retains its own Game instance. No runtime state is copied
 // back into the editable document, and no map data is uploaded to the server.
 let testFrame = null, testSession = '', testPhase = 'idle', testBusy = false;
 let testSnapshot = '', testTimer, testNotice = '';
 function refreshTestControls() {
-  studio('test-start').disabled = ['starting', 'pausing', 'resuming'].includes(testPhase) || testBusy;
+  studio('test-start').disabled = websiteDirectoryLoading || websiteMapLoading || ['starting', 'pausing', 'resuming'].includes(testPhase) || testBusy;
   studio('test-edit').hidden = !['starting', 'running', 'pausing', 'resuming'].includes(testPhase);
   studio('test-edit').disabled = testPhase !== 'running' || testBusy;
   studio('test-resume').hidden = testPhase !== 'paused';
-  const changed = testPhase === 'paused' && exportMap(draft) !== testSnapshot;
+  const changed = testPhase === 'paused' && (exportMap(draft) !== testSnapshot || editorGameId !== testGameId);
   studio('test-status').textContent = changed
     ? 'Your map has changed. Resume continues the previous test. Test from Start uses your changes.'
     : testNotice || 'Test a fresh copy of your map without exporting. Your design stays on this desk.';
@@ -1515,7 +1552,7 @@ function startTest() {
   try { text = exportMap(draft); } catch (error) { report(error); return; }
   clearTimeout(testTimer); testFrame?.remove();
   testSession = [...crypto.getRandomValues(new Uint32Array(4))].map(n => n.toString(16).padStart(8, '0')).join('');
-  testSnapshot = text; testPhase = 'starting'; testBusy = false;
+  testSnapshot = text; testGameId = editorGameId; testPhase = 'starting'; testBusy = false;
   testNotice = 'Opening a fresh test…';
   studio('test-status').classList.remove('error');
   testFrame = document.createElement('iframe');
@@ -1542,7 +1579,7 @@ window.addEventListener('message', event => {
       || !isPlaytestMessage(event.data, testSession)) return;
   const data = event.data;
   if (data.type === 'ready' && testPhase === 'starting') {
-    sendTestCommand('start', { mapId: Number(draft.map.ID), text: testSnapshot });
+    sendTestCommand('start', { mapId: Number(draft.map.ID), text: testSnapshot, gameId: testGameId || undefined });
   } else if (data.type === 'running' && ['starting', 'resuming'].includes(testPhase)) {
     clearTimeout(testTimer); testPhase = 'running'; testBusy = false;
     testNotice = 'Test copy running. Back to Edit pauses it. Test from Start resets all test progress.';
@@ -1564,6 +1601,6 @@ window.addEventListener('message', event => {
 renderStudio();
 if (["http:", "https:"].includes(location.protocol)) refreshWebsiteDirectory();
 else {
-  studio("refresh-map-list").hidden = true;
+  studio("refresh-map-list").hidden = true; studio("editor-game-select").disabled = true;
   directoryNotice("Offline editing: bundled examples and local files are available. Open this editor on your game website to list its published maps.");
 }

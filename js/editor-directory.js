@@ -1,4 +1,4 @@
-import { parseMain } from "./spec.js";
+import { loadGameCatalog } from "./catalog.js";
 
 // Paths in [Maps] are relative to main-config.txt, just as they are in the game.
 // Website editing is intentionally limited to the editor's own HTTP(S) origin.
@@ -34,12 +34,11 @@ export async function readEditorWebsiteText(url, timeout = 10000) {
   } finally { await reader.cancel(); }
 }
 
-export async function readEditorDirectory(mainPath, pageURL) {
+export async function readEditorDirectory(mainPath, pageURL, gameId) {
   const origin = new URL(pageURL).origin;
   const mainURL = editorWebsiteURL(mainPath, pageURL, origin);
-  const config = parseMain(await readEditorWebsiteText(mainURL));
-  const files = new Map([...config.files]
-    .sort(([a], [b]) => a - b)
-    .map(([id, path]) => [id, editorWebsiteURL(path, mainURL, origin)]));
-  return { files, timeout: config.timeout };
+  const catalog = await loadGameCatalog(mainURL, readEditorWebsiteText);
+  const selected = catalog.games.get(gameId || catalog.defaultId);
+  if (!selected) throw new Error(`Selected game ${gameId || catalog.defaultId} is unavailable. ${catalog.failures.join(' ')}`);
+  return { ...selected, files: new Map([...selected.files].sort(([a], [b]) => a - b)), catalog };
 }

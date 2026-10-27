@@ -1,0 +1,30 @@
+[Game]
+Title: Esther's Enchanted Garden
+Author: Esther
+StartMap: 1
+WelcomeMessage: Find the trail key, unlock the gate, and explore the second map.
+VictoryTitle: You restored the garden!
+VictoryMessage: Well done, {Player.Name}! You restored the garden!
+
+[Maps]
+Map.1: map-1.txt
+Map.2: map-2.txt
+
+[Images]
+Player: ../../assets/gnome.png
+Princess: ../../assets/chest.png
+
+[Style]
+Accent: #e4b6ef
+
+[PlayerVariables]
+PuzzlesSolved: 0
+
+[ImageCatalog]
+Grass: ../../assets/grass.png
+Tree: ../../assets/tree.png
+Key: ../../assets/key.png
+Door: ../../assets/door.png
+Chest: ../../assets/chest.png
+Portal: ../../assets/portal.png
+Gravel: ../../assets/gravel.png

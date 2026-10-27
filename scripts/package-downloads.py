@@ -27,6 +27,6 @@ if __name__ == '__main__':
     package('maze-craze-with-editor.zip', 'MazeCraze', set(filter(None, tracked)))
     # This smaller download is for offline authoring; integrated play needs the full package.
     package('maze-craze-map-editor.zip', 'MazeCrazeMapEditor', [
-        'editor.html', 'EDITOR.md', 'SPECIFICATION.md', 'docs/editor-preview.png',
+        'editor.html', 'EDITOR.md', 'SPECIFICATION.md', 'DEPLOYMENT.md', 'docs/editor-preview.png',
         'docs/Maze-Craze-Map-Editor-User-Guide.docx', 'docs/Maze-Craze-Map-Editor-User-Guide.pdf',
     ])

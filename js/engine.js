@@ -46,7 +46,7 @@ export class Game {
   }
   get map() { return this.maps.get(this.mapId); }
   block(nid) {
-    if (nid === '@princess') return { nid, name: 'You saved the princess!', type: 'Interaction', image: this.config.images.Princess, picture: this.config.images.Princess, mapId: this.mapId, message: 'The princess waves from the garden tower. Your clever puzzle-solving has saved the day!', cancel: 'Leave', choices: [{ text: 'Celebrate!', action: 'Attempt', tests: [], mode: 'All', fields: { 'Pass.Message': 'YOU SAVED THE PRINCESS! The kingdom cheers for {Player.Name}, the happiest gnome in the realm!', 'Pass.EndGame': 'Yes' } }] };
+    if (nid === '@princess') return { nid, name: this.config.victoryTitle || 'You saved the princess!', type: 'Interaction', image: this.config.images.Princess, picture: this.config.images.Princess, mapId: this.mapId, message: 'The princess waves from the garden tower. Your clever puzzle-solving has saved the day!', cancel: 'Leave', choices: [{ text: 'Celebrate!', action: 'Attempt', tests: [], mode: 'All', fields: { 'Pass.Message': this.config.victoryMessage || 'YOU SAVED THE PRINCESS! The kingdom cheers for {Player.Name}, the happiest gnome in the realm!', 'Pass.EndGame': 'Yes' } }] };
     const mapId = Number(String(nid).split('/')[0]);
     const block = this.maps.get(mapId)?.byNID.get(nid);
     if (!block) throw new SpecError(`Unknown block NID ${nid}.`);
@@ -81,10 +81,19 @@ export class Game {
     const uids = new Set(this.player[kind].values());
     return this.player.inventory.filter(item => uids.has(item.uid));
   }
-  eligible(action) {
-    if (action === 'Attack') return this.equipment('weapons');
-    if (action === 'UseInventory') return this.player.inventory.filter(item => this.definition(item).itemKind === 'Item');
-    return [];
+  eligible(action, choice) {
+    let items = action === 'Attack' ? this.equipment('weapons') : action === 'UseInventory'
+      ? this.player.inventory.filter(item => this.definition(item).itemKind === 'Item') : [];
+    const ids = splitList(choice?.fields.SelectionItems), group = choice?.fields.SelectionGroup;
+    if (ids.length) items = items.filter(item => ids.includes(item.nid));
+    if (group) items = items.filter(item => this.definition(item).itemGroup === group);
+    return items;
+  }
+  discard(uid) {
+    if (this.pending || this.busy || this.ended || this.paused) throw new SpecError('Put away this interaction before discarding.');
+    if ([...this.player.clothing.values(), ...this.player.weapons.values()].includes(uid)) throw new SpecError('Put the equipped item away first.');
+    if (!this.player.inventory.some(item => item.uid === uid)) throw new SpecError('That item is no longer in your inventory.');
+    this.player.inventory = this.player.inventory.filter(item => item.uid !== uid);
   }
   equip(uid, hand = 'Right') {
     if (this.pending || this.busy || this.ended || this.paused) return;
@@ -154,7 +163,7 @@ export class Game {
     const pending = this.pending, choice = this.choices()[choiceIndex];
     if (!choice) throw new SpecError('Unknown choice.');
     const needsItem = ['Attack', 'UseInventory'].includes(choice.action);
-    const selected = this.eligible(choice.action).find(item => item.uid === selectedUID);
+    const selected = this.eligible(choice.action, choice).find(item => item.uid === selectedUID);
     if (needsItem && !selected) throw new SpecError(choice.action === 'Attack' ? "With what? You haven't got any weapons in your hands!" : 'Choose an item from your pack.');
     this.busy = true;
     try {

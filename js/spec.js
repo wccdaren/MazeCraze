@@ -41,20 +41,29 @@ const sectionFields = (sections, name) => sections.get(name)?.fields ?? Object.c
 export function parseMain(text) {
   const sections = readINI(text, 'Main configuration');
   for (const [name, section] of sections) {
-    if (!['Game', 'Maps', 'Images', 'Style', 'PlayerVariables'].includes(name) || section.rows.length) throw new SpecError(`Invalid main configuration section or entry: ${name}.`);
+    if (!['Game', 'Maps', 'Images', 'Style', 'PlayerVariables', 'Games', 'ImageCatalog'].includes(name) || section.rows.length) throw new SpecError(`Invalid main configuration section or entry: ${name}.`);
   }
   const game = sectionFields(sections, 'Game');
   const maps = sectionFields(sections, 'Maps');
-  const startMap = integer(game.StartMap, 'StartMap');
+  const startMap = game.StartMap ? integer(game.StartMap, 'StartMap') : (sections.has('Games') ? undefined : integer(game.StartMap, 'StartMap'));
   const files = new Map();
   for (const [key, url] of Object.entries(maps)) {
     const match = /^Map\.([1-9]\d*)$/.exec(key);
     if (!match || !url) throw new SpecError(`Invalid map directory field: ${key}.`);
     files.set(Number(match[1]), url);
   }
-  if (!files.has(startMap)) throw new SpecError('StartMap has no file in [Maps].');
+  if (files.size && startMap !== undefined && !files.has(startMap) && !sections.has('Games')) throw new SpecError('StartMap has no file in [Maps].');
   const timeout = integer(game.RequestTimeoutMs ?? '10000', 'RequestTimeoutMs', 1000, 30000);
-  return { title: game.Title || 'Maze Craze', startMap, files, timeout, images: sectionFields(sections, 'Images'), style: sectionFields(sections, 'Style'), variables: Object.fromEntries(Object.entries(sectionFields(sections, 'PlayerVariables')).map(([key, value]) => [key, scalar(value)])) };
+  const games = new Map();
+  for (const [key, path] of Object.entries(sectionFields(sections, 'Games'))) {
+    const match = /^Game\.([A-Za-z][A-Za-z0-9_-]*)$/.exec(key);
+    if (!match || !path) throw new SpecError(`Invalid game directory field: ${key}.`);
+    games.set(match[1], path);
+  }
+  if (!files.size && !games.size) throw new SpecError('Configuration needs [Maps] or [Games].');
+  const startGame = game.StartGame || (files.size ? 'main' : games.keys().next().value);
+  if (!games.has(startGame) && !(startGame === 'main' && files.size)) throw new SpecError('StartGame has no entry in [Games].');
+  return { games, startGame, author: game.Author || '', welcome: game.WelcomeMessage || '', victoryTitle: game.VictoryTitle || '', victoryMessage: game.VictoryMessage || '', imageCatalog: sectionFields(sections, 'ImageCatalog'), title: game.Title || 'Maze Craze', startMap, files, timeout, images: sectionFields(sections, 'Images'), style: sectionFields(sections, 'Style'), variables: Object.fromEntries(Object.entries(sectionFields(sections, 'PlayerVariables')).map(([key, value]) => [key, scalar(value)])) };
 }
 export function parseMap(text, expectedId) {
   const sections = readINI(text, `Map ${expectedId}`);
@@ -72,7 +81,7 @@ export function parseMap(text, expectedId) {
   if (!views.length || views.some(view => !/^\d{4}$/.test(view))) throw new SpecError('ViewWindow entries must contain four digits: up, right, down, left.');
   const blocks = new Map(), byNID = new Map();
   const variables = Object.fromEntries(Object.entries(sectionFields(sections, 'Variables')).map(([key, value]) => [key, scalar(value)]));
-  const blockFields = new Set(['NID', 'Type', 'Description', 'MapImage', 'InteractionImage', 'Message', 'CancelActionText', 'RequiredPower', 'ItemKind', 'Power', 'State', 'WearLocation', 'Hands']);
+  const blockFields = new Set(['NID', 'Type', 'Description', 'MapImage', 'InteractionImage', 'Message', 'CancelActionText', 'RequiredPower', 'ItemKind', 'Power', 'State', 'WearLocation', 'Hands', 'ItemGroup']);
   for (const [name, section] of sections) {
     const match = /^Block\.([1-9]\d*)$/.exec(name);
     if (!match) continue;
@@ -87,7 +96,8 @@ export function parseMap(text, expectedId) {
     if (!f.Description || !f.MapImage) throw new SpecError(`${name}: Description and MapImage are required.`);
     if (f.Type === 'Inventory' && !['Item', 'Weapon', 'Wearable'].includes(f.ItemKind)) throw new SpecError(`${name}: inventory requires ItemKind: Item, Weapon, or Wearable.`);
     if (f.ItemKind === 'Wearable' && !['Head', 'Torso', 'Arms', 'LeftArm', 'RightArm', 'Legs', 'LeftLeg', 'RightLeg', 'Feet', 'LeftFoot', 'RightFoot', 'Hands', 'LeftHand', 'RightHand'].includes(f.WearLocation)) throw new SpecError(`${name}: invalid WearLocation.`);
-    const block = { index, nid: f.NID, type: f.Type, name: f.Description, image: f.MapImage, picture: f.InteractionImage || f.MapImage, message: f.Message || '', cancel: f.CancelActionText || 'Leave', requiredPower: integer(f.RequiredPower || '0', 'RequiredPower', 0), itemKind: f.ItemKind, power: integer(f.Power || '0', 'Power', 0), state: f.State || 'Working', wearLocation: f.WearLocation, hands: integer(f.Hands || '1', 'Hands', 1, 2), choices: [], mapId: id };
+    if (f.ItemGroup && !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(f.ItemGroup)) throw new SpecError(`${name}: invalid ItemGroup.`);
+    const block = { index, nid: f.NID, type: f.Type, name: f.Description, image: f.MapImage, picture: f.InteractionImage || f.MapImage, message: f.Message || '', cancel: f.CancelActionText || 'Leave', requiredPower: integer(f.RequiredPower || '0', 'RequiredPower', 0), itemKind: f.ItemKind, itemGroup: f.ItemGroup || '', power: integer(f.Power || '0', 'Power', 0), state: f.State || 'Working', wearLocation: f.WearLocation, hands: integer(f.Hands || '1', 'Hands', 1, 2), choices: [], mapId: id };
     for (const key of Object.keys(f)) if (!blockFields.has(key)) warn(`${name}: unknown field ${key}.`);
     if (section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
     blocks.set(index, block); byNID.set(block.nid, block);
@@ -115,8 +125,10 @@ export function parseMap(text, expectedId) {
         if (effect === 'ReplaceBlock' && !isNID(value)) throw new SpecError(`${name}: ReplaceBlock requires a full NID.`);
         if (['GiveItems', 'TakeItems'].includes(effect) && splitList(value).some(nid => !isNID(nid))) throw new SpecError(`${name}: ${key} requires full NIDs.`);
         if (effect === 'EndGame' && !['Yes', 'No'].includes(value)) throw new SpecError(`${name}: EndGame must be Yes or No.`);
-      } else if (!['Text', 'Action', 'SelectionPrompt', 'TestsMatch'].includes(key)) warn(`${name}: unknown field ${key}.`);
+      } else if (!['Text', 'Action', 'SelectionPrompt', 'SelectionItems', 'SelectionGroup', 'NoSelectionMessage', 'TestsMatch'].includes(key)) warn(`${name}: unknown field ${key}.`);
     }
+    if (f.SelectionGroup && !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(f.SelectionGroup)) throw new SpecError(`${name}: invalid SelectionGroup.`);
+    if (splitList(f.SelectionItems).some(nid => !isNID(nid))) throw new SpecError(`${name}: SelectionItems requires full NIDs.`);
     if (section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
     block.choices.push({ order: Number(match[2]), text: f.Text, action: f.Action, prompt: f.SelectionPrompt || 'Choose an item.', mode, tests: tests.sort((a, b) => a.order - b.order), fields: f });
   }
@@ -156,7 +168,7 @@ export function parseMap(text, expectedId) {
   }
   if (format === 'Longhand' && mapData.rows.length < height) warn(`only ${mapData.rows.length} of ${height} map rows supplied; remaining cells retain defaults.`);
   for (const [name, section] of sections) {
-    if (!['Map', 'MapData', 'Variables'].includes(name) && !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name)) warn(`unknown section [${name}].`);
+    if (!['Map', 'MapData', 'Variables', 'EditorIDs'].includes(name) && !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name)) warn(`unknown section [${name}].`);
     if (['Map', 'Variables'].includes(name) && section.rows.length) throw new SpecError(`${name}: malformed setting at line ${section.rows[0].line}.`);
   }
   for (const key of Object.keys(data)) if (!['ID', 'Name', 'Dimensions', 'DefaultBlock', 'BorderBlock', 'StartingLocation', 'ViewWindow'].includes(key)) warn(`Map: unknown field ${key}.`);

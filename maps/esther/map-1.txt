@@ -1,0 +1,80 @@
+[Map]
+ID: 1
+Name: Esther's First Trail
+Dimensions: 11x9
+DefaultBlock: 1/1.1
+BorderBlock: 1/2.1
+StartingLocation: (2,2)
+ViewWindow: 3333 | 3303 | 5555 | 9999
+
+[Block.1]
+NID: 1/1.1
+Type: Move
+Description: Grass
+MapImage: @Grass
+
+[Block.2]
+NID: 1/2.1
+Type: Wall
+Description: Tree wall
+MapImage: @Tree
+
+[Block.3]
+NID: 1/4.1
+Type: Inventory
+ItemKind: Item
+ItemGroup: Key
+Description: Esther's Trail Key
+MapImage: @Key
+
+[Block.4]
+NID: 1/3.1
+Type: Interaction
+Description: Trail Gate
+MapImage: @Door
+Message: A little lock waits for the trail key.
+
+[Block.4.Choice.1]
+Text: Try a key
+Action: UseInventory
+SelectionItems: 1/4.1
+SelectionGroup: Key
+SelectionPrompt: Which key will you try?
+NoSelectionMessage: Find a trail key before trying this gate.
+Test.1: SelectedItem.ID | Equal | 1/4.1
+Pass.Message: The key fits! The path opens.
+Fail.Message: That key does not fit.
+
+[Block.5]
+NID: 1/3.2
+Type: Interaction
+Description: Spare-key chest
+MapImage: @Chest
+Message: A helpful chest holds two extra keys.
+
+[Block.5.Choice.1]
+Text: Take the spare keys
+Action: Attempt
+Pass.GiveItems: 1/4.1 | 1/4.1
+Pass.Message: Two spare keys go into your bag.
+
+[Block.6]
+NID: 1/3.3
+Type: Interaction
+Description: Gate to the second map
+MapImage: @Portal
+Message: The trail continues through the blue light.
+
+[Block.6.Choice.1]
+Text: Continue the adventure
+Action: Attempt
+Pass.ReplaceBlock: 1/3.3
+Pass.Transport: (2)
+Pass.Message: You arrive on the second map. Find its treasure!
+
+[MapData]
+Format: Shorthand
+(1,1)2(11) | (1,9)2(11)
+(1,2)2 | (11,2)2 | (1,3)2 | (11,3)2 | (1,4)2 | (11,4)2 | (1,5)2 | (11,5)2 | (1,6)2 | (11,6)2 | (1,7)2 | (11,7)2 | (1,8)2 | (11,8)2
+(6,2)2 | (6,3)2 | (6,4)4 | (6,5)2 | (6,6)2 | (6,7)2 | (6,8)2
+(3,2)3 | (3,4)5 | (8,6)6

@@ -1,0 +1,30 @@
+[Game]
+Title: Sebastian's Workshop Trail
+Author: Sebastian
+StartMap: 1
+WelcomeMessage: Find the trail key, unlock the gate, and explore the second map.
+VictoryTitle: You found the hidden workshop!
+VictoryMessage: Well done, {Player.Name}! You found the hidden workshop!
+
+[Maps]
+Map.1: map-1.txt
+Map.2: map-2.txt
+
+[Images]
+Player: ../../assets/gnome.png
+Princess: ../../assets/chest.png
+
+[Style]
+Accent: #c9ee87
+
+[PlayerVariables]
+PuzzlesSolved: 0
+
+[ImageCatalog]
+Grass: ../../assets/grass.png
+Brick: ../../assets/brick.png
+Key: ../../assets/key.png
+Door: ../../assets/door.png
+Chest: ../../assets/chest.png
+Portal: ../../assets/portal.png
+Gravel: ../../assets/gravel.png

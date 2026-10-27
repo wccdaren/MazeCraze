@@ -1,4 +1,4 @@
-# Maze Craze text specification, version 1
+# Maze Craze text specification, version 2 (legacy maps supported)
 
 This is a small **INI-style custom format**, stored as UTF-8 `.txt` for upload.
 It is not a general INI language. All behavior comes from the fixed game engine.
@@ -34,6 +34,41 @@ It is not a general INI language. All behavior comes from the fixed game engine.
 Relative URLs in this file resolve against this file. Uploaded files can use full
 HTTPS URLs. Style fields do not accept arbitrary CSS or external font imports.
 
+## Game collections and image catalog
+
+Old masters containing [Maps] remain the `main` game. Register additional games
+under [Games], for example `Game.esther: maps/esther/game-config.txt`. IDs begin
+with a letter and use letters/digits/underscores/hyphens. `Game.main`, if supplied,
+explicitly overrides the legacy main collection. A child configuration must list
+its own [Maps] and StartMap, and cannot recursively register [Games]. Config/map
+URLs must stay on the master's HTTP(S) origin; requests omit credentials and
+reject redirects. Each text file is limited to 2 MB and the configured timeout.
+
+| Configuration field | Meaning and relationship | Allowed examples |
+| --- | --- | --- |
+| Game.StartGame | Master default; legacy files default to main, otherwise first registered game | esther |
+| Game.StartMap | Required in a map collection; optional master override for initial default launch only | 1 |
+| Games.Game.ID | Child configuration URL relative to master | maps/esther/game-config.txt |
+| Game.Author | Optional plain author name | Esther |
+| Game.WelcomeMessage | Optional opening story; plain text, no substitution | Find the garden key. |
+| Game.VictoryTitle | Optional title for an ending | You restored the garden! |
+| Game.VictoryMessage | Optional 777 outcome text; normal outcome placeholders | Well done, {Player.Name}! |
+| ImageCatalog.Name | Named image URL relative to defining configuration | Tree: assets/tree.png |
+
+Images, ImageCatalog, Style and PlayerVariables inherit master entries with
+per-entry child overrides. Other child Game settings have their own defaults:
+title Maze Craze, blank author/story/custom ending, and 10000ms timeout. Game
+switches confirm a fresh run and retain the nickname. Map state, inventory,
+equipment and variables are isolated, even when games reuse map IDs and NIDs.
+Transports target maps within the current game. There is no cross-game travel.
+
+A child Map.N URL resolves against that child configuration. A block image may
+be a normal map-relative/HTTP(S) URL or `@Name` from the current game's catalog.
+Unknown aliases are errors. Catalog names use the normal field-name syntax.
+Artwork URLs allow HTTPS or same-origin development HTTP; no scripts/data/file
+schemes or credentials. The editor suggestions combine the catalog, existing map
+paths and bundled previews; published catalog changes need Refresh map list.
+
 ## Map settings
 
 | `[Map]` field | Meaning / allowed values | Allowed examples |
@@ -44,7 +79,7 @@ HTTPS URLs. Style fields do not accept arbitrary CSS or external font imports.
 | `DefaultBlock` | Full NID of a Move block defined in this map | `1/1.1` |
 | `BorderBlock` | Full NID of a local block drawn beyond valid coordinates | `1/2.2` |
 | `StartingLocation` | Valid one-based coordinate, required fallback position | `(3,3)` |
-| `ViewWindow` | Four single digits per option: up, right, down, left | `3333 | 3303 | 9999` |
+| `ViewWindow` | Four single digits per option: up, right, down, left | `3333 \| 3303 \| 9999` |
 
 The first cell is bottom-left `(1,1)`. Up adds 1 to Y; right adds 1 to X.
 `3333` displays 7×7 cells including the player's cell. `3303` displays 7×4,
@@ -71,6 +106,7 @@ Map layout uses these numeric indices, not NIDs. Block 777 is reserved globally.
 | `Message` | Popup description, plain text | `The door is locked.` |
 | `CancelActionText` | Optional cancel label; defaults to Leave | `Back away quietly` |
 | `RequiredPower` | Nonnegative interaction strength | `6` |
+| `ItemGroup` | Optional classification: letter first, then letters/digits/underscore/hyphen, max 64; case-sensitive | `Key`, `Coin` |
 | `ItemKind` | Required for Inventory blocks | `Item`, `Weapon`, `Wearable` |
 | `Power` | Nonnegative weapon power | `8` |
 | `State` | Initial item state; defaults to Working | `Working`, `Broken`, `Cursed` |
@@ -108,9 +144,12 @@ inventory list while equipped, with their equipped locations displayed.
 | --- | --- | --- |
 | `Text` | Choice label | `Unlock the door` |
 | `Action` | Fixed action type | `Attempt`, `UseInventory`, `Attack` |
+| `SelectionItems` | Optional full-NID list, separated by pipes; filters within the action eligibility | `1/4.1`, `1/4.4` |
+| `SelectionGroup` | Optional ItemGroup filter; combines with SelectionItems using AND | `Key` |
+| `NoSelectionMessage` | Guidance when no owned copy matches; no outcome executes | `You have no keys to try.` |
 | `SelectionPrompt` | Optional second-step prompt | `Which key will you try?` |
 | `TestsMatch` | Default All; Any accepts one or more passing tests | `All`, `Any` |
-| `Test.N` | Subject, comparison, value, optional qualifier | `SelectedItem.ID | Equal | 1/4.1` |
+| `Test.N` | Subject, comparison, value, optional qualifier | `SelectedItem.ID \| Equal \| 1/4.1` |
 
 `Attempt` evaluates immediately. `UseInventory` lets the player select a regular
 Item. `Attack` lets the player select a currently wielded Weapon. An empty
@@ -121,16 +160,16 @@ control order. Every rule is checked for validity; there is no expression parser
 
 | Rule subject | Meaning / type | Allowed example test |
 | --- | --- | --- |
-| `SelectedItem.ID` | Selected item's full NID / text | `SelectedItem.ID | Equal | 1/4.1` |
-| `SelectedItem.State` | Selected item's state / text | `SelectedItem.State | Equal | Working` |
-| `SelectedItem.Power` | Selected weapon power / number | `SelectedItem.Power | GreaterThan | Target.RequiredPower` |
-| `Target.RequiredPower` | Target block strength / number | `Target.RequiredPower | LessThan | 10` |
-| `Inventory.Quantity` | Number owned; fourth field is item NID / number | `Inventory.Quantity | GreaterOrEqual | 1 | 1/4.1` |
-| `Equipment.Worn` | NIDs of working worn items / collection | `Equipment.Worn | Contains | 1/4.5` |
-| `Equipment.Wielded` | NIDs of working wielded weapons / collection | `Equipment.Wielded | Contains | 1/4.2` |
-| `Player.State` | Current conditions / collection | `Player.State | NotContains | Cursed` |
-| `Player.Variable.Name` | Declared player variable / text or number | `Player.Variable.PuzzlesSolved | Equal | 1` |
-| `Map.Variable.Name` | Declared current-map variable / text or number | `Map.Variable.GardenOpen | Equal | 0` |
+| `SelectedItem.ID` | Selected item's full NID / text | `SelectedItem.ID \| Equal \| 1/4.1` |
+| `SelectedItem.State` | Selected item's state / text | `SelectedItem.State \| Equal \| Working` |
+| `SelectedItem.Power` | Selected weapon power / number | `SelectedItem.Power \| GreaterThan \| Target.RequiredPower` |
+| `Target.RequiredPower` | Target block strength / number | `Target.RequiredPower \| LessThan \| 10` |
+| `Inventory.Quantity` | Number owned; fourth field is item NID / number | `Inventory.Quantity \| GreaterOrEqual \| 1 \| 1/4.1` |
+| `Equipment.Worn` | NIDs of working worn items / collection | `Equipment.Worn \| Contains \| 1/4.5` |
+| `Equipment.Wielded` | NIDs of working wielded weapons / collection | `Equipment.Wielded \| Contains \| 1/4.2` |
+| `Player.State` | Current conditions / collection | `Player.State \| NotContains \| Cursed` |
+| `Player.Variable.Name` | Declared player variable / text or number | `Player.Variable.PuzzlesSolved \| Equal \| 1` |
+| `Map.Variable.Name` | Declared current-map variable / text or number | `Map.Variable.GardenOpen \| Equal \| 0` |
 
 Equality uses exact matching; text is case-sensitive. Numeric comparisons require
 numbers. Available comparisons: `Equal`, `NotEqual`, `GreaterThan`, `LessThan`,
@@ -148,9 +187,9 @@ flag: the outcome and resulting block type determine entry.
 | --- | --- | --- |
 | `Message` | Plain-text result message | `The key fits!` |
 | `ReplaceBlock` | Full replacement NID; same NID permits repetition | `1/1.2`, `1/3.3` |
-| `GiveItems` | Full inventory NIDs; repeating a NID gives multiple copies | `1/4.1 | 1/4.3 | 1/4.3` |
+| `GiveItems` | Full inventory NIDs; repeating a NID gives multiple copies | `1/4.1 \| 1/4.3 \| 1/4.3` |
 | `TakeItems` | PASS or FAIL: explicitly consume regular Items; repeat NIDs for multiple copies | `1/4.1` |
-| `AddState` | Conditions to add | `Blessed | Muddy` |
+| `AddState` | Conditions to add | `Blessed \| Muddy` |
 | `RemoveState` | Conditions to remove | `Muddy` |
 | `SetPlayerVariable.Name` | Set a declared player variable | `Pass.SetPlayerVariable.PuzzlesSolved: 1` |
 | `SetMapVariable.Name` | Set a declared variable on the interaction's map | `Pass.SetMapVariable.GardenOpen: 1` |
@@ -226,11 +265,30 @@ skipped with warnings. Overlaps are allowed: the **last valid entry wins**.
 Layout errors are skipped; they do not transport the player. Gameplay transport
 coordinate errors use the starting-location fallback instead.
 
+## Editor allocation metadata and inventory display
+
+Block index and NID fields are read-only in forms. Imports preserve IDs; creation
+and duplication allocate fresh values. Type/map-ID changes remap local references,
+including SelectionItems, but cannot rewrite other map files. `[EditorIDs]` saves
+positive next-number counters NextBlock, NextMove, NextWall, NextInteraction and
+NextInventory. Deleted/undone numbers remain reserved across editor exports;
+index 777 is skipped. The runtime ignores these counters. Advanced Text / INI
+editing still validates definitions and references.
+
+The bag groups full NIDs by source map and displays quantities only above one.
+Individual copies, states and equipment slots remain intact; counts include
+equipped copies. Choice lists group by NID and state and select one actual UID.
+Discard one confirms before removing one unequipped copy; it creates no map drop.
+Equipped items must first be put away. Normal pause/busy/interaction/end guards
+apply, and no item removal happens merely by displaying or filtering a list.
+
 ## Reserved princess ending
 
 Any map can place numeric block index `777` without defining it. Do not create a
 `[Block.777]` section. The engine supplies its description, picture from the master
 configuration, immediate successful interaction, default replacement, celebration
-message, and end-game state. It is a built-in exception to normal definition NIDs;
+message, and end-game state. Game.VictoryTitle and VictoryMessage customize its
+text; Images.Princess customizes its picture. Omitted fields retain the original
+princess ending. It is a built-in exception to normal definition NIDs;
 it is never an inventory item or NID reference. This is the requested debug/easter
 egg ending and is deliberately placed at the end of this first sample maze.

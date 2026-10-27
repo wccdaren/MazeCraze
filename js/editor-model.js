@@ -81,7 +81,7 @@ export function importMap(text, filename = "map.txt") {
   const extras = [...sections]
     .filter(
       ([name]) =>
-        !["Map", "Variables", "MapData"].includes(name) &&
+        !["Map", "Variables", "MapData", "EditorIDs"].includes(name) &&
         !/^Block\.[1-9]\d*(\.Choice\.[1-9]\d*)?$/.test(name),
     )
     .map(([name, section]) => ({
@@ -91,6 +91,7 @@ export function importMap(text, filename = "map.txt") {
     }));
   return {
     filename,
+    ids: Object.fromEntries(Object.entries(sections.get("EditorIDs")?.fields || {}).map(([key, value]) => [key, integer(value, `EditorIDs.${key}`)])),
     map: { ...sections.get("Map").fields, ID: String(parsed.id) },
     variables: { ...sections.get("Variables")?.fields },
     blocks: blocks.sort((a, b) => a.index - b.index),
@@ -204,21 +205,32 @@ export function exportMap(document) {
     }
     if (runs.length) lines.push(runs.join(" | "));
   }
+  const allocated = allocationCounters(document);
+  lines.push("", "[EditorIDs]", ...writeFields(allocated));
   const text = `${lines.join("\n")}\n`;
   if (new TextEncoder().encode(text).byteLength > 2_000_000)
     throw new Error("Map exceeds the 2 MB game limit.");
   return text;
 }
 
+export function allocationCounters(document) {
+  const names = ["NextMove", "NextWall", "NextInteraction", "NextInventory"];
+  const values = { NextBlock: 1, NextMove: 1, NextWall: 1, NextInteraction: 1, NextInventory: 1, ...document.ids };
+  for (const block of document.blocks) {
+    values.NextBlock = Math.max(values.NextBlock, block.index + 1);
+    const [category, suffix] = block.fields.NID.split('/')[1].split('.').map(Number);
+    values[names[category - 1]] = Math.max(values[names[category - 1]], suffix + 1);
+  }
+  for (const [key, value] of Object.entries(values)) integer(value, `EditorIDs.${key}`);
+  return values;
+}
+
 export function nextBlock(document, type = "Interaction") {
   const category = EDITOR_TYPES.indexOf(type) + 1;
   if (!category) throw new Error("Unknown block type.");
-  let index = 1,
-    suffix = 1;
-  const indices = new Set(document.blocks.map((block) => block.index));
-  while (indices.has(index) || index === 777) index++;
-  const nids = new Set(document.blocks.map((block) => block.fields.NID));
-  while (nids.has(`${document.map.ID}/${category}.${suffix}`)) suffix++;
+  const counters = allocationCounters(document);
+  let index = counters.NextBlock, suffix = counters[["", "NextMove", "NextWall", "NextInteraction", "NextInventory"][category]];
+  if (index === 777) index++;
   const fields = {
     NID: `${document.map.ID}/${category}.${suffix}`,
     Type: type,
@@ -256,7 +268,7 @@ function allFieldSets(document) {
 }
 function referenceField(key) {
   return (
-    ["NID", "DefaultBlock", "BorderBlock"].includes(key) ||
+    ["NID", "DefaultBlock", "BorderBlock", "SelectionItems"].includes(key) ||
     /^Test\.[1-9]\d*$/.test(key) ||
     /^(Pass|Fail)\.(ReplaceBlock|GiveItems|TakeItems)$/.test(key)
   );
@@ -302,6 +314,7 @@ export function saveBlock(document, previousIndex, replacement) {
       for (let x = 0; x < row.length; x++)
         if (row[x] === previousIndex) row[x] = replacement.index;
   } else document.blocks.push(cloneDocument(replacement));
+  document.ids = allocationCounters(document);
 }
 export function duplicateBlock(document, index) {
   const source = document.blocks.find((block) => block.index === index);
@@ -321,6 +334,7 @@ export function duplicateBlock(document, index) {
           )
           .join(" | ");
   document.blocks.push(copy);
+  document.ids = allocationCounters(document);
   return copy.index;
 }
 export function deleteBlock(document, index) {
@@ -345,6 +359,7 @@ export function deleteBlock(document, index) {
   const defaultIndex = document.blocks.find(
     (candidate) => candidate.fields.NID === document.map.DefaultBlock,
   ).index;
+  document.ids = allocationCounters(document);
   document.blocks = document.blocks.filter((candidate) => candidate !== block);
   for (const row of document.cells)
     for (let x = 0; x < row.length; x++)
@@ -537,6 +552,7 @@ export function validateDocument(document) {
               `${label}: numeric comparison needs a number or Target.RequiredPower.`,
             );
         }
+        if (key === "SelectionItems") for (const nid of splitList(value)) checkNID(nid, label, "Inventory");
         if (/^(Pass|Fail)\.ReplaceBlock$/.test(key)) checkNID(value, label);
         if (/^(Pass|Fail)\.(GiveItems|TakeItems)$/.test(key))
           for (const nid of splitList(value))
@@ -608,13 +624,17 @@ export class EditorHistory {
     const entry = this.undoStack.pop();
     if (!entry) return document;
     this.redoStack.push({ text: JSON.stringify(document), label: entry.label });
-    return JSON.parse(entry.text);
+    const restored = JSON.parse(entry.text), currentIDs = allocationCounters(document), restoredIDs = allocationCounters(restored);
+    for (const [key, value] of Object.entries(currentIDs)) if (value > restoredIDs[key]) { restored.ids ||= {}; restored.ids[key] = value; }
+    return restored;
   }
   redo(document) {
     const entry = this.redoStack.pop();
     if (!entry) return document;
     this.undoStack.push({ text: JSON.stringify(document), label: entry.label });
-    return JSON.parse(entry.text);
+    const restored = JSON.parse(entry.text), currentIDs = allocationCounters(document), restoredIDs = allocationCounters(restored);
+    for (const [key, value] of Object.entries(currentIDs)) if (value > restoredIDs[key]) { restored.ids ||= {}; restored.ids[key] = value; }
+    return restored;
   }
   dirty(document) {
     return JSON.stringify(document) !== this.saved;

@@ -16,12 +16,12 @@
         <div>MAZE CRAZE<small>MAP STUDIO</small></div></a
       >
       <div class="header-note">A little imagination. A whole new world.</div>
-      <button id="help-open" class="quiet">Field guide</button>
+      <a class="quiet guide-link" href="docs/Maze-Craze-Map-Editor-User-Guide.pdf" target="_blank" rel="noopener">PDF user guide ↗</a><button id="help-open" class="quiet">Field guide</button>
     </header>
     <main>
       <section class="studio-intro">
         <div>
-          <p class="eyebrow">SEBASTIAN’S WORLD-BUILDING DESK</p>
+          <p class="eyebrow">YOUR WORLD-BUILDING DESK</p>
           <h1>Draw the next adventure.</h1>
           <p>
             Create your blocks, lay a winding path, and give every door a
@@ -51,7 +51,7 @@
           <strong id="document-name">A New Adventure</strong
           ><span id="document-state">Ready to draw</span>
         </div>
-        <div class="document-actions">
+        <div class="document-actions"><label class="sr-only" for="editor-game-select">Game to edit</label><select id="editor-game-select" aria-label="Game to edit"><option value="main">Main game</option></select>
           <label for="example-select" class="sr-only"
             >Open a website map or bundled example</label
           ><select id="example-select">
@@ -330,10 +330,11 @@
           <label
             >Block index<input
               name="index"
+              readonly
               type="number"
               min="1"
               required
-            /><small>Used in the map layout. 777 is reserved.</small></label
+            /><small>Assigned automatically. Existing numbers stay stable. 777 is reserved.</small></label
           ><label
             >Type<select name="Type">
               <option>Move</option>
@@ -342,7 +343,7 @@
               <option>Inventory</option>
             </select></label
           ><label
-            >Full NID<input name="NID" placeholder="1/3.1" required /><small
+            >Full NID<input name="NID" readonly placeholder="1/3.1" required /><small
               >Map / category.unique number.</small
             ></label
           ><label
@@ -378,7 +379,7 @@
               min="0"
               placeholder="0" /></label
           ><label data-block-group="inventory"
-            >Inventory kind<select name="ItemKind">
+            >Item group (optional)<input name="ItemGroup" placeholder="Key, Coin, or Potion" pattern="[A-Za-z][A-Za-z0-9_-]{0,63}" /></label><label data-block-group="inventory">Inventory kind<select name="ItemKind">
               <option>Item</option>
               <option>Weapon</option>
               <option>Wearable</option>
