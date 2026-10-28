@@ -1,0 +1,132 @@
+; MENO: THE TIDELIGHT TRAIL - original Maze Craze adventure
+; Coordinates are Cartesian: (1,1) is bottom-left. Data only; no scripts.
+
+[Map]
+ID: 3
+Name: 3. Lantern Jelly Gardens
+Dimensions: 25x19
+DefaultBlock: 3/1.1
+BorderBlock: 3/2.2
+StartingLocation: (2,2)
+ViewWindow: 4444 | 3333 | 5555 | 9999 | 4404
+
+[Block.1]
+NID: 3/1.1
+Type: Move
+Description: Open sea
+MapImage: @MenoWater
+
+[Block.2]
+NID: 3/2.1
+Type: Wall
+Description: Lantern Jelly Gardens barrier
+MapImage: @MenoAnemone
+
+[Block.3]
+NID: 3/1.2
+Type: Move
+Description: Soft sand
+MapImage: @MenoSand
+
+[Block.4]
+NID: 3/2.2
+Type: Wall
+Description: Unbroken reef stone
+MapImage: @MenoRock
+
+[Block.5]
+NID: 3/4.1
+Type: Inventory
+Description: Moonlit navigation pearl
+MapImage: @MenoPearl
+ItemKind: Item
+ItemGroup: Navigation
+
+[Block.6]
+NID: 3/4.2
+Type: Inventory
+Description: Bendy bubble reed
+MapImage: @MenoReed
+ItemKind: Weapon
+Power: 2
+Hands: 1
+ItemGroup: BubbleTool
+
+[Block.7]
+NID: 3/3.1
+Type: Interaction
+Description: Lumi the lantern jelly
+MapImage: @MenoJellyfish
+Message: The small jellies mistake dark shapes for drifting kelp. Wear the glow-thread sash from Brindle so they know you are a friend. Cancel an encounter before opening your pack.
+CancelActionText: Swim back
+
+[Block.7.Choice.1]
+Text: Listen to Lumi
+Action: Attempt
+Pass.Message: Open your pack, expand the map 2 sash, then choose Wear. Owning the sash is not the same as wearing it.
+
+[Block.8]
+NID: 3/3.2
+Type: Interaction
+Description: A curtain of little lanterns
+MapImage: @MenoJellyfish
+Message: A curtain of jellyfish fills the passage. Their lights pulse together. They will make a safe space for a fish wearing glow-thread.
+
+[Block.8.Choice.1]
+Text: Swim through with the glow-thread sash
+Action: Attempt
+Test.1: Equipment.Worn | Contains | 2/4.2
+Pass.ReplaceBlock: 3/1.2
+Pass.Message: Your sash glows. The jellies drift aside without a single sting. The sash stays with you.
+Fail.Message: The jellies cannot see your glow-thread. Swim back, open your pack, and WEAR the sash from map 2. Nothing is lost.
+
+[Block.9]
+NID: 3/3.3
+Type: Interaction
+Description: A pearl in the lantern cradle
+MapImage: @MenoChest
+Message: Lumi saved a navigation pearl and a bendy reed. The pearl points toward the turtle current. The reed blows small bubbles but cannot break strong nets.
+CancelActionText: Swim back
+
+[Block.9.Choice.1]
+Text: Collect the pearl and reed
+Action: Attempt
+Pass.GiveItems: 3/4.1 | 3/4.2
+Pass.Message: You tuck away the pearl and reed. Save the pearl for Orla the turtle. The reed is reusable equipment, not a single-use item.
+
+[Block.10]
+NID: 3/3.4
+Type: Interaction
+Description: Current to chapter 4
+MapImage: @MenoPortal
+Message: Warm water carries you to the Turning Tide, where Orla the turtle reads the stars in pearls.
+CancelActionText: Swim back
+
+[Block.10.Choice.1]
+Text: Follow the current
+Action: Attempt
+Pass.Transport: (4)
+Pass.Message: Warm water carries you to the Turning Tide, where Orla the turtle reads the stars in pearls.
+Pass.ReplaceBlock: 3/3.4
+
+[MapData]
+Format: Longhand
+2(25)
+2 | 1(5) | 3(2) | 1(5) | 3 | 1(2) | 2 | 3 | 1(5) | 3 | 2
+2 | 3 | 2(11) | 3 | 2(3) | 3 | 2(5) | 3 | 2
+2 | 10 | 2 | 1(4) | 9 | 3 | 1(3) | 2 | 1(5) | 2 | 1(5) | 2
+2(3) | 1 | 2(7) | 1 | 2(7) | 3 | 2(3) | 1 | 2
+2 | 1 | 3(2) | 2 | 1(7) | 3(2) | 1(5) | 3 | 2 | 1(3) | 2
+2 | 1 | 2(3) | 1 | 2(15) | 1 | 2(3)
+2 | 1 | 2 | 1(3) | 2 | 1(3) | 3(2) | 1(5) | 8 | 3 | 1 | 2 | 1(3) | 2
+2 | 1 | 2(5) | 1 | 2(11) | 1 | 2(3) | 1 | 2
+2 | 1 | 2 | 1(2) | 3(2) | 1(11) | 2 | 1 | 2 | 1 | 2 | 1 | 2
+2 | 3 | 2 | 1 | 2(13) | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2
+2 | 3 | 1(2) | 2 | 1 | 2 | 1(2) | 3(2) | 1 | 2 | 1(5) | 2 | 1 | 2 | 1(3) | 2
+2 | 1 | 2(3) | 1 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2(5) | 3 | 2(3) | 1 | 2
+2 | 1(3) | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1(5) | 2 | 3 | 1(2) | 2 | 1 | 2
+2(3) | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2(5) | 1 | 2(3) | 1 | 2(3)
+2 | 1(5) | 2 | 3 | 2 | 1 | 2 | 1 | 3(2) | 1(2) | 2 | 1(3) | 2 | 1(2) | 3 | 2
+2(7) | 3 | 2 | 1 | 2(5) | 1 | 2(7) | 3 | 2
+2 | 3(2) | 1(3) | 7 | 1 | 2 | 1(8) | 3(2) | 1(5) | 2
+2(25)

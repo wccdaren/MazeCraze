@@ -1,0 +1,125 @@
+; MENO: THE TIDELIGHT TRAIL - original Maze Craze adventure
+; Coordinates are Cartesian: (1,1) is bottom-left. Data only; no scripts.
+
+[Map]
+ID: 2
+Name: 2. Whispering Kelp
+Dimensions: 25x19
+DefaultBlock: 2/1.1
+BorderBlock: 2/2.2
+StartingLocation: (2,2)
+ViewWindow: 4444 | 3333 | 5555 | 9999 | 4404
+
+[Block.1]
+NID: 2/1.1
+Type: Move
+Description: Open sea
+MapImage: @MenoWater
+
+[Block.2]
+NID: 2/2.1
+Type: Wall
+Description: Whispering Kelp barrier
+MapImage: @MenoKelp
+
+[Block.3]
+NID: 2/1.2
+Type: Move
+Description: Soft sand
+MapImage: @MenoSand
+
+[Block.4]
+NID: 2/2.2
+Type: Wall
+Description: Unbroken reef stone
+MapImage: @MenoRock
+
+[Block.5]
+NID: 2/4.1
+Type: Inventory
+Description: Crunchy algae biscuit
+MapImage: @MenoAlgaeSnack
+ItemKind: Item
+ItemGroup: Food
+
+[Block.6]
+NID: 2/4.2
+Type: Inventory
+Description: Glow-thread sash
+MapImage: @MenoGlowSash
+ItemKind: Wearable
+WearLocation: Torso
+ItemGroup: Light
+
+[Block.7]
+NID: 2/3.1
+Type: Interaction
+Description: A message in green glass
+MapImage: @MenoBottle
+Message: Your family left a note: We are safe. We took the lantern route past the jellyfish. Ask Brindle the shark for the glowing sash. He loves algae biscuits.
+CancelActionText: Swim back
+
+[Block.7.Choice.1]
+Text: Read the family note
+Action: Attempt
+Pass.Message: Not every large ocean animal is an enemy. Try a kind offer before you rush past.
+
+[Block.8]
+NID: 2/3.2
+Type: Interaction
+Description: Brindle the gentle shark
+MapImage: @MenoShark
+Message: Brindle keeps this kelp tunnel quiet for the smaller fish. I am a little peckish, he says. Do you have a crunchy sea-garden snack?
+
+[Block.8.Choice.1]
+Text: Offer a snack
+Action: UseInventory
+Test.1: SelectedItem.ID | Equal | 2/4.1
+SelectionGroup: Food
+NoSelectionMessage: Look for an algae biscuit among the kelp.
+Pass.GiveItems: 2/4.2
+Pass.Message: Brindle munches happily and gives you a glow-thread sash. Wear it from your pack before swimming among the jellyfish.
+Fail.Message: Brindle thanks you, but that is not his favorite snack. You keep it.
+
+[Block.8.Choice.2]
+Text: Try to rush past
+Action: Attempt
+Test.1: Target.RequiredPower | LessThan | 0
+Fail.Message: Brindle gently blocks the narrow tunnel. There is no hurry. Find a kind way through.
+
+[Block.9]
+NID: 2/3.3
+Type: Interaction
+Description: Current to chapter 3
+MapImage: @MenoPortal
+Message: The kelp opens onto a lavender glow: the Lantern Jelly Gardens. Your family's trail is getting brighter.
+CancelActionText: Swim back
+
+[Block.9.Choice.1]
+Text: Follow the current
+Action: Attempt
+Pass.Transport: (3)
+Pass.Message: The kelp opens onto a lavender glow: the Lantern Jelly Gardens. Your family's trail is getting brighter.
+Pass.ReplaceBlock: 2/3.3
+
+[MapData]
+Format: Longhand
+2(25)
+2 | 1(5) | 3(2) | 1(6) | 2 | 1(5) | 2 | 1(3) | 2
+2 | 3 | 2(9) | 1 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2(3) | 1 | 2
+2 | 3 | 2 | 1(2) | 3(2) | 1 | 2 | 1 | 2 | 3 | 2 | 1(3) | 2 | 1 | 2 | 1(3) | 2 | 1 | 2
+2 | 1 | 2(3) | 1 | 2 | 1 | 2 | 1 | 2 | 3 | 2(3) | 1 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2
+2 | 1 | 2 | 1(3) | 2 | 1 | 2 | 1 | 2 | 1(3) | 2 | 1(3) | 2 | 1(5) | 2
+2 | 1 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2(3) | 1 | 2(9) | 1 | 2
+2 | 1 | 2 | 3 | 2 | 3(2) | 1 | 2 | 1(3) | 2 | 1 | 3(2) | 2 | 3(2) | 1 | 2 | 1 | 2 | 1 | 2
+2 | 1 | 2 | 3 | 2 | 1 | 2(3) | 3 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2
+2 | 3 | 2 | 1 | 2 | 1(4) | 3 | 2 | 1 | 3(2) | 2 | 1(3) | 2 | 1 | 2 | 1(3) | 2
+2 | 3 | 2 | 1 | 2 | 1 | 2(7) | 1 | 2(5) | 1 | 2(3) | 1 | 2
+2 | 1 | 8 | 1 | 2 | 1 | 2 | 1(3) | 2 | 1 | 2 | 1 | 2 | 1(3) | 2 | 1 | 3(2) | 2 | 1 | 2
+2 | 1 | 2(5) | 3 | 2 | 1 | 2 | 1 | 2 | 1 | 2(3) | 1 | 2(3) | 1 | 2 | 1 | 2
+2 | 1 | 2 | 1(4) | 3 | 2 | 1 | 2 | 1(4) | 3(2) | 1 | 2 | 9 | 2 | 1 | 2 | 1 | 2
+2 | 1 | 2 | 1 | 2(5) | 3 | 2(7) | 1 | 2 | 3 | 2 | 1 | 2 | 1 | 2
+2 | 1 | 2 | 3(2) | 1 | 2 | 1 | 2 | 3 | 1(4) | 2 | 1(5) | 2 | 1 | 2 | 1 | 2
+2(5) | 7 | 2 | 1 | 2(5) | 1 | 2(7) | 1 | 2 | 1 | 2
+2 | 3(2) | 1(3) | 2 | 1(6) | 3(2) | 1(4) | 5 | 3(2) | 2 | 1 | 2
+2(25)

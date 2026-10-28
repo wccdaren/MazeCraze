@@ -1,0 +1,221 @@
+; MENO: THE TIDELIGHT TRAIL - original Maze Craze adventure
+; Coordinates are Cartesian: (1,1) is bottom-left. Data only; no scripts.
+
+[Map]
+ID: 4
+Name: 4. The Turning Tide
+Dimensions: 25x19
+DefaultBlock: 4/1.1
+BorderBlock: 4/2.2
+StartingLocation: (2,2)
+ViewWindow: 4444 | 3333 | 5555 | 9999 | 4404
+
+[Variables]
+CurrentStep: 0
+
+[Block.1]
+NID: 4/1.1
+Type: Move
+Description: Open sea
+MapImage: @MenoWater
+
+[Block.2]
+NID: 4/2.1
+Type: Wall
+Description: The Turning Tide barrier
+MapImage: @MenoRock
+
+[Block.3]
+NID: 4/1.2
+Type: Move
+Description: Soft sand
+MapImage: @MenoSand
+
+[Block.4]
+NID: 4/2.2
+Type: Wall
+Description: Unbroken reef stone
+MapImage: @MenoRock
+
+[Block.5]
+NID: 4/4.1
+Type: Inventory
+Description: Stormglass bubble wand
+MapImage: @MenoBubbleWand
+ItemKind: Weapon
+Power: 8
+Hands: 2
+ItemGroup: BubbleTool
+
+[Block.6]
+NID: 4/3.1
+Type: Interaction
+Description: Orla's current lesson
+MapImage: @MenoTurtle
+Message: Your family rode the eastbound tide to Bellglass Harbor. First, show me a navigation pearl. Then remember the three current markers: RISE, TURN RIGHT, DIVE. Choose those directions in that order.
+CancelActionText: Swim back
+
+[Block.6.Choice.1]
+Text: Remember the three current markers
+Action: Attempt
+Pass.Message: The current code is RISE, TURN RIGHT, DIVE. A wrong choice keeps you beside that marker so you can try again.
+
+[Block.7]
+NID: 4/3.2
+Type: Interaction
+Description: Orla the star-reading turtle
+MapImage: @MenoTurtle
+Message: Orla holds a steady place against the tide. A moonlit navigation pearl will show me the safe crossing, she says.
+
+[Block.7.Choice.1]
+Text: Offer the navigation pearl
+Action: UseInventory
+Test.1: SelectedItem.ID | Equal | 3/4.1
+SelectionGroup: Navigation
+NoSelectionMessage: Find the navigation pearl in the Jelly Gardens.
+Pass.Message: Orla reads the pearl, then returns it to the sea. Follow my current markers. Your family left a stronger bubble wand for you at the far end.
+Fail.Message: That is not a navigation pearl. You keep your item.
+
+[Block.8]
+NID: 4/3.3
+Type: Interaction
+Description: First current marker
+MapImage: @MenoCompass
+Message: Orla's lesson was RISE, TURN RIGHT, DIVE. Which part comes first?
+
+[Block.8.Choice.1]
+Text: Rise with the bubbles
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | Equal | 0
+Pass.SetMapVariable.CurrentStep: 1
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.8.Choice.2]
+Text: Turn right with the tide
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | LessThan | 0
+Pass.SetMapVariable.CurrentStep: 1
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.8.Choice.3]
+Text: Dive under the arch
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | LessThan | 0
+Pass.SetMapVariable.CurrentStep: 1
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.9]
+NID: 4/3.4
+Type: Interaction
+Description: Second current marker
+MapImage: @MenoCompass
+Message: Orla's lesson was RISE, TURN RIGHT, DIVE. Which part comes second?
+
+[Block.9.Choice.1]
+Text: Rise with the bubbles
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | LessThan | 0
+Pass.SetMapVariable.CurrentStep: 2
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.9.Choice.2]
+Text: Turn right with the tide
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | Equal | 1
+Pass.SetMapVariable.CurrentStep: 2
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.9.Choice.3]
+Text: Dive under the arch
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | LessThan | 0
+Pass.SetMapVariable.CurrentStep: 2
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.10]
+NID: 4/3.5
+Type: Interaction
+Description: Third current marker
+MapImage: @MenoCompass
+Message: Orla's lesson was RISE, TURN RIGHT, DIVE. Which part comes third?
+
+[Block.10.Choice.1]
+Text: Rise with the bubbles
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | LessThan | 0
+Pass.SetMapVariable.CurrentStep: 3
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.10.Choice.2]
+Text: Turn right with the tide
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | LessThan | 0
+Pass.SetMapVariable.CurrentStep: 3
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.10.Choice.3]
+Text: Dive under the arch
+Action: Attempt
+Test.1: Map.Variable.CurrentStep | Equal | 2
+Pass.SetMapVariable.CurrentStep: 3
+Pass.Message: The current settles into a safe lane. You remember the next part of Orla's lesson.
+Fail.Message: The tide loops gently back to this marker. Nothing is lost. Remember: RISE, TURN RIGHT, DIVE.
+
+[Block.11]
+NID: 4/3.6
+Type: Interaction
+Description: The family's tool cache
+MapImage: @MenoChest
+Message: A stormglass bubble wand is tied to an old buoy. A note says: For tangled nets, not for hurting sea creatures. This wand is stronger than a bendy reed.
+CancelActionText: Swim back
+
+[Block.11.Choice.1]
+Text: Take the stormglass wand
+Action: Attempt
+Pass.GiveItems: 4/4.1
+Pass.Message: The stormglass wand has power 8 and uses both weapon hands. Wield it from your pack when a strong net blocks you.
+
+[Block.12]
+NID: 4/3.7
+Type: Interaction
+Description: Current to chapter 5
+MapImage: @MenoPortal
+Message: Orla points toward Bellglass Harbor. Your family stopped there to help two guppy fry trapped behind a forgotten gate.
+CancelActionText: Swim back
+
+[Block.12.Choice.1]
+Text: Follow the current
+Action: Attempt
+Pass.Transport: (5)
+Pass.Message: Orla points toward Bellglass Harbor. Your family stopped there to help two guppy fry trapped behind a forgotten gate.
+Pass.ReplaceBlock: 4/3.7
+
+[MapData]
+Format: Longhand
+2(25)
+2 | 1(5) | 2 | 3(2) | 1(2) | 11 | 1(2) | 3(2) | 1(8) | 2
+2 | 1 | 2 | 3 | 2(3) | 1 | 2(9) | 1 | 2 | 1 | 2(5)
+2 | 1 | 2 | 3 | 1(6) | 2 | 3 | 1(4) | 2 | 1 | 2 | 1 | 2 | 1(3) | 2
+2 | 3 | 2(9) | 3 | 2(3) | 1 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2
+2 | 3 | 1 | 12 | 2 | 3(2) | 1(5) | 2 | 1 | 2 | 3 | 2 | 3 | 2 | 1 | 3 | 10 | 2 | 3 | 2
+2(5) | 1 | 2(7) | 1 | 2 | 3 | 2 | 3 | 2 | 1 | 2(3) | 3 | 2
+2 | 3(2) | 1 | 2 | 7 | 2 | 1(7) | 2 | 1 | 2 | 1(3) | 2 | 1(3) | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2(5) | 1 | 2 | 1 | 2(3) | 1 | 2(3)
+2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1(5) | 2 | 1 | 2 | 1(3) | 2 | 1 | 3(2) | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2(5) | 1 | 2 | 1 | 2 | 8 | 2(3) | 1 | 2(3) | 1 | 2
+2 | 1 | 2 | 1 | 3(2) | 2 | 1(3) | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1(3) | 2 | 1 | 2 | 1 | 2
+2 | 1 | 2(5) | 1 | 2 | 1 | 2(3) | 1 | 2 | 3 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2
+2 | 3(2) | 6 | 2 | 1(3) | 2 | 1(3) | 2 | 1 | 2 | 3 | 2 | 1(5) | 2 | 1 | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2(5) | 1 | 2 | 1 | 2 | 1 | 2(7) | 9 | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2 | 1(3) | 2 | 1(3) | 2 | 1(3) | 2 | 1(3) | 3(2) | 2
+2(3) | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2(7) | 1 | 2 | 1 | 2(3) | 1 | 2
+2 | 3(2) | 1 | 2 | 1(3) | 2 | 1(8) | 3(2) | 1 | 2 | 1(3) | 2
+2(25)

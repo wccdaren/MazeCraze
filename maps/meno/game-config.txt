@@ -1,0 +1,67 @@
+; Add Game.meno: maps/meno/game-config.txt to the master [Games] section.
+
+[Game]
+Title: Meno: The Tidelight Trail
+Author: Sebastian and Esther's Maze Craze collection
+StartMap: 1
+WelcomeMessage: You are Meno, a little guppy separated from your family by a storm. Follow the Tidelight lanterns through seven ocean mazes. Find useful things, help new friends, and bring your heart-shell locket home.
+VictoryTitle: Meno found his family!
+VictoryMessage: The Tidelight lanterns shine for a family reunited. Well done, {Player.Name}!
+RequestTimeoutMs: 10000
+
+[Maps]
+Map.1: map-1.txt
+Map.2: map-2.txt
+Map.3: map-3.txt
+Map.4: map-4.txt
+Map.5: map-5.txt
+Map.6: map-6.txt
+Map.7: map-7.txt
+
+[Images]
+Player: assets/meno.png
+Princess: assets/homecoming.png
+
+[Style]
+Font: Georgia
+MessageFont: System
+Accent: #a8ead7
+Panel: #103c56
+Text: #f4f0d9
+
+[ImageCatalog]
+MenoAlgaeSnack: assets/algae-snack.png
+MenoAnemone: assets/anemone.png
+MenoBell: assets/bell.png
+MenoBottle: assets/bottle.png
+MenoBubbleWand: assets/bubble-wand.png
+MenoChest: assets/chest.png
+MenoCompass: assets/compass.png
+MenoCoral: assets/coral.png
+MenoCrab: assets/crab.png
+MenoFamily: assets/family.png
+MenoGlowSash: assets/glow-sash.png
+MenoJellyfish: assets/jellyfish.png
+MenoKelp: assets/kelp.png
+MenoLantern: assets/lantern.png
+MenoLockShell: assets/lock-shell.png
+MenoLocket: assets/locket.png
+MenoMeno: assets/meno.png
+MenoNet: assets/net.png
+MenoNote: assets/note.png
+MenoOctopus: assets/octopus.png
+MenoPearl: assets/pearl.png
+MenoPortal: assets/portal.png
+MenoReed: assets/reed.png
+MenoRock: assets/rock.png
+MenoSand: assets/sand.png
+MenoSeaGate: assets/sea-gate.png
+MenoSeahorse: assets/seahorse.png
+MenoShark: assets/shark.png
+MenoShellKey: assets/shell-key.png
+MenoStarfish: assets/starfish.png
+MenoTurtle: assets/turtle.png
+MenoValve: assets/valve.png
+MenoWater: assets/water.png
+MenoHomecoming: assets/homecoming.png
+

@@ -1,0 +1,160 @@
+; MENO: THE TIDELIGHT TRAIL - original Maze Craze adventure
+; Coordinates are Cartesian: (1,1) is bottom-left. Data only; no scripts.
+
+[Map]
+ID: 5
+Name: 5. Bellglass Harbor
+Dimensions: 25x19
+DefaultBlock: 5/1.1
+BorderBlock: 5/2.2
+StartingLocation: (2,2)
+ViewWindow: 4444 | 3333 | 5555 | 9999 | 4404
+
+[Variables]
+DrainOpen: 0
+
+[Block.1]
+NID: 5/1.1
+Type: Move
+Description: Sandy seabed
+MapImage: @MenoSand
+
+[Block.2]
+NID: 5/2.1
+Type: Wall
+Description: Bellglass Harbor barrier
+MapImage: @MenoRock
+
+[Block.3]
+NID: 5/1.2
+Type: Move
+Description: Soft sand
+MapImage: @MenoSand
+
+[Block.4]
+NID: 5/2.2
+Type: Wall
+Description: Unbroken reef stone
+MapImage: @MenoRock
+
+[Block.5]
+NID: 5/4.1
+Type: Inventory
+Description: Copper valve handle
+MapImage: @MenoValve
+ItemKind: Item
+ItemGroup: Repair
+
+[Block.6]
+NID: 5/3.1
+Type: Interaction
+Description: Pebble the clever octopus
+MapImage: @MenoOctopus
+Message: Two little guppies, Bim and Bop, are stuck in an abandoned observation pool. No humans are here now. Turn the drain valve, find both fry, and ring the harbor bell so the gate opens. Your family promised to meet you beyond it.
+CancelActionText: Swim back
+
+[Block.6.Choice.1]
+Text: Make a rescue plan
+Action: Attempt
+Pass.Message: First find the valve handle. Then drain the pool gently, help Bim and Bop, and ring the harbor bell.
+
+[Block.7]
+NID: 5/3.2
+Type: Interaction
+Description: The dry dock drain
+MapImage: @MenoValve
+Message: The drain is missing its handle. Repairing it will lower the water just enough to open a safe passage. Everyone can still breathe underwater.
+
+[Block.7.Choice.1]
+Text: Fit the valve handle
+Action: UseInventory
+Test.1: SelectedItem.ID | Equal | 5/4.1
+SelectionGroup: Repair
+NoSelectionMessage: Find the copper valve handle nearby.
+Pass.SetMapVariable.DrainOpen: 1
+Pass.ReplaceBlock: 5/1.2
+Pass.Message: The handle fits. Water swirls safely through the drain and opens a narrow passage.
+Fail.Message: That does not fit the valve. You keep it.
+
+[Block.8]
+NID: 5/3.3
+Type: Interaction
+Description: Bim the lost guppy fry
+MapImage: @MenoFamily
+Message: Bim waits in a bottle-shaped alcove. The current must be safe before the little fish can leave.
+
+[Block.8.Choice.1]
+Text: Guide Bim to the safe current
+Action: Attempt
+Test.1: Map.Variable.DrainOpen | Equal | 1
+Pass.AddState: BimSafe
+Pass.Message: Bim follows a line of bubbles to safety. One more friend can make a big difference.
+Fail.Message: The old drain is still closed. Fit its valve handle before leading anyone through.
+
+[Block.9]
+NID: 5/3.4
+Type: Interaction
+Description: Bop the lost guppy fry
+MapImage: @MenoFamily
+Message: Bop waits in a bottle-shaped alcove. The current must be safe before the little fish can leave.
+
+[Block.9.Choice.1]
+Text: Guide Bop to the safe current
+Action: Attempt
+Test.1: Map.Variable.DrainOpen | Equal | 1
+Pass.AddState: BopSafe
+Pass.Message: Bop follows a line of bubbles to safety. One more friend can make a big difference.
+Fail.Message: The old drain is still closed. Fit its valve handle before leading anyone through.
+
+[Block.10]
+NID: 5/3.5
+Type: Interaction
+Description: The two-note harbor bell
+MapImage: @MenoBell
+Message: The bell rings true only when both little guppies are safe. Sound it to open the harbor gate.
+
+[Block.10.Choice.1]
+Text: Ring the bell for both friends
+Action: Attempt
+Test.1: Player.State | Contains | BimSafe
+Test.2: Player.State | Contains | BopSafe
+Pass.AddState: HarborHelped
+Pass.Message: DING-DONG! Bim and Bop ring their tiny bells in answer. The harbor gate opens. Your family will be proud of your kindness.
+Fail.Message: One little answering bell is missing. Help BOTH Bim and Bop before you ring again.
+
+[Block.11]
+NID: 5/3.6
+Type: Interaction
+Description: Current to chapter 6
+MapImage: @MenoPortal
+Message: Beyond the harbor lies the Drifting Netfield. You can hear your family calling through the ropes.
+CancelActionText: Swim back
+
+[Block.11.Choice.1]
+Text: Follow the current
+Action: Attempt
+Pass.Transport: (6)
+Pass.Message: Beyond the harbor lies the Drifting Netfield. You can hear your family calling through the ropes.
+Pass.ReplaceBlock: 5/3.6
+
+[MapData]
+Format: Longhand
+2(25)
+2 | 1(2) | 3(2) | 11 | 2 | 1(2) | 3(2) | 1(3) | 2 | 1(4) | 3(2) | 1(3) | 2
+2 | 1 | 2(5) | 1 | 2(5) | 1 | 2 | 1 | 2(5) | 1 | 2(3)
+2 | 1 | 2 | 1 | 10 | 3 | 1(6) | 2 | 1 | 3(2) | 2 | 1(2) | 3 | 2 | 1 | 9 | 1 | 2
+2 | 1 | 2 | 1 | 2(13) | 1 | 2 | 3 | 2(3) | 3 | 2
+2 | 3 | 2 | 1(3) | 2 | 1(4) | 3(2) | 1 | 2 | 3 | 1(2) | 2 | 1(3) | 2 | 3 | 2
+2 | 3 | 2 | 1 | 2(3) | 1 | 2(5) | 1 | 2 | 3 | 2(5) | 1 | 2 | 1 | 2
+2 | 1 | 2 | 1 | 2 | 1 | 3(2) | 2 | 1(5) | 2 | 8 | 1(2) | 2 | 1 | 2 | 1 | 2 | 1 | 2
+2 | 1 | 2 | 3 | 2 | 1 | 2(5) | 3 | 2(3) | 1 | 2 | 1 | 2 | 1 | 2 | 3 | 2 | 1 | 2
+2 | 1 | 2 | 3 | 2 | 1 | 2 | 1(3) | 2 | 3 | 2 | 1(3) | 2 | 1 | 2 | 1(2) | 3 | 1(2) | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 1 | 2 | 7 | 2(3) | 1 | 2 | 3 | 2(5) | 1 | 2
+2 | 1 | 2 | 1 | 2 | 1 | 3 | 5 | 2 | 3 | 2 | 1(3) | 2 | 1 | 2 | 3 | 1(4) | 2 | 1 | 2
+2 | 3 | 2 | 1 | 2(5) | 3 | 2(3) | 1 | 2(7) | 1 | 2 | 1 | 2
+2 | 3 | 1(6) | 2 | 1(3) | 2 | 3(2) | 1(5) | 3(2) | 2 | 1 | 2
+2 | 1 | 2(9) | 1 | 2(11) | 1 | 2
+2 | 1 | 2 | 1(2) | 6 | 3(2) | 1(2) | 2 | 1 | 2 | 1(7) | 2 | 1(3) | 2
+2(3) | 1 | 2(5) | 1 | 2 | 3 | 2 | 1 | 2(7) | 1 | 2(3)
+2 | 3(2) | 1 | 2 | 1(6) | 3 | 2 | 1(11) | 2
+2(25)

@@ -1,0 +1,123 @@
+; MENO: THE TIDELIGHT TRAIL - original Maze Craze adventure
+; Coordinates are Cartesian: (1,1) is bottom-left. Data only; no scripts.
+
+[Map]
+ID: 7
+Name: 7. Moonpool Homecoming
+Dimensions: 25x19
+DefaultBlock: 7/1.1
+BorderBlock: 7/2.2
+StartingLocation: (2,2)
+ViewWindow: 4444 | 3333 | 5555 | 9999 | 4404
+
+[Variables]
+LanternLit: 0
+
+[Block.1]
+NID: 7/1.1
+Type: Move
+Description: Open sea
+MapImage: @MenoWater
+
+[Block.2]
+NID: 7/2.1
+Type: Wall
+Description: Moonpool Homecoming barrier
+MapImage: @MenoCoral
+
+[Block.3]
+NID: 7/1.2
+Type: Move
+Description: Soft sand
+MapImage: @MenoSand
+
+[Block.4]
+NID: 7/2.2
+Type: Wall
+Description: Unbroken reef stone
+MapImage: @MenoRock
+
+[Block.5]
+NID: 7/3.1
+Type: Interaction
+Description: The last family message
+MapImage: @MenoBottle
+Message: We followed your light, Meno. We heard about the fry and the net. Meet us at the Tidelight lantern. Bring your heart-shell locket so our littlest guppies know you. We love you.
+CancelActionText: Swim back
+
+[Block.5.Choice.1]
+Text: Read the message from home
+Action: Attempt
+Pass.Message: Your heart-shell locket came from Tavi on map 1. Keep it. Wear your glow-thread sash and look for the dark lantern.
+
+[Block.6]
+NID: 7/3.2
+Type: Interaction
+Description: The dark Tidelight lantern
+MapImage: @MenoLantern
+Message: The family lantern has gone dim. Glow-thread can lend it a gentle light without using up the sash.
+
+[Block.6.Choice.1]
+Text: Share the glow from your sash
+Action: Attempt
+Test.1: Equipment.Worn | Contains | 2/4.2
+Pass.SetMapVariable.LanternLit: 1
+Pass.ReplaceBlock: 7/1.2
+Pass.Message: The Tidelight lantern blooms with soft green light. Your sash keeps glowing too. Across the lagoon, a family answers.
+Fail.Message: Wear the glow-thread sash from map 2, then try again. Carrying it in your pack will not light the lantern.
+
+[Block.7]
+NID: 7/3.3
+Type: Interaction
+Description: The lantern arch
+MapImage: @MenoSeaGate
+Message: This last arch leads to the quiet lagoon. Its shell marks read: LIGHT THE WAY. LEAVE NO FRIEND BEHIND.
+
+[Block.7.Choice.1]
+Text: Follow the light home
+Action: Attempt
+Test.1: Map.Variable.LanternLit | Equal | 1
+Test.2: Player.State | Contains | NetFreed
+Pass.ReplaceBlock: 7/1.2
+Pass.Message: The arch opens. The path is bright, and every friend you helped is swimming safely. Your family is just ahead.
+Fail.Message: Light the lagoon lantern and free the school from the netfield first. The arch stays closed, and your items stay safe.
+
+[Block.8]
+NID: 7/3.4
+Type: Interaction
+Description: The guppy family reunion
+MapImage: @MenoFamily
+InteractionImage: @MenoHomecoming
+Message: There they are: your guppy family, safe beneath the lanterns! Your littlest sibling peeks around a shell. Is that really Meno? Show the heart-shell locket and tell them about the friends who helped you home.
+
+[Block.8.Choice.1]
+Text: Show the locket and swim into a family hug
+Action: Attempt
+Test.1: Inventory.Quantity | GreaterOrEqual | 1 | 1/4.1
+Test.2: Player.State | Contains | NetFreed
+Test.3: Map.Variable.LanternLit | Equal | 1
+Pass.EndGame: Yes
+Pass.Message: MENO FOUND HIS FAMILY! Your heart-shell shines as everyone gathers for a guppy-sized hug. Tavi, Brindle, Lumi, Orla, Pebble, Bim and Bop follow the lanterns to join the celebration. You found your way home by being curious, kind, and brave together. Well done, {Player.Name}!
+Fail.Message: Your family asks for the heart-shell locket. Keep the locket from Tavi, light the lagoon lantern, and make sure the netfield school is free.
+
+[MapData]
+Format: Longhand
+2(25)
+2 | 1 | 2 | 1(6) | 3(2) | 1(3) | 2 | 1(4) | 3(2) | 1(3) | 2
+2 | 1 | 2 | 1 | 2(5) | 1 | 2(3) | 1 | 2(3) | 1 | 2(5) | 1 | 2
+2 | 1(3) | 2 | 3 | 1(4) | 2 | 1 | 2 | 1 | 3(2) | 2 | 1 | 7 | 3(2) | 1 | 2 | 1 | 2
+2(5) | 3 | 2(5) | 1 | 2(3) | 1 | 2 | 1 | 2(3) | 1 | 2 | 3 | 2
+2 | 1(5) | 2 | 1(3) | 3(2) | 1(4) | 2 | 1 | 2 | 1(3) | 2 | 3 | 2
+2 | 3 | 2(5) | 1 | 2(11) | 3 | 2(3) | 1 | 2
+2 | 3 | 1(2) | 2 | 1 | 2 | 1 | 2 | 1(3) | 2 | 1(6) | 3 | 2 | 1(3) | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2 | 3 | 2(3) | 1 | 2 | 1 | 2(3) | 1 | 2(3) | 1 | 2(3)
+2 | 1 | 2 | 1 | 2 | 1 | 2 | 3 | 1 | 6 | 2 | 1(5) | 2 | 1 | 2 | 1 | 2 | 3 | 2 | 1 | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2(3) | 1 | 2(3) | 1 | 2(3) | 1 | 2 | 1 | 2 | 3 | 2 | 1 | 2
+2 | 1 | 2 | 5 | 2 | 1(3) | 2 | 1(2) | 3 | 2 | 1 | 2 | 1 | 3(2) | 2 | 1 | 2 | 1(3) | 2
+2 | 1 | 2 | 3 | 2(3) | 1 | 2(3) | 3 | 2(3) | 1 | 2(3) | 1 | 2(3) | 1 | 2
+2 | 1 | 2 | 1 | 2 | 1(5) | 2 | 1 | 2 | 1(3) | 2 | 1 | 2 | 3 | 1(2) | 2 | 1 | 2
+2 | 1 | 2 | 1 | 2 | 1 | 2(5) | 1 | 2 | 3 | 2(3) | 1 | 2 | 3 | 2 | 1 | 2 | 3 | 2
+2 | 1 | 2 | 1 | 2 | 1(3) | 2 | 1(3) | 2 | 3 | 2 | 1 | 2 | 1(3) | 2 | 1(2) | 3 | 2
+2(3) | 1 | 2 | 1 | 2 | 1 | 2 | 3 | 2(3) | 1 | 2 | 1 | 2 | 1 | 2(7)
+2 | 3(2) | 1 | 2 | 1 | 2 | 1(2) | 3 | 1(4) | 2 | 1(3) | 3(2) | 1(3) | 8 | 2
+2(25)

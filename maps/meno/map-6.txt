@@ -1,0 +1,151 @@
+; MENO: THE TIDELIGHT TRAIL - original Maze Craze adventure
+; Coordinates are Cartesian: (1,1) is bottom-left. Data only; no scripts.
+
+[Map]
+ID: 6
+Name: 6. The Drifting Netfield
+Dimensions: 25x19
+DefaultBlock: 6/1.1
+BorderBlock: 6/2.2
+StartingLocation: (2,2)
+ViewWindow: 4444 | 3333 | 5555 | 9999 | 4404
+
+[Block.1]
+NID: 6/1.1
+Type: Move
+Description: Open sea
+MapImage: @MenoWater
+
+[Block.2]
+NID: 6/2.1
+Type: Wall
+Description: The Drifting Netfield barrier
+MapImage: @MenoNet
+
+[Block.3]
+NID: 6/1.2
+Type: Move
+Description: Soft sand
+MapImage: @MenoSand
+
+[Block.4]
+NID: 6/2.2
+Type: Wall
+Description: Unbroken reef stone
+MapImage: @MenoRock
+
+[Block.5]
+NID: 6/4.1
+Type: Inventory
+Description: Little teamwork shell
+MapImage: @MenoStarfish
+ItemKind: Item
+ItemGroup: Keepsake
+
+[Block.6]
+NID: 6/3.1
+Type: Interaction
+Description: A warning on a float
+MapImage: @MenoNote
+Message: A strong ghost net drifts across the channel. Your power 2 reed will make bubbles, but only the power 8 stormglass wand can loosen its knot. Open your pack and WIELD the wand. Sea creatures are friends, not targets.
+CancelActionText: Swim back
+
+[Block.6.Choice.1]
+Text: Read the net warning
+Action: Attempt
+Pass.Message: The net needs power GREATER THAN 6. Cancel the encounter to equip your two-handed stormglass wand. The equipment stays in your pack after use.
+
+[Block.7]
+NID: 6/3.2
+Type: Interaction
+Description: The storm-tied ghost net
+MapImage: @MenoNet
+RequiredPower: 6
+Message: This net looks like the other net walls, but its central knot trembles when bubbles touch it. Untie this one with a strong bubble tool. Ordinary net walls remain impassable.
+
+[Block.7.Choice.1]
+Text: Loosen the knot with a wielded bubble tool
+Action: Attack
+Test.1: SelectedItem.Power | GreaterThan | Target.RequiredPower
+Test.2: SelectedItem.State | Equal | Working
+SelectionGroup: BubbleTool
+NoSelectionMessage: Wield the stormglass bubble wand from map 4 in your pack first.
+Pass.ReplaceBlock: 6/1.2
+Pass.Message: A ring of bright bubbles lifts the knot. The net slips loose without hurting anyone. Your wand stays with you.
+Fail.Message: Your {SelectedItem.Name} is too weak to loosen this knot. Wield the power 8 stormglass wand instead. No tool is lost.
+
+[Block.8]
+NID: 6/3.3
+Type: Interaction
+Description: A school behind the ropes
+MapImage: @MenoFamily
+Message: Several small fish are frightened behind a loose curtain of ropes. They will trust a fish who helped the two harbor fry.
+
+[Block.8.Choice.1]
+Text: Ask everyone to swim together
+Action: Attempt
+Test.1: Player.State | Contains | HarborHelped
+Pass.AddState: SchoolTogether
+Pass.GiveItems: 6/4.1
+Pass.Message: Bim and Bop recognize you and call the school together. You receive a little teamwork shell. Nobody has to be brave alone.
+Fail.Message: The school is unsure. Help the harbor fry and ring their bell to earn their trust.
+
+[Block.9]
+NID: 6/3.4
+Type: Interaction
+Description: The drifting curtain
+MapImage: @MenoNet
+Message: One guppy cannot shift this wide curtain. A whole school swimming DOWN together can gently pull it off the coral.
+
+[Block.9.Choice.1]
+Text: Swim down together
+Action: Attempt
+Test.1: Player.State | Contains | SchoolTogether
+Test.2: Equipment.Wielded | Contains | 4/4.1
+Pass.AddState: NetFreed
+Pass.ReplaceBlock: 6/1.2
+Pass.Message: Together, you swim down and guide bubbles under the ropes. The curtain lifts into an empty channel. Every fish is free.
+Fail.Message: Gather the school first and keep the stormglass wand wielded. The current is too strong to do this alone.
+
+[Block.9.Choice.2]
+Text: Try pulling alone
+Action: Attempt
+Test.1: Target.RequiredPower | LessThan | 0
+Fail.Message: The rope barely moves. Ask your new friends to help instead.
+
+[Block.10]
+NID: 6/3.5
+Type: Interaction
+Description: Current to chapter 7
+MapImage: @MenoPortal
+Message: A silver trail opens toward Moonpool Lagoon. Familiar tails sparkle between the coral arches.
+CancelActionText: Swim back
+
+[Block.10.Choice.1]
+Text: Follow the current
+Action: Attempt
+Pass.Transport: (7)
+Pass.Message: A silver trail opens toward Moonpool Lagoon. Familiar tails sparkle between the coral arches.
+Pass.ReplaceBlock: 6/3.5
+
+[MapData]
+Format: Longhand
+2(25)
+2 | 1 | 2 | 1(5) | 2 | 1(5) | 2 | 1(9) | 2
+2 | 1 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2 | 1 | 2(3) | 1 | 2 | 1 | 2(5) | 1 | 2
+2 | 1(5) | 2 | 1(3) | 2 | 9 | 1(2) | 3(2) | 2 | 3 | 2 | 1(5) | 2
+2(11) | 1 | 2(5) | 3 | 2(3) | 1 | 2(3)
+2 | 1(5) | 3(2) | 1(2) | 2 | 1 | 2 | 1(2) | 3 | 2 | 1(3) | 2 | 1(3) | 2
+2 | 3 | 2(7) | 1 | 2 | 3 | 2 | 1 | 2 | 3 | 2(3) | 1 | 2(5)
+2 | 3 | 2 | 1(5) | 2 | 1 | 2 | 3 | 1(2) | 2 | 1(3) | 2 | 1 | 3(2) | 1(2) | 2
+2 | 1 | 2(3) | 3 | 2 | 1 | 2 | 1 | 2(7) | 1 | 2(5) | 1 | 2
+2 | 1(3) | 2 | 3 | 2 | 1 | 3(2) | 2 | 1 | 3(2) | 1(2) | 2 | 1 | 2 | 10 | 3(2) | 2 | 1 | 2
+2(3) | 1 | 2 | 1 | 2(5) | 1 | 2(3) | 1 | 2 | 3 | 2(3) | 1 | 2 | 1 | 2
+2 | 1 | 6 | 3 | 2 | 1 | 2 | 1(7) | 2 | 1 | 2 | 3 | 1(4) | 2 | 3 | 2
+2 | 1 | 2(3) | 1 | 2(5) | 1 | 2 | 3 | 2 | 1 | 2(5) | 1 | 2 | 3 | 2
+2 | 1 | 2 | 1 | 2 | 1(2) | 3(2) | 1 | 2 | 1 | 2 | 3 | 2 | 3 | 2 | 1 | 3(2) | 2 | 1 | 2 | 1 | 2
+2 | 1 | 2 | 1 | 2(5) | 1 | 2(3) | 1 | 2 | 3 | 2 | 1 | 2 | 1 | 2(3) | 1 | 2
+2 | 1 | 2 | 1(5) | 2 | 1(3) | 2 | 1 | 2 | 1(3) | 2 | 1 | 2 | 1(3) | 2
+2 | 3 | 2 | 1 | 2 | 1 | 2(5) | 3 | 2 | 1 | 2(5) | 1 | 2 | 3 | 2 | 1 | 2
+2 | 3 | 2 | 1 | 2 | 1(6) | 3 | 1 | 7 | 2 | 1(5) | 8 | 3 | 2 | 1 | 2
+2(25)
